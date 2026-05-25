@@ -1,0 +1,73 @@
+{
+  "audience": "executive",
+  "date": "2026-03-14",
+  "title": "ThreatNoir — Executive Briefing",
+  "intro": {
+    "text": "Today's critical security developments for leadership"
+  },
+  "segments": [
+    {
+      "headline": "Loblaw Breach Exposes 75M Records",
+      "narration": "Major Canadian retailer confirms massive data exfiltration.",
+      "impact_cards": [
+        {"label": "WHY CARE", "value": "Databreach and compliance risk"},
+        {"label": "AFFECTED", "value": "75M customer records"},
+        {"label": "ACTION", "value": "Review vendor access controls"}
+      ],
+      "key_points": [
+        "March 19 notification deadline approaching",
+        "Ransomware group claimed responsibility"
+      ],
+      "categories": ["breaches", "compliance"],
+      "display_seconds": 12
+    },
+    {
+      "headline": "Critical HVAC Vulnerabilities in Johnson Controls",
+      "narration": "Legacy building systems exploitable for network access.",
+      "impact_cards": [
+        {"label": "WHY CARE", "value": "Legacy systems and OT under attack"},
+        {"label": "SCOPE", "value": "Food, agriculture, and healthcare"},
+        {"label": "ACTION", "value": "Patch immediately if deployed"}
+      ],
+      "key_points": [
+        "CVE-2026-1234 — CVSS 9.8, pre-auth RCE",
+        "Affects building management systems globally"
+      ],
+      "categories": ["vulnerabilities", "iot-ot"],
+      "display_seconds": 12
+    },
+    {
+      "headline": "Phonebot Breach Hits Australian Retailer",
+      "narration": "Customer PII compromised in e-commerce platform attack.",
+      "impact_cards": [
+        {"label": "AFFECTED", "value": "200K+ customer records"},
+        {"label": "REGION", "value": "Australia, APAC"},
+        {"label": "ACTION", "value": "Monitor for credential stuffing"}
+      ],
+      "key_points": [
+        "Payment card data potentially exposed",
+        "Investigation ongoing with Australian authorities"
+      ],
+      "categories": ["breaches", "privacy"],
+      "display_seconds": 11
+    },
+    {
+      "headline": "BlingLibra Vishing Targets Multiple Industries",
+      "narration": "Voice phishing campaign escalating across enterprise targets.",
+      "impact_cards": [
+        {"label": "ACTORS", "value": "BlingLibra threat group"},
+        {"label": "VECTOR", "value": "Voice phishing + social engineering"},
+        {"label": "ACTION", "value": "Brief staff on vishing tactics"}
+      ],
+      "key_points": [
+        "Targeting finance, tech, and healthcare sectors",
+        "Using AI-generated voice cloning"
+      ],
+      "categories": ["threat-intelligence", "malware"],
+      "display_seconds": 11
+    }
+  ],
+  "closing": {
+    "text": "Stay vigilant. Full coverage at threatnoir.com"
+  }
+}

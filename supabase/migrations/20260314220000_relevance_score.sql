@@ -1,0 +1,2 @@
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS relevance_score INTEGER CHECK (relevance_score >= 1 AND relevance_score <= 10);
+CREATE INDEX IF NOT EXISTS articles_relevance_score_idx ON articles(relevance_score);

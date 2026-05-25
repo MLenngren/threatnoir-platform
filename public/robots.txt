@@ -1,0 +1,12 @@
+User-Agent: *
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /settings
+Disallow: /confirm
+
+User-Agent: Googlebot
+Allow: /api/podcast/feed.xml
+Allow: /api/weekly/feed.xml
+
+Sitemap: https://threatnoir.com/sitemap.xml

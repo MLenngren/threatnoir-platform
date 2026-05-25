@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "computed": [
+    {"rule": "second_tuesday", "name": "Patch Tuesday", "category": "security"},
+    {"rule": "day_after_patch_tuesday", "name": "Exploit Wednesday", "category": "security"}
+  ],
+  "fixed": [
+    {"month": 1, "day": 1, "name": "New Year's Day", "category": "fun"},
+    {"month": 1, "day": 28, "name": "Data Privacy Day", "category": "privacy"},
+
+    {"month": 2, "day": 1, "name": "Change Your Password Day", "category": "security"},
+    {"month": 2, "day": 2, "name": "Groundhog Day", "category": "fun"},
+    {"month": 2, "day": 11, "name": "International Day of Women and Girls in Science", "category": "awareness"},
+    {"month": 2, "day": 14, "name": "Valentine's Day", "category": "fun"},
+
+    {"month": 3, "day": 8, "name": "International Women's Day", "category": "awareness"},
+    {"month": 3, "day": 14, "name": "Pi Day", "category": "fun"},
+    {"month": 3, "day": 15, "name": "World Consumer Rights Day", "category": "privacy"},
+    {"month": 3, "day": 20, "name": "International Day of Happiness", "category": "fun"},
+    {"month": 3, "day": 22, "name": "World Water Day", "category": "awareness"},
+    {"month": 3, "day": 31, "name": "World Backup Day", "category": "security"},
+
+    {"month": 4, "day": 7, "name": "World Health Day", "category": "awareness"},
+    {"month": 4, "day": 22, "name": "Earth Day", "category": "awareness"},
+    {"month": 4, "day": 23, "name": "World Book and Copyright Day", "category": "awareness"},
+    {"month": 4, "day": 26, "name": "World Intellectual Property Day", "category": "privacy"},
+    {"month": 4, "day": 28, "name": "World Day for Safety and Health at Work", "category": "awareness"},
+
+    {"month": 5, "day": 1, "name": "International Workers' Day", "category": "awareness"},
+    {"month": 5, "day": 3, "name": "World Press Freedom Day", "category": "awareness"},
+    {"month": 5, "day": 4, "name": "Star Wars Day", "category": "fun"},
+    {"month": 5, "day": 17, "name": "World Telecommunication and Information Society Day", "category": "awareness"},
+    {"month": 5, "day": 25, "name": "GDPR Day", "category": "privacy"},
+    {"month": 5, "day": 31, "name": "World No Tobacco Day", "category": "awareness"},
+
+    {"month": 6, "day": 5, "name": "World Environment Day", "category": "awareness"},
+    {"month": 6, "day": 8, "name": "World Oceans Day", "category": "awareness"},
+    {"month": 6, "day": 20, "name": "World Wi-Fi Day", "category": "awareness"},
+    {"month": 6, "day": 28, "name": "International Caps Lock Day", "category": "fun"},
+
+    {"month": 7, "day": 7, "name": "World Chocolate Day", "category": "fun"},
+    {"month": 7, "day": 17, "name": "World Emoji Day", "category": "fun"},
+    {"month": 7, "day": 30, "name": "International Day of Friendship", "category": "fun"},
+
+    {"month": 8, "day": 1, "name": "World Wide Web Day", "category": "awareness"},
+    {"month": 8, "day": 12, "name": "International Youth Day", "category": "awareness"},
+    {"month": 8, "day": 19, "name": "World Humanitarian Day", "category": "awareness"},
+
+    {"month": 9, "day": 8, "name": "International Literacy Day", "category": "awareness"},
+    {"month": 9, "day": 19, "name": "International Talk Like a Pirate Day", "category": "fun"},
+    {"month": 9, "day": 21, "name": "International Day of Peace", "category": "awareness"},
+    {"month": 9, "day": 28, "name": "International Day for Universal Access to Information", "category": "privacy"},
+    {"month": 9, "day": 30, "name": "International Podcast Day", "category": "fun"},
+
+    {"month": 10, "day": 1, "name": "International Day of Older Persons", "category": "awareness"},
+    {"month": 10, "day": 5, "name": "World Teachers' Day", "category": "awareness"},
+    {"month": 10, "day": 10, "name": "World Mental Health Day", "category": "awareness"},
+    {"month": 10, "day": 13, "name": "International Day for Disaster Risk Reduction", "category": "awareness"},
+    {"month": 10, "day": 16, "name": "World Food Day", "category": "awareness"},
+
+    {"month": 11, "day": 13, "name": "World Kindness Day", "category": "fun"},
+    {"month": 11, "day": 30, "name": "Computer Security Day", "category": "security"},
+
+    {"month": 12, "day": 1, "name": "World AIDS Day", "category": "awareness"},
+    {"month": 12, "day": 3, "name": "International Day of Persons with Disabilities", "category": "awareness"},
+    {"month": 12, "day": 10, "name": "Human Rights Day", "category": "awareness"}
+  ],
+  "ranges": [
+    {"start": "2026-01-26", "end": "2026-02-01", "name": "Data Privacy Week 2026", "category": "privacy"},
+
+    {"start": "2026-02-09", "end": "2026-02-09", "name": "Clean Out Your Computer Day 2026", "category": "security"},
+    {"start": "2026-02-10", "end": "2026-02-10", "name": "Safer Internet Day 2026", "category": "awareness"},
+
+    {"start": "2026-03-11", "end": "2026-03-13", "name": "WiCyS 2026 Annual Conference", "category": "conference"},
+    {"start": "2026-03-23", "end": "2026-03-26", "name": "RSA Conference 2026", "category": "conference"},
+
+    {"start": "2026-04-14", "end": "2026-04-14", "name": "Identity Management Day 2026", "category": "awareness"},
+    {"start": "2026-04-21", "end": "2026-04-24", "name": "Black Hat Asia 2026", "category": "conference"},
+    {"start": "2026-04-26", "end": "2026-04-30", "name": "DEF CON Singapore 2026", "category": "conference"},
+
+    {"start": "2026-05-04", "end": "2026-05-08", "name": "Privacy Awareness Week 2026", "category": "privacy"},
+    {"start": "2026-05-07", "end": "2026-05-07", "name": "World Password Day 2026", "category": "security"},
+    {"start": "2026-05-11", "end": "2026-05-14", "name": "Black Hat Trainings Masterclass 2026", "category": "conference"},
+
+    {"start": "2026-06-01", "end": "2026-06-03", "name": "Gartner Security & Risk Management Summit 2026", "category": "conference"},
+    {"start": "2026-06-02", "end": "2026-06-04", "name": "Infosecurity Europe 2026", "category": "conference"},
+    {"start": "2026-06-22", "end": "2026-06-26", "name": "OWASP Global AppSec EU 2026", "category": "conference"},
+
+    {"start": "2026-07-31", "end": "2026-07-31", "name": "System Administrator Appreciation Day 2026", "category": "awareness"},
+
+    {"start": "2026-08-01", "end": "2026-08-06", "name": "Black Hat USA 2026", "category": "conference"},
+    {"start": "2026-08-06", "end": "2026-08-09", "name": "DEF CON 34", "category": "conference"},
+
+    {"start": "2026-09-15", "end": "2026-09-15", "name": "IT Professionals Day 2026", "category": "awareness"},
+
+    {"start": "2026-10-01", "end": "2026-10-31", "name": "Cybersecurity Awareness Month 2026", "category": "awareness"},
+    {"start": "2026-10-06", "end": "2026-10-08", "name": "SecTor 2026", "category": "conference"}
+  ]
+}
+

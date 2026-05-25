@@ -1,0 +1,24 @@
+ThreatNoir
+Copyright 2024-2026 ThreatNoir contributors
+
+This product is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this software except in compliance with the License.
+You may obtain a copy of the License at:
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+This software includes the following third-party components, each under their
+own licenses (see node_modules/*/LICENSE and pyproject equivalents for full
+text and attribution):
+
+- Nuxt and Nitro (MIT)
+- @nuxt/ui, @nuxt/fonts, @vueuse/nuxt, @nuxtjs/supabase (MIT)
+- @supabase/supabase-js (MIT)
+- @anthropic-ai/sdk (MIT)
+- @vercel/analytics (Apache-2.0)
+- resend (MIT)
+- googleapis (Apache-2.0)
+- google-api-python-client (Apache-2.0)
+- python-frontmatter (MIT)
+
+For a complete list, see package.json and scripts/*/requirements.txt.
