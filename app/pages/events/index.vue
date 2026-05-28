@@ -409,7 +409,7 @@ useSeoMeta({
   twitterTitle: 'Upcoming Security Events & Conferences | ThreatNoir',
   twitterDescription: 'Cybersecurity conferences, workshops, CTFs, and meetups. Filtered by category, audience, and date. Submit your own event.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+  author: 'Marcus Lenngren'
 })
 
 const categoryOptions: Array<{ key: '' | EventCategory; label: string }> = [

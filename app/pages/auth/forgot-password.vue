@@ -98,7 +98,7 @@ useSeoMeta({
   twitterTitle: 'Reset Password | ThreatNoir',
   twitterDescription: 'Request a password reset link for your ThreatNoir account. We’ll email a secure link to set a new password and regain access.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir',
+  author: 'Marcus Lenngren',
   robots: 'noindex'
 })
 

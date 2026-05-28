@@ -161,7 +161,7 @@ useSeoMeta({
   twitterTitle: 'Sign Up — Free Security Briefings | ThreatNoir',
   twitterDescription: 'Create a free account to get daily security briefings, the weekly roundup, and custom alerts via email, Discord, Telegram, or webhook.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir',
+  author: 'Marcus Lenngren',
   robots: 'noindex'
 })
 

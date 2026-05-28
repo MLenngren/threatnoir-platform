@@ -11,14 +11,15 @@
   - Emailing the API key via Resend
 */
 
+import { execSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 import { Resend } from 'resend'
 
 import { generateSubscriberApiKey } from '../server/utils/api-keys'
 
-const SUPABASE_REF = (process.env.SUPABASE_URL || '').replace(/^https?:\/\//, '').split('.')[0]
-if (!SUPABASE_REF) throw new Error('SUPABASE_URL env var required (e.g. https://abcdefgh.supabase.co)')
+const SUPABASE_REF = process.env.SUPABASE_PROJECT_REF
+if (!SUPABASE_REF) throw new Error('SUPABASE_PROJECT_REF env var required')
 const SUPABASE_QUERY_URL = `https://api.supabase.com/v1/projects/${SUPABASE_REF}/database/query`
 
 function eprint(...args: unknown[]) {
@@ -35,7 +36,13 @@ function sqlLiteral(value: string | null): string {
 function getSupabasePat(): string {
   const env = (process.env.SUPABASE_PAT || '').trim()
   if (env) return env
-  throw new Error('Missing SUPABASE_PAT env var (Supabase Management API personal access token)')
+
+  // Fallback to 1Password CLI if available (same convention as python backfill scripts)
+  try {
+    return execSync(['op', 'read', 'op://Claude/Supabase/PAT'].join(' '), { encoding: 'utf8' }).trim()
+  } catch {
+    throw new Error('Missing SUPABASE_PAT env var (or 1Password CLI not available)')
+  }
 }
 
 function getResendApiKey(): string {

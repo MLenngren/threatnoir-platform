@@ -37,7 +37,7 @@
           If you need tailored feeds for your security team, custom integrations, company-specific monitoring, or bulk subscriptions, get in touch.
         </p>
         <a
-          href="mailto:contact@threatnoir.com?subject=Custom%20subscription%20inquiry"
+          href="mailto:marcus@threatnoir.com?subject=Custom%20subscription%20inquiry"
 	        class="mt-5 inline-flex items-center gap-2 rounded-xl bg-tn-surface-lowest/60 px-4 py-3 font-label text-[11px] font-bold uppercase tracking-[0.2em] text-tn-on-surface ring-1 ring-white/10 hover:bg-tn-surface-lowest"
         >
 	        <UIcon name="i-heroicons-envelope" class="h-4 w-4 text-tn-primary" />

@@ -163,7 +163,7 @@ useSeoMeta({
   ogUrl: computed(() => `https://threatnoir.com/tag/${slug.value}`),
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  author: 'ThreatNoir'
+  author: 'Marcus Lenngren'
 })
 
 function articleHref(a: TagResponse['articles'][number]) {

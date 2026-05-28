@@ -241,7 +241,7 @@ useSeoMeta({
   twitterTitle: 'Security Resources, Infographics & Guides | ThreatNoir',
   twitterDescription: 'Curated security posters, infographics, cheat sheets, and practical guides. Free references for security teams, students, and practitioners.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+  author: 'Marcus Lenngren'
 })
 
 const route = useRoute()

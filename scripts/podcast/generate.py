@@ -43,9 +43,9 @@ PROJECT_ROOT = SCRIPT_DIR.parent.parent
 # Config
 # ---------------------------------------------------------------------------
 
-SUPABASE_REF = (os.environ.get("SUPABASE_URL") or "").replace("https://", "").replace("http://", "").split(".")[0]
+SUPABASE_REF = os.environ.get("SUPABASE_PROJECT_REF")
 if not SUPABASE_REF:
-    raise SystemExit("SUPABASE_URL env var required (e.g. https://abcdefgh.supabase.co)")
+    raise RuntimeError("SUPABASE_PROJECT_REF env var required")
 DEFAULT_SUPABASE_URL = f"https://{SUPABASE_REF}.supabase.co"
 
 R2_PUBLIC_BASE = "https://cdn.threatnoir.com"
@@ -1255,10 +1255,7 @@ def post_to_alerts_channel(content: str) -> None:
             eprint("[podcast] DISCORD_BOT_TOKEN not set; skipping #alerts post")
             return
 
-        channel_id = os.environ.get("DISCORD_ALERTS_CHANNEL_ID", "").strip()
-        if not channel_id:
-            eprint("[podcast] DISCORD_ALERTS_CHANNEL_ID not set; skipping #alerts post")
-            return
+        channel_id = os.environ.get("DISCORD_ALERTS_CHANNEL_ID", "1452222760649490596")
         req = urllib.request.Request(
             f"https://discord.com/api/v10/channels/{channel_id}/messages",
             data=_json.dumps({"content": content[:1900]}).encode(),

@@ -145,7 +145,7 @@ useSeoMeta({
   twitterTitle: 'Log In | ThreatNoir',
   twitterDescription: 'Log in to your ThreatNoir account to manage notifications, API keys, preferences, and delivery channels for email, Discord, Telegram, and webhooks.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir',
+  author: 'Marcus Lenngren',
   robots: 'noindex'
 })
 

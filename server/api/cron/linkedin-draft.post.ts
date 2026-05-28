@@ -180,7 +180,7 @@ export default defineEventHandler(async (event) => {
   const resend = new Resend(process.env.RESEND_API_KEY)
   await resend.emails.send({
     from: 'ThreatNoir <noreply@threatnoir.com>',
-    to: process.env.ADMIN_EMAIL || 'admin@example.com',
+    to: 'marcus@lenngren.com',
     subject,
     html,
     text: bodyText

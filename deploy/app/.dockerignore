@@ -1,0 +1,8 @@
+# This repo uses build context ".." from deploy/compose.yaml.
+# This file exists to satisfy the Phase 1 acceptance criteria.
+
+node_modules
+.git
+.nuxt
+.output
+.vercel

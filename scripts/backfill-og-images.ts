@@ -9,10 +9,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.SUPABASE_URL
-if (!SUPABASE_URL) {
-  console.error('SUPABASE_URL env var required (e.g. https://abcdefgh.supabase.co)')
-  process.exit(1)
-}
+if (!SUPABASE_URL) throw new Error('SUPABASE_URL env var required')
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY
 
 if (!SUPABASE_KEY) {

@@ -107,7 +107,7 @@ export default defineEventHandler(async (event) => {
     <itunes:summary>Daily security intelligence briefings. AI-curated from 1000+ sources, delivered as a conversational podcast. Morning and afternoon editions, under 5 minutes each. Covering vulnerabilities, breaches, ransomware, regulatory enforcement, and threat intelligence.</itunes:summary>
     <itunes:owner>
       <itunes:name>ThreatNoir</itunes:name>
-      <itunes:email>${process.env.ADMIN_EMAIL || 'admin@example.com'}</itunes:email>
+      <itunes:email>marcus@threatnoir.com</itunes:email>
     </itunes:owner>
     <itunes:image href="https://threatnoir.com/podcast-artwork.jpg"/>
     <itunes:category text="Technology"/>

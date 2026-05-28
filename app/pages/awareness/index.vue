@@ -115,7 +115,7 @@ useSeoMeta({
   twitterTitle: 'Security Awareness Lessons | ThreatNoir',
   twitterDescription: 'Root-cause takeaways from real security incidents. Learn what to look for in your own environment before it happens to you. Updated weekly.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+  author: 'Marcus Lenngren'
 })
 
 const route = useRoute()

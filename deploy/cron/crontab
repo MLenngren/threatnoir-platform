@@ -1,0 +1,10 @@
+# ThreatNoir platform cron (UTC)
+
+# Ingest RSS every 4 hours
+0 */4 * * * curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" http://app:3000/api/cron/ingest
+
+# Summarize every 4 hours, offset by 30 minutes
+30 */4 * * * curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" http://app:3000/api/cron/summarize
+
+# Weekly roundup: Mondays 08:00 UTC
+0 8 * * 1 curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" http://app:3000/api/cron/generate-weekly-roundup

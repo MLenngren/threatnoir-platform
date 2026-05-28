@@ -50,6 +50,7 @@ export default defineNuxtConfig({
     '/for-developers': { swr: 3600 },
     '/developer': { swr: 3600 },
     '/resources': { swr: 3600 },
+    '/opensource': { swr: 3600 },
     '/legal': { swr: 86400 },
     '/contact': { swr: 3600 },
     '/review': { swr: 3600 },
