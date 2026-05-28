@@ -130,7 +130,7 @@ export default defineEventHandler(async (event) => {
     .filter((e) => Boolean(e.title))
     .slice(0, 2)
 
-  const previewEmail = (user.email || '').trim() || 'marcus@threatnoir.com'
+  const previewEmail = (user.email || '').trim() || process.env.ADMIN_EMAIL || 'admin@example.com'
   const subRes = await supabase
     .from('subscribers')
     .select('id,email,verify_token')

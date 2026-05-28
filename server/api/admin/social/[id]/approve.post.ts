@@ -3,7 +3,7 @@ import { TwitterApi } from 'twitter-api-v2'
 
 import { requireAdminUser } from '../../../../utils/requireAdmin'
 
-const X_USERNAME = 'lenngrenm'
+const X_USERNAME = (process.env.X_USERNAME || '').trim()
 
 function requireEnv(name: string): string {
   const v = (process.env[name] || '').trim()

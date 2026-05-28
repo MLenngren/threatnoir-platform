@@ -178,7 +178,7 @@ useSeoMeta({
   twitterTitle: 'IOC Search | ThreatNoir',
   twitterDescription: 'Search 10,000+ indicators of compromise by IP, domain, hash, CVE, or malware family. Free for SOC analysts and threat hunters. Updated daily.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'Marcus Lenngren'
+  author: 'ThreatNoir'
 })
 
 const search = ref('')

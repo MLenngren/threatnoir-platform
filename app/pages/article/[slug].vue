@@ -231,7 +231,7 @@ useHead({
           mainEntityOfPage: canonicalUrl.value,
           url: canonicalUrl.value,
           image: [ogImage.value],
-          author: [{ '@type': 'Person', name: 'Marcus Lenngren' }],
+          author: [{ '@type': 'Person', name: 'ThreatNoir' }],
           publisher: {
             '@type': 'Organization',
             name: 'ThreatNoir',

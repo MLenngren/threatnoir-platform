@@ -110,7 +110,7 @@ useSeoMeta({
   twitterTitle: 'Set New Password | ThreatNoir',
   twitterDescription: 'Set a new password for your ThreatNoir account. If you requested a reset link, you can securely update your credentials here.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'Marcus Lenngren',
+  author: 'ThreatNoir',
   robots: 'noindex'
 })
 

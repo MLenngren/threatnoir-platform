@@ -268,7 +268,7 @@ const legalCards = [
   {
     icon: 'i-heroicons-scale',
     title: 'Imprint',
-    body: 'ThreatNoir is operated by Marcus Lenngren. Organization number and registration details available upon request.'
+		body: 'Operator and registration details available upon request.'
   },
   {
     icon: 'i-heroicons-shield-check',

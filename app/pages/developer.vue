@@ -296,7 +296,7 @@ useSeoMeta({
   twitterTitle: 'Developer API & MCP Server | ThreatNoir',
   twitterDescription: 'IOC search API, MCP server for Claude and Cursor, webhooks, and RSS feeds. Build security automation with a free API key.',
   twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'Marcus Lenngren'
+  author: 'ThreatNoir'
 })
 
 const installSnippet = `# Using npx (recommended)

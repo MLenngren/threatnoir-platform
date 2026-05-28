@@ -5,7 +5,7 @@ export function useOrganizationSchema() {
     name: 'ThreatNoir',
     url: 'https://threatnoir.com',
     logo: 'https://threatnoir.com/images/threatnoir-logo-wide.png',
-    sameAs: ['https://x.com/lenngrenm', 'https://www.linkedin.com/in/marcuslenngren'],
+    sameAs: [],
     description: 'Curated security intelligence for SOC analysts, threat hunters, and security leaders.'
   }
 }

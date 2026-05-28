@@ -369,10 +369,10 @@ useSeoMeta({
   ogImage: cardImage,
   ogUrl: computed(() => (roundup.value?.slug ? `https://threatnoir.com/weekly/${roundup.value.slug}` : 'https://threatnoir.com/weekly')),
   ogType: 'article',
-  articleAuthor: 'Marcus Lenngren',
+  articleAuthor: 'ThreatNoir',
   articlePublishedTime: computed(() => roundup.value?.date_from ? `${roundup.value.date_to}T00:00:00Z` : undefined),
   twitterCard: 'summary_large_image',
-  author: 'Marcus Lenngren'
+  author: 'ThreatNoir'
 })
 
 const shareUrl = computed(() => (roundup.value?.slug ? `https://threatnoir.com/weekly/${roundup.value.slug}` : ''))

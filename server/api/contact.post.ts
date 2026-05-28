@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
   const resend = new Resend(apiKey)
   await resend.emails.send({
     from: 'ThreatNoir Contact <noreply@threatnoir.com>',
-    to: 'marcus@threatnoir.com',
+    to: process.env.ADMIN_EMAIL || 'admin@example.com',
     replyTo: email,
     subject: `[ThreatNoir Contact] ${subject}`,
     html:
