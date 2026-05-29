@@ -215,7 +215,7 @@ async function deliverDiscord(webhookUrl: string, article: ArticleData): Promise
             ...(article.jurisdiction ? [{ name: 'Jurisdiction', value: article.jurisdiction, inline: true }] : []),
             ...(article.fine_amount ? [{ name: 'Fine', value: article.fine_amount, inline: true }] : [])
           ],
-          footer: { text: 'ThreatNoir' },
+          footer: { text: getSiteConfig().name },
           timestamp: article.published_at || new Date().toISOString()
         }
       ]

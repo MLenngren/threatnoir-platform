@@ -7,6 +7,7 @@ import { useSupabaseAdmin } from '../../utils/supabase'
 import { safeCompare } from '../../utils/safeCompare'
 import { aiLimits, checkAiQuota, logAiCall } from '../../utils/aiUsage'
 import { notifyAdmin } from '../../utils/notifyAdmin'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 const HOOKS = [
   '3 threats from the last 48 hours:',
@@ -213,6 +214,8 @@ export default defineEventHandler(async (event) => {
     .slice(0, 3)
 
   const hookText = pickHook(recentHooks)
+	const site = getSiteConfig()
+	const siteHost = new URL(site.url).host
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const articlesForPrompt = candidates.slice(0, 20).map((a) => ({
@@ -221,13 +224,13 @@ export default defineEventHandler(async (event) => {
     summary: (a.ai_summary || a.summary || '').slice(0, 500)
   }))
 
-  const prompt = `You are ThreatNoir's social media writer. Pick the 3 most interesting and diverse stories from the provided articles and write social media posts.
+	const prompt = `You are ${site.name}'s social media writer. Pick the 3 most interesting and diverse stories from the provided articles and write social media posts.
 
 Rules:
 - Practitioner voice, not marketing. Direct and useful.
 - No em dashes anywhere. Use periods, colons, or pipes instead.
 - Each story gets a one-line summary with the "so what" angle.
-- Link to threatnoir.com (not individual article URLs).
+	- Link to ${siteHost} (not individual article URLs).
 - Max 3-4 hashtags: #cybersecurity #threatintel and 1-2 topic-specific ones.
 - Pick diverse stories. Avoid 3 of the same category.
 
@@ -297,7 +300,7 @@ ${JSON.stringify(articlesForPrompt, null, 2)}
     const shortenPrompt = `Shorten this X post to be under 280 characters total.
 Rules:
 - Keep the same 3 numbered items.
-- Keep the final line with "threatnoir.com".
+	- Keep the final line with "${siteHost}".
 - Keep 2-4 hashtags.
 - No em dashes.
 

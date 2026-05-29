@@ -103,12 +103,12 @@ export default defineEventHandler(async (event) => {
 	    <link>${site.url}/podcast</link>
     <description>Daily security intelligence briefings curated for practitioners. Morning and afternoon editions covering vulnerabilities, breaches, ransomware, regulations, and threat intelligence. AI-curated from 1000+ sources, delivered as a conversational podcast under 5 minutes.</description>
     <language>en</language>
-    <copyright>ThreatNoir ${year}</copyright>
+	    <copyright>${site.name} ${year}</copyright>
 	    <atom:link href="${site.url}/api/podcast/feed.xml" rel="self" type="application/rss+xml"/>
-    <itunes:author>ThreatNoir</itunes:author>
+	    <itunes:author>${site.name}</itunes:author>
     <itunes:summary>Daily security intelligence briefings. AI-curated from 1000+ sources, delivered as a conversational podcast. Morning and afternoon editions, under 5 minutes each. Covering vulnerabilities, breaches, ransomware, regulatory enforcement, and threat intelligence.</itunes:summary>
     <itunes:owner>
-      <itunes:name>ThreatNoir</itunes:name>
+	      <itunes:name>${site.name}</itunes:name>
       <itunes:email>${process.env.ADMIN_EMAIL || 'admin@example.com'}</itunes:email>
     </itunes:owner>
 	    <itunes:image href="${site.podcastArtworkUrl}"/>

@@ -18,6 +18,8 @@ export default defineNuxtConfig({
 	  public: {
 	    sponsorLabel: process.env.NUXT_PUBLIC_SPONSOR_LABEL || '',
 
+		    contactEmail: process.env.NUXT_PUBLIC_CONTACT_EMAIL || 'contact@example.com',
+
 	    siteName: process.env.NUXT_PUBLIC_SITE_NAME || DEFAULT_SITE_NAME,
 	    siteTagline: process.env.NUXT_PUBLIC_SITE_TAGLINE || DEFAULT_SITE_TAGLINE,
 	    siteUrl: process.env.NUXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL,

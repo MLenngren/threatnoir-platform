@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, readBody } from 'h3'
 
 import { requireAdminUser } from '../../../utils/requireAdmin'
+import { getSiteConfig } from '../../../utils/siteConfig'
 import { UUID_REGEX } from '../../../utils/subscriptions'
 
 type Body = {
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
   const title = typeof body?.title === 'string' ? body.title.trim() : ''
   const tipBody = typeof body?.body === 'string' ? body.body.trim() : ''
   const categoryId = typeof body?.category_id === 'string' ? body.category_id.trim() : ''
-  const authorName = typeof body?.author_name === 'string' ? body.author_name.trim() : 'ThreatNoir'
+  const authorName = typeof body?.author_name === 'string' ? body.author_name.trim() : getSiteConfig().name
   const status = typeof body?.status === 'string' ? body.status.trim() : 'draft'
   const featured = typeof body?.featured === 'boolean' ? body.featured : false
   const tags = normalizeTags(body?.tags)
