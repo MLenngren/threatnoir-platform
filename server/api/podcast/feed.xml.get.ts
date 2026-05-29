@@ -3,6 +3,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 
 import { emailRecipients } from '../../utils/emailConfig'
 import { getSiteConfig } from '../../utils/siteConfig'
+import { getFeedMetadata } from '../../utils/feedConfig'
 
 type EpisodeRow = {
   date: string
@@ -94,7 +95,7 @@ export default defineEventHandler(async (event) => {
     })
     .join('\n')
 
-  const year = new Date().getFullYear()
+	const meta = getFeedMetadata()
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
   xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
@@ -104,22 +105,19 @@ export default defineEventHandler(async (event) => {
 	    <title>${site.name} — Security Intelligence Briefing</title>
 	    <link>${site.url}/podcast</link>
     <description>Daily security intelligence briefings curated for practitioners. Morning and afternoon editions covering vulnerabilities, breaches, ransomware, regulations, and threat intelligence. AI-curated from 1000+ sources, delivered as a conversational podcast under 5 minutes.</description>
-    <language>en</language>
-	    <copyright>${site.name} ${year}</copyright>
+	    <language>${escXml(meta.language)}</language>
+		    <copyright>${escXml(meta.copyright)}</copyright>
 	    <atom:link href="${site.url}/api/podcast/feed.xml" rel="self" type="application/rss+xml"/>
-	    <itunes:author>${site.name}</itunes:author>
+		    <itunes:author>${escXml(meta.podcastAuthorName)}</itunes:author>
     <itunes:summary>Daily security intelligence briefings. AI-curated from 1000+ sources, delivered as a conversational podcast. Morning and afternoon editions, under 5 minutes each. Covering vulnerabilities, breaches, ransomware, regulatory enforcement, and threat intelligence.</itunes:summary>
     <itunes:owner>
 	      <itunes:name>${site.name}</itunes:name>
 	      <itunes:email>${emailRecipients.podcastOwner()}</itunes:email>
     </itunes:owner>
 	    <itunes:image href="${site.podcastArtworkUrl}"/>
-    <itunes:category text="Technology"/>
-    <itunes:category text="News">
-      <itunes:category text="Tech News"/>
-    </itunes:category>
-    <itunes:explicit>false</itunes:explicit>
-    <itunes:type>episodic</itunes:type>
+	    <itunes:category text="${escXml(meta.podcastItunesCategory)}"/>
+	    <itunes:explicit>${meta.podcastItunesExplicit}</itunes:explicit>
+	    <itunes:type>${escXml(meta.podcastItunesType)}</itunes:type>
 ${items}
   </channel>
 </rss>`

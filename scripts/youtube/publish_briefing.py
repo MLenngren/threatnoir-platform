@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish a ThreatNoir SOC video briefing to YouTube (LEN-1761).
+"""Publish a SOC video briefing to YouTube (LEN-1761).
 
 IMPORTANT:
 - Idempotency is via `video_briefings.youtube_video_id`.
@@ -146,11 +146,12 @@ def _supabase_patch(
 
 
 def _download(url: str, suffix: str) -> str:
-    fd, path = tempfile.mkstemp(prefix="threatnoir-", suffix=suffix)
+    fd, path = tempfile.mkstemp(prefix="briefing-", suffix=suffix)
     os.close(fd)
     log(f"downloading: {url}")
-    # Cloudflare on cdn.threatnoir.com 403s the default Python-urllib UA. Use a browser-like UA.
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 ThreatNoir-Publisher/1.0"})
+    # Some CDNs 403 the default Python-urllib UA. Use a browser-like UA (configurable).
+    ua = (os.environ.get("PUBLISH_USER_AGENT") or os.environ.get("HTTP_USER_AGENT") or "Mozilla/5.0 PlatformPublisher/1.0").strip()
+    req = urllib.request.Request(url, headers={"User-Agent": ua})
     with urllib.request.urlopen(req, timeout=120) as resp, open(path, "wb") as out:
         while True:
             chunk = resp.read(64 * 1024)
@@ -183,7 +184,8 @@ def _build_description(*, summary: str, slug: str, articles: list[dict[str, Any]
     if summary.strip():
         parts.append(summary.strip())
     parts.append("")
-    parts.append(f"Watch on ThreatNoir: https://threatnoir.com/show/{slug}")
+    site_url = (os.environ.get("NUXT_PUBLIC_SITE_URL") or "https://example.com").rstrip("/")
+    parts.append(f"Watch here: {site_url}/show/{slug}")
     if articles:
         parts.append("")
         parts.append("Sources cited:")
@@ -197,7 +199,7 @@ def _build_description(*, summary: str, slug: str, articles: list[dict[str, Any]
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Publish a ThreatNoir SOC video briefing to YouTube"
+        description="Publish a SOC video briefing to YouTube"
     )
     g = parser.add_mutually_exclusive_group(required=True)
     g.add_argument("--briefing-id", help="video_briefings.id (uuid)")
@@ -333,14 +335,14 @@ def main(argv: list[str] | None = None) -> int:
             log(f"channel sanity-check skipped (tolerated — token may be upload-only): {e}")
 
         # 6) Upload
-        yt_title = f"ThreatNoir SOC Brief: {title}".strip()
+        yt_title = f"SOC Brief: {title}".strip()
         description = _build_description(summary=summary, slug=slug, articles=articles)
 
         body = {
             "snippet": {
                 "title": yt_title,
                 "description": description,
-                "tags": ["cybersecurity", "SOC", "threat intelligence", "ThreatNoir"],
+                "tags": ["cybersecurity", "SOC", "threat intelligence"],
                 "categoryId": "28",
             },
             "status": {
@@ -443,7 +445,7 @@ def main(argv: list[str] | None = None) -> int:
         log("db updated")
 
         # 10) Optional: Discord DM notification
-        # TODO(LEN-1761): mirror threatnoir-cyber-news publish_youtube.py Discord DM on success.
+        # TODO(LEN-1761): mirror the other publisher's Discord DM on success.
 
         return 0
 

@@ -414,7 +414,7 @@ export const openapiSpec = {
       post: {
         tags: ['Submit'],
         operationId: 'submitArticle',
-        summary: 'Submit an article URL to ThreatNoir',
+	        summary: 'Submit an article URL',
         description:
           'Submit an article URL for ingestion. Requires an API key (Authorization: Bearer ... or x-api-key). Duplicate URLs return 409 with the existing article record.',
         security: [{ bearerAuth: [] }, { xApiKeyAuth: [] }],

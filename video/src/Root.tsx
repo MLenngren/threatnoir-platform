@@ -32,7 +32,7 @@ const defaultProps: BriefingProps = {
     }
   ],
   closing: {
-    text: 'Thanks for watching — see full coverage in ThreatNoir.',
+	  text: 'Thanks for watching — see full coverage on our site.',
   },
 };
 

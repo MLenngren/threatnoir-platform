@@ -94,10 +94,10 @@ const { el: root, revealed } = useScrollReveal({ rootMargin: '0px 0px -12% 0px' 
 
 const mcpConfig = `{
   "mcpServers": {
-    "threatnoir-iocs": {
+	    "iocs": {
       "command": "npx",
-      "args": ["threatnoir-mcp-iocs"],
-      "env": { "THREATNOIR_API_KEY": "your-key-here" }
+	      "args": ["your-mcp-iocs-package"],
+	      "env": { "PLATFORM_API_KEY": "your-key-here" }
     }
   }
 }`

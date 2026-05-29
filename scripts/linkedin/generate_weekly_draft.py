@@ -18,10 +18,14 @@ from scripts.utils.ai_cost import log_ai_call  # noqa: E402
 
 ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 
-# Marcus's LinkedIn voice pattern (content copied verbatim from weekly-linkedin-voice.md)
+SITE_NAME = (os.getenv("NUXT_PUBLIC_SITE_NAME") or os.getenv("SITE_NAME") or "Example Site").strip() or "Example Site"
+SITE_URL = (os.getenv("NUXT_PUBLIC_SITE_URL") or os.getenv("SITE_URL") or "https://example.com").strip().rstrip("/") or "https://example.com"
+SITE_DOMAIN = SITE_URL.replace("https://", "").replace("http://", "").split("/")[0]
+
+# LinkedIn voice pattern (content copied verbatim from weekly-linkedin-voice.md)
 LINKEDIN_VOICE_PROMPT = (
-    "When drafting LinkedIn posts for the weekly ThreatNoir roundup, match Marcus's actual posting style:\n\n"
-    "**Why:** Marcus posted the W14 roundup manually and the voice was much better than the AI-drafted numbered list. His style got engagement because it felt like a real person sharing, not a news bulletin.\n\n"
+    "When drafting LinkedIn posts for the weekly roundup, match a practitioner's real posting style:\n\n"
+    "**Why:** A human-written roundup post tends to land better than an AI-drafted numbered list. The voice works when it feels like a real person sharing, not a news bulletin.\n\n"
     "**How to apply:**\n\n"
     "Structure:\n"
     "- Open with personal commentary, not a cold hook. \"I read that...\", \"Last week was...\", a question or observation\n"
@@ -107,7 +111,7 @@ def extract_story_summaries(full_brief, limit=6):
 def extract_tagline(post_text):
     lines = [l.rstrip() for l in (post_text or "").splitlines()]
     for i, l in enumerate(lines):
-        if l.strip().startswith("https://threatnoir.com/weekly/"):
+        if l.strip().startswith(f"{SITE_URL}/weekly/"):
             for j in range(i - 1, -1, -1):
                 if lines[j].strip():
                     return lines[j].strip()
@@ -115,7 +119,7 @@ def extract_tagline(post_text):
         s = l.strip()
         if s and not s.startswith("#") and not s.startswith("http"):
             return s
-    return "ThreatNoir — practitioner-grade threat intel with the noise removed."
+    return f"{SITE_NAME} — practitioner-grade threat intel with the noise removed."
 
 
 def font(size, bold=False):
@@ -138,7 +142,7 @@ def render_card(path, week_label, tagline):
 
     lf, wf = font(22, True), font(20, False)
     x = pad
-    for ch in "THREATNOIR":
+    for ch in (SITE_NAME.upper() or "SITE"):
         d.text((x, 44), ch, font=lf, fill="#4cd7f6")
         x += d.textlength(ch, font=lf) + 2
     week = (week_label or "").strip()[:40]
@@ -161,7 +165,7 @@ def render_card(path, week_label, tagline):
     d.multiline_text(((w - bw) / 2, (h - bh) / 2), wrapped, font=bf, fill="#ffffff", spacing=10, align="center")
 
     ff = font(18, False)
-    footer = "threatnoir.com"
+    footer = SITE_DOMAIN or "example.com"
     d.text(((w - d.textlength(footer, font=ff)) / 2, h - 56), footer, font=ff, fill="#64748b")
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     img.save(path, format="PNG")
@@ -188,7 +192,7 @@ def main():
     stories = extract_story_summaries(full_brief, 6)
 
     user_prompt = (
-        "Write a LinkedIn post about this week's ThreatNoir roundup.\n\n"
+        "Write a LinkedIn post about this week's roundup.\n\n"
         f"Week: {week_label}\n\nTLDR:\n{tldr}\n\n"
         + "Top stories (summaries):\n"
         + "\n".join(f"- {s}" for s in (stories or ["(none)"]))
@@ -197,7 +201,7 @@ def main():
         + "\n\n"
         + "Formatting rules: conversational paragraphs (no lists/bold/emoji). Each story gets its own paragraph (1-2 sentences). Use occasional parenthetical asides.\n"
         + "End with a punchy standalone tagline line, then a blank line, then the link on its own line, then hashtags at the end.\n"
-        + f"Use this exact link (standalone): https://threatnoir.com/weekly/{slug}\n"
+        + f"Use this exact link (standalone): {SITE_URL}/weekly/{slug}\n"
         + "Hashtags: #cybersecurity plus 1-2 relevant hashtags."
     )
 

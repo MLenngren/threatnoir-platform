@@ -1,4 +1,4 @@
-# ThreatNoir platform cron (UTC)
+# Platform cron (UTC)
 
 # Ingest RSS every 4 hours
 0 */4 * * * curl -fsS -X POST -H "x-cron-secret: $CRON_SECRET" http://app:3000/api/cron/ingest

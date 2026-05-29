@@ -173,7 +173,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const weekLabel = typeof rec.week_label === 'string' ? rec.week_label : 'weekly'
-  const filename = `threatnoir-${safeFilenamePiece(weekLabel)}.stix.json`
+	const filename = `weekly-${safeFilenamePiece(weekLabel)}.stix.json`
 
   const bundle: StixBundle = {
     type: 'bundle',

@@ -3,6 +3,7 @@ import { createError, defineEventHandler, setResponseHeader } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 import { getSiteConfig } from '../../utils/siteConfig'
+import { getFeedMetadata } from '../../utils/feedConfig'
 
 type AwarenessRow = {
   title: string | null
@@ -77,15 +78,15 @@ export default defineEventHandler(async (event) => {
     .filter(Boolean)
     .join('\n')
 
-  const year = new Date().getFullYear()
+  const meta = getFeedMetadata()
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
 	    <title>${site.name} — Awareness Lessons</title>
     <link>${escXml(siteUrl)}</link>
 	    <description>${wrapCdata('Curated cybersecurity news and analysis')}</description>
-    <language>en</language>
-    <copyright>ThreatNoir ${year}</copyright>
+    <language>${escXml(meta.language)}</language>
+    <copyright>${escXml(meta.copyright)}</copyright>
     <atom:link href="${escXml(`${siteUrl}/api/awareness/feed.xml`)}" rel="self" type="application/rss+xml"/>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
 ${items}

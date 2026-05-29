@@ -1,5 +1,5 @@
 {
-  "name": "threatnoir-ai-gateway",
+	"name": "oss-platform-ai-gateway",
   "private": true,
   "type": "module",
   "scripts": {

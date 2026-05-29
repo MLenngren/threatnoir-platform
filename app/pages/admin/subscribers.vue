@@ -2,10 +2,10 @@
   <div class="-m-6 min-h-full bg-[#0e131f] p-6 text-white">
     <!-- Header -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Subscribers</h1>
-        <p class="mt-1 text-sm text-[#94a3b8]">Everyone who signed up for ThreatNoir notifications.</p>
-      </div>
+	      <div>
+	        <h1 class="text-2xl font-semibold tracking-tight">Subscribers</h1>
+	        <p class="mt-1 text-sm text-[#94a3b8]">Everyone who signed up for {{ site.name }} notifications.</p>
+	      </div>
 
       <button
         type="button"
@@ -138,6 +138,8 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin' })
+
+	const site = useSiteConfig()
 
 type Channel = { type: string; verified: boolean; is_active: boolean }
 type Subscriber = {

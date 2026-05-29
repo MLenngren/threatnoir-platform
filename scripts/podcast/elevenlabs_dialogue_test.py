@@ -1,6 +1,6 @@
 """ElevenLabs standalone podcast voice test (Text to Dialogue).
 
-One-off experiment to render an existing ThreatNoir episode's dialogue
+One-off experiment to render an existing episode's dialogue
 through ElevenLabs' synchronous /v1/text-to-dialogue endpoint.
 
 READ-ONLY: does not touch R2, does not write to Supabase, does not notify

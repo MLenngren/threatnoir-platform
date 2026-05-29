@@ -19,9 +19,9 @@
 
         <div class="relative">
           <div class="text-center">
-            <div class="font-headline text-2xl font-black tracking-tight text-tn-primary uppercase">
-              THREATNOIR
-            </div>
+	            <div class="font-headline text-2xl font-black tracking-tight text-tn-primary uppercase">
+	              {{ (site.name || 'SITE').toUpperCase() }}
+	            </div>
             <div class="mt-1 font-label text-[10px] uppercase tracking-[0.25em] text-tn-on-surface-variant">
               Reset password
             </div>

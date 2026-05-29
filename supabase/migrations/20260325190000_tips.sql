@@ -139,7 +139,7 @@ Turn noisy alerts into an actionable next step (escalate, suppress, or request m
 $$,
   (select id from public.tip_categories where slug = 'ai-prompt-engineering'),
   array['triage','soc','prompt','llm'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   true
 where not exists (select 1 from public.tips where title = 'Triage a security alert in 5 minutes with a structured LLM prompt');
@@ -167,7 +167,7 @@ It prevents silent failure where the query returns 0 rows because the schema doe
 $$,
   (select id from public.tip_categories where slug = 'ai-prompt-engineering'),
   array['kql','spl','siem','detection-engineering'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   false
 where not exists (select 1 from public.tips where title = 'Generate KQL / SPL safely: force the model to show assumptions + fields');
@@ -189,7 +189,7 @@ Always treat the output as a hypothesis—verify against authoritative sources a
 $$,
   (select id from public.tip_categories where slug = 'ai-prompt-engineering'),
   array['cve','vulnerability-management','inventory'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   false
 where not exists (select 1 from public.tips where title = 'Use an LLM as a “translation layer” between a CVE and your asset inventory');
@@ -211,7 +211,7 @@ For each control, keep a **one-page “evidence map”**: what system, what scre
 $$,
   (select id from public.tip_categories where slug = 'frameworks-compliance'),
   array['iso27001','evidence','audit'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   true
 where not exists (select 1 from public.tips where title = 'ISO 27001 evidence: prefer “live artifacts” over policy PDFs');
@@ -236,7 +236,7 @@ Once the "We do this via…" column is real, documentation becomes an output—n
 $$,
   (select id from public.tip_categories where slug = 'frameworks-compliance'),
   array['nist-csf','controls','governance'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   false
 where not exists (select 1 from public.tips where title = 'NIST CSF mapping: build a 2-column control matrix first');
@@ -259,7 +259,7 @@ Store build metadata (commit SHA → environment → timestamp) in a simple tabl
 $$,
   (select id from public.tip_categories where slug = 'frameworks-compliance'),
   array['soc2','ci-cd','audit'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   false
 where not exists (select 1 from public.tips where title = 'SOC 2 “change management” quick win: make CI logs exportable');
@@ -287,7 +287,7 @@ Your post-incident narrative is defensible, and your containment KPI becomes mea
 $$,
   (select id from public.tip_categories where slug = 'operational-tactics'),
   array['incident-response','timeline','forensics'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   true
 where not exists (select 1 from public.tips where title = 'Incident response: always capture the “first seen” timeline from multiple clocks');
@@ -308,7 +308,7 @@ Some browsers and security tools may rely on DoH—pilot before broad enforcemen
 $$,
   (select id from public.tip_categories where slug = 'operational-tactics'),
   array['hardening','dns','egress'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   false
 where not exists (select 1 from public.tips where title = 'Hardening baseline: block outbound DNS-over-HTTPS unless you run it');
@@ -329,7 +329,7 @@ You catch ingestion failures before you miss an incident.
 $$,
   (select id from public.tip_categories where slug = 'operational-tactics'),
   array['detection','logging','reliability'],
-  'ThreatNoir',
+	  'Editorial Team',
   'published',
   false
 where not exists (select 1 from public.tips where title = 'Detection engineering: add a “negative control” alert for your top 10 data sources');

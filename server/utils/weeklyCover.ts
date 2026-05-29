@@ -1,5 +1,7 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
+import { getSiteConfig } from './siteConfig'
+
 type OpenRouterImageResponse = {
   choices?: Array<{
     message?: {
@@ -35,6 +37,8 @@ export async function generateAndUploadWeeklyCover(
   weekLabel: string
 ): Promise<string | null> {
   try {
+    const site = getSiteConfig()
+
     const apiKey = (process.env.OPENROUTER_API_KEY || '').trim()
     if (!apiKey) throw new Error('OPENROUTER_API_KEY missing')
 
@@ -80,7 +84,7 @@ export async function generateAndUploadWeeklyCover(
       credentials: { accessKeyId, secretAccessKey }
     })
 
-    const bucket = (process.env.R2_BUCKET || 'threatnoir-videos').trim() || 'threatnoir-videos'
+	    const bucket = (process.env.R2_BUCKET || 'site-assets').trim() || 'site-assets'
     const key = `weekly/${slug}-cover.png`
 
     await s3.send(
@@ -93,7 +97,9 @@ export async function generateAndUploadWeeklyCover(
       })
     )
 
-    return `https://cdn.threatnoir.com/${key}`
+	    const cdnBaseRaw = (process.env.NUXT_PUBLIC_CDN_BASE_URL || '').trim()
+	    const cdnBase = (cdnBaseRaw || `${site.url}/cdn`).replace(/\/+$/, '')
+	    return `${cdnBase}/${key}`
   } catch (err: unknown) {
     console.error('[weeklyCover] failed', err)
     return null

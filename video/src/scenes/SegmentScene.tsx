@@ -245,13 +245,13 @@ export const SegmentScene: React.FC<Props> = ({audience, segment, segmentIndex, 
         <div style={{width: `${progress}%`, height: '100%', backgroundColor: accent}} />
       </div>
 
-      {/* Branding */}
+	      {/* Branding */}
       <div style={{
         position: 'absolute', bottom: 16, right: 80,
         fontSize: 15, fontWeight: 600, color: '#4b5563', letterSpacing: 1,
         textShadow: '0 1px 4px rgba(0,0,0,0.8)',
       }}>
-        THREATNOIR
+	        BRIEFING
       </div>
     </AbsoluteFill>
   );

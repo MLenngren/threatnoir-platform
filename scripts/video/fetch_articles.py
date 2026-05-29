@@ -1,4 +1,4 @@
-"""Fetch approved ThreatNoir articles for a date and route them to video audiences.
+"""Fetch approved articles for a date and route them to video audiences.
 
 This script uses Supabase PostgREST (REST) endpoints with a service role key.
 It outputs a JSON object to stdout with up to three audience buckets:

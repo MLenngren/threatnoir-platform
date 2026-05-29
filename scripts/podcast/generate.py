@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ThreatNoir Podcast — end-to-end orchestrator (LEN-1080, LEN-1084).
+"""Podcast — end-to-end orchestrator (LEN-1080, LEN-1084).
 
 Chains: fetch articles → dialogue → TTS → mix → upload to R2 → upsert DB → Discord DM.
 
@@ -48,8 +48,9 @@ if not SUPABASE_REF:
     raise RuntimeError("SUPABASE_PROJECT_REF env var required")
 DEFAULT_SUPABASE_URL = f"https://{SUPABASE_REF}.supabase.co"
 
-R2_PUBLIC_BASE = "https://cdn.threatnoir.com"
-R2_BUCKET = "threatnoir-videos"
+SITE_NAME = (os.getenv("NUXT_PUBLIC_SITE_NAME") or os.getenv("SITE_NAME") or "Example Site").strip() or "Example Site"
+R2_PUBLIC_BASE = os.environ.get("R2_PUBLIC_BASE", "https://cdn.example.com")
+R2_BUCKET = os.environ.get("R2_BUCKET", "platform-media")
 
 # Dialogue generation retry policy: Claude/LLM output can rarely be malformed or
 # transiently unavailable (timeouts, 5xx, rate limits). We want the cron to be
@@ -1183,7 +1184,7 @@ def send_discord_notification(
         label = EDITION_LABELS.get(edition, edition.title())
         mins = max(1, int(round(duration_seconds / 60.0)))
         message = (
-            f"🎙️ ThreatNoir {label} — {date_str}\n"
+            f"🎙️ {SITE_NAME} {label} — {date_str}\n"
             f"{article_count} stories | {mins}min\n"
             f"{audio_url}"
         )
@@ -1225,12 +1226,12 @@ def send_discord_failure_notification(
             else "TRANSIENT (will retry next run)"
         )
         message = (
-            f"🚨 ThreatNoir {label} — {date_str} FAILED\n"
+            f"🚨 {SITE_NAME} {label} — {date_str} FAILED\n"
             f"{severity}\n"
             f"\n"
             f"{err_trimmed}\n"
             f"\n"
-            f"Log: /tmp/threatnoir-podcast.log"
+            f"Log: /tmp/podcast.log"
         )
 
         subprocess.run(
@@ -1408,10 +1409,10 @@ def main(
             total_characters=0,
         )
 
-    with tempfile.TemporaryDirectory(prefix=f"threatnoir-podcast-{date_s}-") as tmp:
+    with tempfile.TemporaryDirectory(prefix=f"podcast-{date_s}-") as tmp:
         tmp_dir = Path(tmp)
         lines_dir = tmp_dir / "lines"
-        out_mp3 = tmp_dir / f"threatnoir-{edition}-brief-{date_s}.mp3"
+        out_mp3 = tmp_dir / f"podcast-{edition}-brief-{date_s}.mp3"
 
         eprint(f"[podcast] TTS engine: {engine}")
         if engine == "wondercraft":
@@ -1464,7 +1465,7 @@ def main(
             duration_seconds = int(mix_result.get("duration_seconds") or 0)
 
         # Step 5
-        r2_key = f"podcasts/{date_s}/threatnoir-{edition}-brief-{date_s}.mp3"
+        r2_key = f"podcasts/{date_s}/podcast-{edition}-brief-{date_s}.mp3"
         audio_url = upload_to_r2(str(out_mp3), r2_key, content_type="audio/mpeg")
 
         # Step 6
@@ -1474,7 +1475,7 @@ def main(
         record_episode(
             date_str=date_s,
             edition=edition,
-            title=str(dialogue.get("title") or f"ThreatNoir {label} — {date_s}"),
+            title=str(dialogue.get("title") or f"{SITE_NAME} {label} — {date_s}"),
             article_text=article_text,
             duration_seconds=duration_seconds,
             audio_url=audio_url,
@@ -1506,7 +1507,7 @@ def main(
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="ThreatNoir Podcast generator")
+    p = argparse.ArgumentParser(description="Podcast generator")
     p.add_argument(
         "--date",
         help="Podcast date (YYYY-MM-DD). Defaults to today (UTC).",
@@ -1574,7 +1575,7 @@ def cli(argv: list[str]) -> int:
         )
         severity = "PERMANENT" if is_permanent else "TRANSIENT"
         post_to_alerts_channel(
-            f"🚨 ThreatNoir podcast {edition} {date_str} FAILED ({severity})\n"
+            f"🚨 Podcast {edition} {date_str} FAILED ({severity})\n"
             f"{err_str[:1500]}"
         )
         eprint(f"[podcast] ERROR: {exc}")

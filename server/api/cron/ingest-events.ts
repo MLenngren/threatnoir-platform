@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk'
 
 import { safeCompare } from '../../utils/safeCompare'
 import { useSupabaseAdmin } from '../../utils/supabase'
+import { resolveHttpUserAgent } from '../../utils/httpUserAgent'
 import { aiLimits, checkAiQuota, logAiCall } from '../../utils/aiUsage'
 import { computeCostMicroCents } from '../../utils/aiPricing'
 
@@ -208,9 +209,9 @@ export default defineEventHandler(async (event) => {
 
     sourcesProcessed += 1
 
-    try {
-      const resp = await fetch(source.url, {
-        headers: { 'User-Agent': 'ThreatNoir-EventBot/1.0' },
+	    try {
+	      const resp = await fetch(source.url, {
+	        headers: { 'User-Agent': resolveHttpUserAgent({ suffix: 'EventBot' }) },
         signal: AbortSignal.timeout(15_000)
       })
 

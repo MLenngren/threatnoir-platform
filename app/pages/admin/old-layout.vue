@@ -61,13 +61,15 @@ import LandingPreview from '~/components/landing/LandingPreview.vue'
 // global middleware because path is under /admin/. robots blocked via SEO meta.
 definePageMeta({ layout: 'default' })
 
+	const site = useSiteConfig()
+
 const structuredData = computed(() => [useOrganizationSchema(), useWebSiteSchema()])
 
 useSeoMeta({
-  title: 'ThreatNoir — Old Layout Archive (Admin)',
+	  title: `${site.name} — Old Layout Archive (Admin)`,
   description: 'Internal archive of the previous landing page layout. Not intended for public viewing.',
   robots: 'noindex, nofollow',
-  ogTitle: 'ThreatNoir — Old Layout Archive',
+	  ogTitle: `${site.name} — Old Layout Archive`,
   ogType: 'website'
 })
 </script>

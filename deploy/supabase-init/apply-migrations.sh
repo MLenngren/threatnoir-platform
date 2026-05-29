@@ -53,11 +53,11 @@ AS \$\$
 SQL
 
 # If we successfully initialized this DB before, do nothing.
-existing_marker="$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "select to_regclass('public._threatnoir_db_init')")"
+existing_marker="$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "select to_regclass('public._platform_db_init')")"
 if [ "${existing_marker:-}" != "" ] && [ "${existing_marker:-}" != "null" ]; then
-  is_complete="$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "select complete from public._threatnoir_db_init limit 1")"
+  is_complete="$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "select complete from public._platform_db_init limit 1")"
   if [ "${is_complete:-}" = "t" ] || [ "${is_complete:-}" = "true" ]; then
-    echo "[db-init] detected existing init marker (public._threatnoir_db_init); skipping migrations"
+    echo "[db-init] detected existing init marker (public._platform_db_init); skipping migrations"
     exit 0
   fi
 fi
@@ -73,9 +73,9 @@ psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" 
 
 echo "[db-init] writing init marker"
 psql -v ON_ERROR_STOP=1 -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
-  -c "CREATE TABLE IF NOT EXISTS public._threatnoir_db_init (complete boolean not null, completed_at timestamptz not null default now());" \
-  -c "TRUNCATE public._threatnoir_db_init;" \
-  -c "INSERT INTO public._threatnoir_db_init (complete) VALUES (true);" \
+  -c "CREATE TABLE IF NOT EXISTS public._platform_db_init (complete boolean not null, completed_at timestamptz not null default now());" \
+  -c "TRUNCATE public._platform_db_init;" \
+  -c "INSERT INTO public._platform_db_init (complete) VALUES (true);" \
   >/dev/null
 
 echo "[db-init] done"

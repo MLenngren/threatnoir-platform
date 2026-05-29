@@ -1,4 +1,4 @@
-"""Wondercraft TTS integration for ThreatNoir Podcast (LEN-1365).
+"""Wondercraft TTS integration for podcast generation (LEN-1365).
 
 Afternoon edition uses Wondercraft convo-mode. Morning edition remains on ElevenLabs.
 """
@@ -47,7 +47,7 @@ def _eprint(*args: object) -> None:
 
 
 def build_script(dialogue: dict[str, Any]) -> list[dict[str, str]]:
-    """Flatten ThreatNoir dialogue JSON into Wondercraft script items."""
+    """Flatten dialogue JSON into Wondercraft script items."""
 
     out: list[dict[str, str]] = []
     for _section, speaker, text in _iter_dialogue_lines(dialogue):

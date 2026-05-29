@@ -1,7 +1,7 @@
 {
   "audience": "executive",
   "date": "2026-03-14",
-  "title": "ThreatNoir — Executive Briefing",
+  "title": "Example — Executive Briefing",
   "intro": {
     "text": "Today's critical security developments for leadership"
   },
@@ -68,6 +68,6 @@
     }
   ],
   "closing": {
-    "text": "Stay vigilant. Full coverage at threatnoir.com"
+    "text": "Stay vigilant. Full coverage at example.com"
   }
 }

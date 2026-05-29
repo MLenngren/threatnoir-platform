@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ThreatNoir daily video briefing orchestrator.
+"""Daily video briefing orchestrator.
 
 Chains: fetch articles → route audiences → generate scripts → generate frames
 → render via Remotion → upload to R2 → record in DB → notify Discord.
@@ -40,8 +40,8 @@ SUPABASE_REF = (os.environ.get("SUPABASE_URL") or "").replace("https://", "").re
 if not SUPABASE_REF:
     raise SystemExit("SUPABASE_URL env var required (e.g. https://abcdefgh.supabase.co)")
 DEFAULT_SUPABASE_URL = f"https://{SUPABASE_REF}.supabase.co"
-R2_PUBLIC_BASE = "https://cdn.threatnoir.com"
-R2_BUCKET = "threatnoir-videos"
+R2_PUBLIC_BASE = os.environ.get("R2_PUBLIC_BASE", "https://cdn.example.com")
+R2_BUCKET = os.environ.get("R2_BUCKET", "platform-media")
 AUDIENCES = ("executive", "soc", "engineer")
 MIN_ARTICLES_PER_AUDIENCE = 3
 
@@ -268,10 +268,11 @@ def record_briefing(
     if not service_key:
         raise RuntimeError("SUPABASE_SERVICE_KEY required for DB recording")
 
+
     row = {
         "date": date_str,
         "audience": audience,
-        "title": script.get("title", f"ThreatNoir Briefing — {audience}"),
+        "title": script.get("title", f"Video Briefing — {audience}"),
         "duration_seconds": duration_seconds,
         "video_url": video_url,
         "thumbnail_url": thumbnail_url,
@@ -319,7 +320,7 @@ def send_discord_notification(date_str: str, results: list[dict[str, Any]], erro
                 eprint("[orchestrator] no Discord notification method available")
             return
 
-        lines = [f"**ThreatNoir Video Briefings — {date_str}**\n"]
+        lines = [f"**Video Briefings — {date_str}**\n"]
         for r in results:
             lines.append(f"✅ {r['audience'].title()}: {r['article_count']} articles → {r['video_url']}")
         for e in errors:
@@ -346,7 +347,7 @@ def _send_webhook(webhook_url: str, date_str: str, results: list[dict[str, Any]]
     """Fallback: send via Discord webhook."""
     import httpx
 
-    lines = [f"**ThreatNoir Video Briefings — {date_str}**"]
+    lines = [f"**Video Briefings — {date_str}**"]
     for r in results:
         lines.append(f"✅ {r['audience'].title()}: {r['article_count']} articles")
     for e in errors:
@@ -478,7 +479,7 @@ def generate_daily_briefings(target_date: date, *, dry_run: bool = False) -> Run
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="ThreatNoir daily video briefing orchestrator")
+    parser = argparse.ArgumentParser(description="Daily video briefing orchestrator")
     parser.add_argument(
         "--date",
         default="yesterday",

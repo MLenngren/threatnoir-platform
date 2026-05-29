@@ -67,6 +67,8 @@ function humanWeekLabelFromIsoWeekLabel(week: string): string {
 export default defineEventHandler(async (event) => {
   requireCronSecret(event)
 
+  const site = getSiteConfig()
+
   const q = getQuery(event)
   const now = new Date()
 
@@ -306,9 +308,9 @@ export default defineEventHandler(async (event) => {
         console.error('[weekly-digest-correction] render failed, falling back to plaintext:', err)
         if (!renderFallbackNotified) {
           renderFallbackNotified = true
-          await pingOps(
-            '🚨 ThreatNoir weekly digest correction render failed, sent plaintext fallback. Investigate the markdown that broke marked.'
-          )
+	          await pingOps(
+	            `🚨 ${site.name} weekly digest correction render failed, sent plaintext fallback. Investigate the markdown that broke marked.`
+	          )
         }
 
         const baseRendered = renderWeeklyDigestPlaintextFallback(digestParams)

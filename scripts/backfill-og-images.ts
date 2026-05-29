@@ -19,6 +19,10 @@ if (!SUPABASE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
+const SITE_NAME = (process.env.NUXT_PUBLIC_SITE_NAME || 'Example Site').trim() || 'Example Site'
+const SITE_URL = (process.env.NUXT_PUBLIC_SITE_URL || 'https://example.com').trim().replace(/\/+$/, '') || 'https://example.com'
+const HTTP_USER_AGENT = (process.env.HTTP_USER_AGENT || `${SITE_NAME}/1.0 (+${SITE_URL})`).trim()
+
 const SKIP_HOSTS = ['x.com', 'twitter.com', 'github.com']
 
 function shouldSkip(url: string): boolean {
@@ -36,7 +40,7 @@ async function extractOgImage(url: string): Promise<string | null> {
     if (shouldSkip(url)) return null
 
     const resp = await fetch(url, {
-      headers: { 'User-Agent': 'ThreatNoir/1.0 (+https://threatnoir.com)' },
+	      headers: { 'User-Agent': HTTP_USER_AGENT },
       signal: AbortSignal.timeout(10_000),
       redirect: 'follow'
     })
