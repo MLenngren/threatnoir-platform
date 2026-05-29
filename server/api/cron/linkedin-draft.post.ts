@@ -1,36 +1,14 @@
 import { createError, defineEventHandler, getHeader, getQuery } from 'h3'
 import type { H3Event } from 'h3'
-import Anthropic from '@anthropic-ai/sdk'
 import { Resend } from 'resend'
 
-import { checkAiQuota, logAiCall } from '../../utils/aiUsage'
+import { checkAiQuota } from '../../utils/aiUsage'
 import { emailRecipients, emailSenders } from '../../utils/emailConfig'
 import { safeCompare } from '../../utils/safeCompare'
 import { useSupabaseAdmin } from '../../utils/supabase'
 import { formatWeeklyTweet, postTweet } from '../../utils/twitter'
 import { getSiteConfig } from '../../utils/siteConfig'
-
-function buildLinkedinVoicePrompt(siteName: string): string {
-  return (
-    `When drafting LinkedIn posts for the weekly ${siteName} roundup, match Marcus's actual posting style:\n\n` +
-  "**Why:** Marcus posted the W14 roundup manually and the voice was much better than the AI-drafted numbered list. His style got engagement because it felt like a real person sharing, not a news bulletin.\n\n" +
-  "**How to apply:**\n\nStructure:\n" +
-  "- Open with personal commentary, not a cold hook. \"I read that...\", \"Last week was...\", a question or observation\n" +
-  "- Flow as conversational paragraphs, NOT numbered lists\n" +
-  "- Each story gets its own paragraph with 1-2 sentences\n" +
-  "- Add parenthetical asides that show opinion: \"(it does feel like Fortinet gets hit a lot?)\", \"(rougher than usual?)\"\n" +
-  "- End with the punchy tagline from the card\n" +
-  "- Link at the bottom, standalone, not inline\n" +
-  "- Hashtags at the very end: #cybersecurity + 1-2 topic-specific\n\nTone:\n" +
-  "- Practitioner sharing with peers, not analyst briefing executives\n" +
-  "- \"I read that...\" not \"This week brought...\"\n" +
-  "- Personal takes: \"not sure how long you would survive\" not \"organizations face significant risk\"\n" +
-  "- Slight provocations as questions, not statements\n" +
-  "- No bold, no bullet points, no numbered lists\n" +
-  "- No emoji\n\nReference post (W14):\n" +
-    "\"I read that last week was rough (rougher than usual?), if you are a business (big or small) good IT hygiene can be optional if you accept the risk, but not sure how long you would survive...\""
-  )
-}
+import { draftLinkedinWeeklyPostDirect } from '../../utils/anthropic'
 
 const requireCronSecret = (event: H3Event) => {
   const expected = process.env.CRON_SECRET
@@ -134,33 +112,12 @@ export default defineEventHandler(async (event) => {
     `Use this exact link (standalone): ${link}\n` +
     `Hashtags: #cybersecurity plus 1-2 relevant hashtags.`
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-	  const model = 'claude-haiku-4-5-20251001'
-	  const startedAt = Date.now()
-	  const resp = await client.messages.create({
-	    model,
-    max_tokens: 1000,
-    temperature: 0.8,
-	    system: buildLinkedinVoicePrompt(site.name),
-    messages: [{ role: 'user', content: userPrompt }]
-  })
-
-	  await logAiCall({
-	    pipeline: 'linkedin_draft_weekly',
-	    model,
-	    response: resp,
-	    durationMs: Date.now() - startedAt,
-	    metadata: {
-	      week_label: weekly.week_label,
-	      weekly_id: weekly.id
-	    }
-	  })
-
-  const postText = (resp.content || [])
-    .map((c) => (c.type === 'text' ? (c.text || '') : ''))
-    .filter(Boolean)
-    .join('\n')
-    .trim()
+	const postText = await draftLinkedinWeeklyPostDirect({
+		siteName: site.name,
+		userPrompt,
+		week_label: weekly.week_label,
+		weekly_id: weekly.id
+	})
   if (!postText) throw createError({ statusCode: 500, statusMessage: 'Anthropic response was empty' })
 
   const weekShort = weekly.week_label?.match(/W[0-9]+/i)?.[0] || weekly.week_label

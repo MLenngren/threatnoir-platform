@@ -1,10 +1,9 @@
 import { createError, defineEventHandler, readMultipartFormData } from 'h3'
 import { randomUUID } from 'crypto'
-import Anthropic from '@anthropic-ai/sdk'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { requireAdminUser } from '../../../utils/requireAdmin'
-import { logAiCall } from '../../../utils/aiUsage'
+import { tagResourceImage } from '../../../utils/resourceTagger'
 
 const MAX_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf'])
@@ -66,70 +65,28 @@ export default defineEventHandler(async (event) => {
     fileName
   }
 
-  // Auto-analyze image with Claude Vision (best-effort)
-  if (IMAGE_TYPES.has(filePart.type) && process.env.ANTHROPIC_API_KEY) {
-    try {
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-      const base64 = filePart.data.toString('base64')
-      const mediaType = filePart.type as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif'
+	  // Auto-analyze image with Claude Vision (best-effort)
+	  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+	  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+	  if (IMAGE_TYPES.has(filePart.type) && (gatewayUrl || apiKey)) {
+	    try {
+	      const base64 = filePart.data.toString('base64')
+	      const mediaType = filePart.type as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif'
 
-	      const model = 'claude-haiku-4-5-20251001'
-	      const startedAt = Date.now()
-	      const resp = await client.messages.create({
-	        model,
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mediaType, data: base64 }
-            },
-            {
-              type: 'text',
-              text: `Analyze this security resource image. Return JSON only, no markdown:
-{
-  "title": "short descriptive title for this resource",
-  "description": "1-2 sentence technical summary of what this resource covers",
-  "category": "one of: ${CATEGORIES.join(', ')}",
-  "tags": ["tag1", "tag2", "tag3"] (3-5 relevant lowercase tags)
-}`
-            }
-          ]
-        }]
-      })
-
-	      await logAiCall({
-	        pipeline: 'resource_upload_analyze',
-	        model,
-	        response: resp,
-	        durationMs: Date.now() - startedAt,
-	        metadata: {
-	          file_type: filePart.type,
-	          file_bytes: filePart.data.length
+	      const tagged = await tagResourceImage({ mediaType, base64 })
+	      if (tagged) {
+	        result.ai = {
+	          title: tagged.title || '',
+	          description: tagged.description || '',
+	          category: CATEGORIES.includes(tagged.category) ? tagged.category : '',
+	          tags: (tagged.tags || []).slice(0, 8)
 	        }
-	      })
-
-      const text = (resp.content || [])
-        .map((c) => (c.type === 'text' ? c.text : ''))
-        .join('')
-        .trim()
-
-      const match = text.match(/\{[\s\S]*\}/)
-      if (match) {
-        const parsed = JSON.parse(match[0])
-        result.ai = {
-          title: typeof parsed.title === 'string' ? parsed.title.trim() : '',
-          description: typeof parsed.description === 'string' ? parsed.description.trim() : '',
-          category: CATEGORIES.includes(parsed.category) ? parsed.category : '',
-          tags: Array.isArray(parsed.tags) ? parsed.tags.filter((t: unknown) => typeof t === 'string').slice(0, 8) : []
-        }
-      }
-    } catch (e) {
-      console.error('[admin/resources/upload] AI analysis failed:', e instanceof Error ? e.message : e)
-      // Non-critical — return upload result without AI suggestions
-    }
-  }
+	      }
+	    } catch (e) {
+	      console.error('[admin/resources/upload] AI analysis failed:', e instanceof Error ? e.message : e)
+	      // Non-critical — return upload result without AI suggestions
+	    }
+	  }
 
   return result
 })

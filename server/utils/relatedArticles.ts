@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { aiLimits, checkAiQuota, logAiCall } from './aiUsage'
+import { aiLimits, checkAiQuota } from './aiUsage'
+import { findRelatedArticlesDirect } from './anthropic'
 
 type ArticleRow = {
   id: string
@@ -166,8 +166,9 @@ async function llmIsUpdate(params: {
   childTitle: string
   childSummary: string
 }): Promise<{ decision: boolean; used: boolean }> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) return { decision: false, used: false }
+  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+  if (!gatewayUrl && !apiKey) return { decision: false, used: false }
   if (process.env.AI_ENABLED === 'false') return { decision: false, used: false }
 
   const quota = await checkAiQuota()
@@ -177,43 +178,56 @@ async function llmIsUpdate(params: {
   // A safety stop if we are already over budget (should be handled by checkAiQuota, but keep conservative)
   if (quota.monthSpendTenthsCents >= monthlyBudgetCents * 10) return { decision: false, used: false }
 
-  const client = new Anthropic({ apiKey })
-  const prompt = `You are a strict classifier. Determine whether Article B is an update/follow-up on the same underlying security story as Article A.
+  if (gatewayUrl) {
+    const token = process.env.AI_GATEWAY_INTERNAL_TOKEN
+    if (!token || !token.trim()) {
+      throw new Error('AI_GATEWAY_INTERNAL_TOKEN must be set when AI_GATEWAY_URL is set')
+    }
 
-Article A title: ${params.parentTitle}
-Article A summary: ${params.parentSummary}
+    const base = gatewayUrl.replace(/\/+$/, '')
+    const url = `${base}/find-related-articles`
+    const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
+    let res: Awaited<ReturnType<typeof fetch>>
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-gateway-token': token
+        },
+        body: JSON.stringify({
+          parentTitle: params.parentTitle,
+          parentSummary: params.parentSummary,
+          childTitle: params.childTitle,
+          childSummary: params.childSummary
+        }),
+        signal: AbortSignal.timeout(timeoutMs)
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+      throw new Error(
+        `[ai-gateway] ${isTimeout ? `timeout after ${timeoutMs}ms` : 'network error'} calling ${url}: ${msg}`
+      )
+    }
 
-Article B title: ${params.childTitle}
-Article B summary: ${params.childSummary}
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      throw new Error(`[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText))
+    }
 
-Answer with exactly one word: YES or NO.`
+    const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
+    const decision = Boolean(data && typeof data.decision === 'boolean' ? data.decision : false)
+    return { decision, used: true }
+  }
 
-	const model = 'claude-haiku-4-5-20251001'
-	const startedAt = Date.now()
-	const res = await client.messages.create({
-	  model,
-    max_tokens: 10,
-    messages: [{ role: 'user', content: prompt }]
+  const decision = await findRelatedArticlesDirect({
+    parentTitle: params.parentTitle,
+    parentSummary: params.parentSummary,
+    childTitle: params.childTitle,
+    childSummary: params.childSummary
   })
-
-	await logAiCall({
-	  pipeline: 'related_articles_link',
-	  model,
-	  response: res,
-	  durationMs: Date.now() - startedAt,
-	  metadata: {
-	    parent_title: params.parentTitle.slice(0, 160),
-	    child_title: params.childTitle.slice(0, 160)
-	  }
-	})
-
-  const text = (res.content || [])
-    .map((c) => (c.type === 'text' ? c.text : ''))
-    .join('\n')
-    .trim()
-    .toUpperCase()
-
-  return { decision: text.startsWith('YES'), used: true }
+  return { decision, used: true }
 }
 
 export async function linkRelatedArticles(

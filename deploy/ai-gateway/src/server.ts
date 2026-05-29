@@ -7,6 +7,14 @@ import { mountExtractIocs } from './routes/extract-iocs.js'
 import { mountGenerateAwareness } from './routes/generate-awareness.js'
 import { mountRankArticles } from './routes/rank-articles.js'
 import { mountDraftSocialPost } from './routes/draft-social-post.js'
+import { mountSummarizeShow } from './routes/summarize-show.js'
+import { mountDraftWeeklyRoundup } from './routes/draft-weekly-roundup.js'
+import { mountAutoFocusTopics } from './routes/auto-focus-topics.js'
+import { mountDraftLinkedinFocus } from './routes/draft-linkedin-focus.js'
+import { mountFindRelatedArticles } from './routes/find-related-articles.js'
+import { mountExtractCves } from './routes/extract-cves.js'
+import { mountDraftLinkedinMidweek } from './routes/draft-linkedin-midweek.js'
+import { mountTagResource } from './routes/tag-resource.js'
 
 function requireNonEmpty(name: string): string {
   const v = process.env[name]
@@ -36,6 +44,14 @@ mountExtractIocs(app)
 mountGenerateAwareness(app)
 mountRankArticles(app)
 mountDraftSocialPost(app)
+mountSummarizeShow(app)
+mountDraftWeeklyRoundup(app)
+mountAutoFocusTopics(app)
+mountDraftLinkedinFocus(app)
+mountFindRelatedArticles(app)
+mountExtractCves(app)
+mountDraftLinkedinMidweek(app)
+mountTagResource(app)
 
 app.onError((err, c) => {
   console.error('[ai-gateway] unhandled error:', err)

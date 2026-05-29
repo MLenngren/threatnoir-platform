@@ -1,13 +1,18 @@
-import { checkAiQuota } from './aiUsage'
-import { tweetRelevanceCheckDirect } from './anthropic'
+import { tagResourceDirect } from './anthropic'
 
-// NOTE: We now log actual token usage via logAiCall().
+export type ResourceAiSuggestion = {
+  title: string
+  description: string
+  category: string
+  tags: string[]
+}
 
-export async function isSecurityRelevant(tweetText: string): Promise<boolean> {
-  // If AI disabled or quota exceeded, let everything through.
-  const quota = await checkAiQuota()
-  if (!quota.allowed) return true
+type MediaType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif'
 
+export async function tagResourceImage(params: {
+  mediaType: MediaType
+  base64: string
+}): Promise<ResourceAiSuggestion | null> {
   const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
   if (gatewayUrl) {
     const token = process.env.AI_GATEWAY_INTERNAL_TOKEN
@@ -16,9 +21,9 @@ export async function isSecurityRelevant(tweetText: string): Promise<boolean> {
     }
 
     const base = gatewayUrl.replace(/\/+$/, '')
-    const url = `${base}/rank-articles`
-
+    const url = `${base}/tag-resource`
     const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
+
     let res: Awaited<ReturnType<typeof fetch>>
     try {
       res = await fetch(url, {
@@ -27,7 +32,10 @@ export async function isSecurityRelevant(tweetText: string): Promise<boolean> {
           'content-type': 'application/json',
           'x-gateway-token': token
         },
-        body: JSON.stringify({ text: tweetText }),
+        body: JSON.stringify({
+          mediaType: params.mediaType,
+          base64: params.base64
+        }),
         signal: AbortSignal.timeout(timeoutMs)
       })
     } catch (err) {
@@ -43,17 +51,15 @@ export async function isSecurityRelevant(tweetText: string): Promise<boolean> {
       throw new Error(`[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText))
     }
 
-    const data = (await res.json()) as { relevant?: unknown }
-    return Boolean(data && typeof data === 'object' && (data as Record<string, unknown>).relevant)
+    const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
+    if (!data) return null
+    return {
+      title: typeof data.title === 'string' ? data.title.trim() : '',
+      description: typeof data.description === 'string' ? data.description.trim() : '',
+      category: typeof data.category === 'string' ? data.category.trim() : '',
+      tags: Array.isArray(data.tags) ? data.tags.filter((t: unknown) => typeof t === 'string') : []
+    }
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) return true // No API key, let through.
-
-	try {
-		return await tweetRelevanceCheckDirect({ tweetText })
-	} catch (err) {
-    console.error('Relevance check failed:', err)
-    return true // On error, let through.
-  }
+  return await tagResourceDirect({ mediaType: params.mediaType, base64: params.base64 })
 }

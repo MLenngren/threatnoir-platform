@@ -1,8 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import Anthropic from '@anthropic-ai/sdk'
-
-import { logAiCall } from './aiUsage'
+import { generateAwarenessLessonDirect } from './anthropic'
 
 export type AwarenessGeneratorOptions = {
   maxPerRun?: number // default 10
@@ -14,12 +12,6 @@ export type AwarenessGeneratorResult = {
   created: number
   skipped_existing: number
   errors: Array<{ article_id: string; error: string }>
-}
-
-function extractJson(text: string): unknown {
-  const m = text.match(/\{[\s\S]*\}/)
-  if (!m) throw new Error('No JSON in response')
-  return JSON.parse(m[0])
 }
 
 function cleanText(v: unknown, max: number): string {
@@ -118,8 +110,6 @@ export async function generateAwarenessLessons(
     return { processed: 0, created: 0, skipped_existing: candidates.length, errors: [] }
   }
 
-  const client = gatewayUrl ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
   let created = 0
   const errors: Array<{ article_id: string; error: string }> = []
 
@@ -162,59 +152,9 @@ export async function generateAwarenessLessons(
         }
 
         parsed = (await res.json()) as Record<string, unknown>
-      } else {
-        const prompt = `You are a security awareness analyst. Given this security news article, identify:
-1. The root cause category (one of: Patch Management, Access Control, Configuration Management, Security Awareness, Incident Response, Network Segmentation, Data Protection, Supply Chain, Logging & Monitoring, Regulatory Compliance, Backup & Recovery, Vulnerability Management)
-2. Write a concise lesson (3-5 sentences) explaining what went wrong and why it matters
-3. Write a structured "prevention" section with actionable bullet points
-4. List relevant framework references (CIS Controls, NIST, ITIL, GDPR articles, etc.)
-
-Article title: ${title}
-Article summary: ${summary}
-
-IMPORTANT — the "prevention" field must be structured with markdown-style bullet points, NOT a wall of text. Format like this:
-"prevention": "**Immediate actions:**\n- Patch or upgrade affected systems to the latest version\n- Enable automated vulnerability scanning for internet-facing assets\n\n**Long-term improvements:**\n- Implement emergency patching procedures for critical infrastructure\n- Maintain an accurate inventory of all network appliances\n- Establish network segmentation around critical systems"
-
-Each prevention should have 2-3 categories (e.g., Immediate actions, Long-term improvements, Detection measures) with 2-3 bullet points each. Keep each bullet point to ONE actionable sentence.
-
-Respond in JSON: { "categories": ["slug1", "slug2"], "title": "short headline", "body": "lesson text", "prevention": "structured prevention with bullet points", "framework_refs": ["CIS Control 7", "NIST AC-2"] }
-
-Allowed category slugs (use ONLY from this list):
-patch-management
-access-control
-configuration-management
-security-awareness
-incident-response
-network-segmentation
-data-protection
-supply-chain
-logging-monitoring
-regulatory-compliance
-backup-recovery
-vulnerability-management`
-
-        const model = 'claude-sonnet-4-20250514'
-        const startedAt = Date.now()
-        const resp = await (client as Anthropic).messages.create({
-          model,
-          max_tokens: 900,
-          messages: [{ role: 'user', content: prompt }]
-        })
-
-        await logAiCall({
-          pipeline: 'awareness_lesson',
-          model,
-          response: resp,
-          durationMs: Date.now() - startedAt,
-          metadata: {
-            article_id: articleId,
-            title
-          }
-        })
-
-        const text = resp.content?.[0]?.type === 'text' ? resp.content[0].text : ''
-        parsed = extractJson(text) as Record<string, unknown>
-      }
+	      } else {
+	        parsed = await generateAwarenessLessonDirect({ article_id: articleId, title, summary })
+	      }
 
       const lessonTitle = cleanText(parsed.title, 200) || `Awareness Lessons: ${title}`.slice(0, 200)
       const body = typeof parsed.body === 'string' ? parsed.body.trim() : ''
