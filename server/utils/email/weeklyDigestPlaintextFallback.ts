@@ -1,5 +1,7 @@
 import { DEFAULT_SITE_URL } from '../../../shared/siteDefaults'
 
+import { getSiteConfig } from '../siteConfig'
+
 type WeeklyDigestInput = {
   email: string
   siteUrl: string
@@ -110,6 +112,7 @@ export function renderWeeklyDigestPlaintextFallback(
   data: Partial<WeeklyDigestInput>
 ): { subject: string; html: string; text: string } {
   try {
+		  const siteConfig = getSiteConfig()
     const site = normalizeSiteUrl(data.siteUrl)
     const weekLabel = (data.weekLabel || '').trim() || 'Unknown week'
     const subject = `Your week in security — ${weekLabel}`
@@ -124,7 +127,7 @@ export function renderWeeklyDigestPlaintextFallback(
       `<!DOCTYPE html>`,
       `<html><body style="background:#0e131f; color:#ffffff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; margin:0; padding:0;">`,
       `<div style="max-width:600px; margin:0 auto; padding:32px 24px;">`,
-      `<div style="color:#4cd7f6; font-weight:900; letter-spacing:2px; text-transform:uppercase;">ThreatNoir</div>`,
+	      `<div style="color:#4cd7f6; font-weight:900; letter-spacing:2px; text-transform:uppercase;">${escapeHtml(siteConfig.name)}</div>`,
       `<p style="color:#64748b; font-size:12px; margin:8px 0 0;">${escapeHtml(weekLabel)}</p>`,
       tagline
         ? `<p style="font-style:italic; font-size:18px; color:#4cd7f6; margin:16px 0 0;">${escapeHtml(tagline)}</p>`
@@ -165,9 +168,10 @@ export function renderWeeklyDigestPlaintextFallback(
     return { subject, html, text }
   } catch {
     // Ultimate defense: even our fallback renderer must never throw.
-    const subject = 'ThreatNoir weekly digest'
-    const html = '<html><body><pre>ThreatNoir weekly digest (render fallback failed)</pre></body></html>'
-    const text = 'ThreatNoir weekly digest (render fallback failed)'
+			const siteName = getSiteConfig().name
+	    const subject = `${siteName} weekly digest`
+	    const html = `<html><body><pre>${escapeHtml(siteName)} weekly digest (render fallback failed)</pre></body></html>`
+	    const text = `${siteName} weekly digest (render fallback failed)`
     return { subject, html, text }
   }
 }

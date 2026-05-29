@@ -1,5 +1,7 @@
 import { defineEventHandler, setResponseHeader } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
+
+import { emailRecipients } from '../../utils/emailConfig'
 import { getSiteConfig } from '../../utils/siteConfig'
 
 type EpisodeRow = {
@@ -109,7 +111,7 @@ export default defineEventHandler(async (event) => {
     <itunes:summary>Daily security intelligence briefings. AI-curated from 1000+ sources, delivered as a conversational podcast. Morning and afternoon editions, under 5 minutes each. Covering vulnerabilities, breaches, ransomware, regulatory enforcement, and threat intelligence.</itunes:summary>
     <itunes:owner>
 	      <itunes:name>${site.name}</itunes:name>
-      <itunes:email>${process.env.ADMIN_EMAIL || 'admin@example.com'}</itunes:email>
+	      <itunes:email>${emailRecipients.podcastOwner()}</itunes:email>
     </itunes:owner>
 	    <itunes:image href="${site.podcastArtworkUrl}"/>
     <itunes:category text="Technology"/>

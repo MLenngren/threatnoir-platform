@@ -1,6 +1,7 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { createError, defineEventHandler } from 'h3'
 
+import { emailRecipients } from '../../utils/emailConfig'
 import { requireAdminUser } from '../../utils/requireAdmin'
 import { renderWeeklyDigest } from '../../utils/email/weeklyDigest'
 import { getSiteConfig } from '../../utils/siteConfig'
@@ -130,7 +131,7 @@ export default defineEventHandler(async (event) => {
     .filter((e) => Boolean(e.title))
     .slice(0, 2)
 
-  const previewEmail = (user.email || '').trim() || process.env.ADMIN_EMAIL || 'admin@example.com'
+	const previewEmail = (user.email || '').trim() || emailRecipients.weeklyDigestPreview()
   const subRes = await supabase
     .from('subscribers')
     .select('id,email,verify_token')

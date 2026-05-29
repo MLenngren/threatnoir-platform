@@ -17,7 +17,7 @@ import process from 'node:process'
 import { Resend } from 'resend'
 
 import { generateSubscriberApiKey } from '../server/utils/api-keys'
-import { DEFAULT_SITE_URL } from '../shared/siteDefaults'
+import { DEFAULT_SITE_NAME, DEFAULT_SITE_URL } from '../shared/siteDefaults'
 
 const SUPABASE_REF = process.env.SUPABASE_PROJECT_REF
 if (!SUPABASE_REF) throw new Error('SUPABASE_PROJECT_REF env var required')
@@ -170,16 +170,17 @@ async function main(): Promise<void> {
 
   // Email API key
   const resend = new Resend(getResendApiKey())
-	  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL).trim() || DEFAULT_SITE_URL
+		  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL).trim() || DEFAULT_SITE_URL
+		  const siteName = (process.env.NUXT_PUBLIC_SITE_NAME || DEFAULT_SITE_NAME).trim() || DEFAULT_SITE_NAME
   const endpoint = `${siteUrl.replace(/\/$/, '')}/api/v1/notifications`
 
   eprint(`[approve-api-request] sending API key email via Resend to=${email}`)
   await resend.emails.send({
-    from: 'ThreatNoir <noreply@threatnoir.com>',
+	  from: process.env.EMAIL_FROM || `${siteName} <noreply@example.com>`,
     to: email,
-    subject: 'Your ThreatNoir API access is approved',
+	  subject: `Your ${siteName} API access is approved`,
     html:
-      `<p>Your ThreatNoir API access request has been approved.</p>` +
+	    `<p>Your ${siteName} API access request has been approved.</p>` +
       `<p><strong>API key:</strong> <code>${apiKey}</code></p>` +
       `<p><strong>Endpoint:</strong> <code>${endpoint}?key=YOUR_KEY</code></p>` +
       `<p>Optional query params:</p>` +

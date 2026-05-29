@@ -2,11 +2,13 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { logAiCall } from './aiUsage'
+import { emailRecipients } from './emailConfig'
 import { sendWelcomeEmail } from './resend'
 import { getSiteConfig } from './siteConfig'
 
-const LINKEDIN_VOICE_PROMPT =
-  "When drafting LinkedIn posts for the weekly ThreatNoir roundup, match Marcus's actual posting style:\n\n" +
+function buildLinkedinVoicePrompt(siteName: string): string {
+  return (
+    `When drafting LinkedIn posts for the weekly ${siteName} roundup, match Marcus's actual posting style:\n\n` +
   "**Why:** Marcus posted the W14 roundup manually and the voice was much better than the AI-drafted numbered list. His style got engagement because it felt like a real person sharing, not a news bulletin.\n\n" +
   "**How to apply:**\n\nStructure:\n" +
   "- Open with personal commentary, not a cold hook. \"I read that...\", \"Last week was...\", a question or observation\n" +
@@ -22,7 +24,9 @@ const LINKEDIN_VOICE_PROMPT =
   "- Slight provocations as questions, not statements\n" +
   "- No bold, no bullet points, no numbered lists\n" +
   "- No emoji\n\nReference post (W14):\n" +
-  "\"I read that last week was rough (rougher than usual?), if you are a business (big or small) good IT hygiene can be optional if you accept the risk, but not sure how long you would survive...\""
+    "\"I read that last week was rough (rougher than usual?), if you are a business (big or small) good IT hygiene can be optional if you accept the risk, but not sure how long you would survive...\""
+  )
+}
 
 type FocusItemInput = {
   id: string
@@ -44,6 +48,8 @@ export async function generateAndEmailFocusDraft(
   focusItem: FocusItemInput
 ): Promise<void> {
   try {
+			const site = getSiteConfig()
+
     const { data: existing, error: existingErr } = await supabase
       .from('focus_items')
       .select('linkedin_drafted_at')
@@ -76,7 +82,7 @@ export async function generateAndEmailFocusDraft(
       `Affected: ${(focusItem.affected_products && focusItem.affected_products.length) ? focusItem.affected_products.join(', ') : '(unknown)'}. ` +
       `Action: ${(focusItem.action_required || '').trim() || '(none provided)'}. ` +
       `Keep it under 150 words. Direct, first-person, practitioner sharing an alert. ` +
-	      `End with link to ${getSiteConfig().url}/focus. No emoji, no bold, no lists.`
+		      `End with link to ${site.url}/focus. No emoji, no bold, no lists.`
 
     const client = new Anthropic({ apiKey })
 	    const model = 'claude-haiku-4-5-20251001'
@@ -85,7 +91,7 @@ export async function generateAndEmailFocusDraft(
 	      model,
       max_tokens: 500,
       temperature: 0.7,
-      system: LINKEDIN_VOICE_PROMPT,
+	      system: buildLinkedinVoicePrompt(site.name),
       messages: [{ role: 'user', content: userPrompt }]
     })
 
@@ -123,7 +129,7 @@ export async function generateAndEmailFocusDraft(
       '</div>'
 
     await sendWelcomeEmail({
-      to: process.env.ADMIN_EMAIL || 'admin@example.com',
+	      to: emailRecipients.linkedinDraft(),
       subject,
       html,
       text: bodyText
