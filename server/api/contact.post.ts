@@ -1,7 +1,9 @@
 import { Resend } from 'resend'
 import { createError, defineEventHandler, readBody } from 'h3'
 
+import { emailRecipients, emailSenders } from '../utils/emailConfig'
 import { checkRateLimit, getClientIP } from '../utils/rateLimit'
+import { getSiteConfig } from '../utils/siteConfig'
 import { EMAIL_REGEX, normalizeEmail, normalizeText } from '../utils/subscriptions'
 
 type Body = {
@@ -63,12 +65,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: 'Mail service unavailable' })
   }
 
+	const site = getSiteConfig()
+
   const resend = new Resend(apiKey)
   await resend.emails.send({
-    from: 'ThreatNoir Contact <noreply@threatnoir.com>',
-    to: process.env.ADMIN_EMAIL || 'admin@example.com',
+		from: emailSenders.default(),
+		to: emailRecipients.contactForm(),
     replyTo: email,
-    subject: `[ThreatNoir Contact] ${subject}`,
+		subject: `[${site.name} Contact] ${subject}`,
     html:
       `<div style="font-family:sans-serif;max-width:600px;">` +
       `<h2 style="margin:0 0 16px;">New contact form submission</h2>` +

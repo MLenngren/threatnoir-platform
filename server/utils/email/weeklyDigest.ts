@@ -2,6 +2,8 @@ import { marked } from 'marked'
 import type { RendererThis, Tokens } from 'marked'
 import { DEFAULT_SITE_URL } from '../../../shared/siteDefaults'
 
+import { getSiteConfig } from '../siteConfig'
+
 const BASE_STYLES = `
 <style>
   body { background: #0e131f; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
@@ -49,13 +51,16 @@ function normalizeSiteUrl(raw?: string | null): string {
 }
 
 function footerHtml(data: { siteUrl?: string | null; unsubscribeUrl: string }): string {
+	const siteConfig = getSiteConfig()
+	const siteName = escapeHtml(siteConfig.name)
+
   const site = normalizeSiteUrl(data.siteUrl)
   const manageUrl = `${site}/subscribe`
   const unsubUrl = (data.unsubscribeUrl || '').trim() || site
 
   return [
     `<div class="footer">`,
-    `You're receiving this because you signed up for ThreatNoir at ${escapeHtml(site)}<br>`,
+	  `You're receiving this because you signed up for ${siteName} at ${escapeHtml(site)}<br>`,
     `<a href="${escapeHtml(manageUrl)}">Manage preferences</a> · <a href="${escapeHtml(unsubUrl)}">Unsubscribe</a>`,
     `</div>`
   ].join('')
@@ -180,6 +185,7 @@ export function renderWeeklyDigest(data: {
   latestPodcast: { title: string; date: string } | null
   upcomingEvents: Array<{ title: string; date: string }>
 }): { subject: string; html: string; text: string } {
+	const siteConfig = getSiteConfig()
   const site = normalizeSiteUrl(data.siteUrl)
   const subject = `Your week in security — ${data.weekLabel}`
 
@@ -238,14 +244,16 @@ export function renderWeeklyDigest(data: {
       ].join('')
     : `<p class="meta">No podcast episode found.</p><p><a href="${escapeHtml(podcastUrl)}">Browse podcast →</a></p>`
 
-	const youtubeUrl = 'https://www.youtube.com/@ThreatNoir'
-	const youtubeHtml = `
-			<div class="card">
-			  <h2 style="color:#ffffff; font-size:18px; margin:0 0 12px;">Watch on YouTube</h2>
-			  <p style="color:#94a3b8; line-height:1.6; margin:0 0 12px;">Red vs Blue Show episodes, podcast video versions, and security explainers.</p>
-			  <p style="margin:0;"><a href="${escapeHtml(youtubeUrl)}" class="button" style="background:#ff0000; color:#ffffff !important;">Open YouTube channel</a></p>
-			</div>
-		`
+		const youtubeUrl = (process.env.NUXT_PUBLIC_SOCIAL_YOUTUBE_URL || '').trim()
+		const youtubeHtml = youtubeUrl
+			? `
+				<div class="card">
+				  <h2 style="color:#ffffff; font-size:18px; margin:0 0 12px;">Watch on YouTube</h2>
+				  <p style="color:#94a3b8; line-height:1.6; margin:0 0 12px;">Red vs Blue Show episodes, podcast video versions, and security explainers.</p>
+				  <p style="margin:0;"><a href="${escapeHtml(youtubeUrl)}" class="button" style="background:#ff0000; color:#ffffff !important;">Open YouTube channel</a></p>
+				</div>
+			`
+			: ''
 
   const events = (data.upcomingEvents || []).slice(0, 2)
   const eventsHtml = events.length
@@ -261,8 +269,8 @@ export function renderWeeklyDigest(data: {
   const html = `
 <!DOCTYPE html>
 <html><head>${BASE_STYLES}</head><body>
-  <div class="wrapper">
-    <div class="logo">ThreatNoir</div>
+	  <div class="wrapper">
+	    <div class="logo">${escapeHtml(siteConfig.name)}</div>
     <p class="meta">${escapeHtml(data.weekLabel)}</p>
     ${taglineHtml}
 
@@ -302,7 +310,11 @@ export function renderWeeklyDigest(data: {
 </body></html>
   `.trim()
 
-  const text = [
+	const youtubeTextLines = youtubeUrl
+	  ? ['', 'YouTube channel', 'Red vs Blue Show, podcast video versions, and security explainers', youtubeUrl, '']
+	  : []
+
+	const text = [
     `Your week in security — ${data.weekLabel}`,
 		tagline ? `Tagline: ${tagline}` : '',
 		executiveSummary ? `Executive summary\n${executiveSummary}` : '',
@@ -319,13 +331,9 @@ export function renderWeeklyDigest(data: {
     'Lesson learned',
     data.awarenessLesson ? `${data.awarenessLesson.title}\n${lessonUrl}` : `Browse: ${lessonUrl}`,
     '',
-    'Latest podcast',
-    data.latestPodcast ? `${data.latestPodcast.title} (${data.latestPodcast.date})\n${podcastUrl}` : `Browse: ${podcastUrl}`,
-	    '',
-	    'YouTube channel',
-	    'Red vs Blue Show, podcast video versions, and explainers',
-	    youtubeUrl,
-    '',
+	    'Latest podcast',
+	    data.latestPodcast ? `${data.latestPodcast.title} (${data.latestPodcast.date})\n${podcastUrl}` : `Browse: ${podcastUrl}`,
+	    ...youtubeTextLines,
     'Events ahead',
     events.length ? events.map((e) => `- ${e.title}${e.date ? ` (${e.date})` : ''}`).join('\n') : '(No events in the next 7 days)',
     '',

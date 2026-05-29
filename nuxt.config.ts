@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
-import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE, DEFAULT_SITE_URL } from './shared/siteDefaults'
+import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE, DEFAULT_SITE_URL, DEFAULT_SOCIAL_YOUTUBE_URL } from './shared/siteDefaults'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
@@ -29,6 +29,7 @@ export default defineNuxtConfig({
 	    socialXUrl: process.env.NUXT_PUBLIC_SOCIAL_X_URL || '',
 	    socialLinkedinUrl: process.env.NUXT_PUBLIC_SOCIAL_LINKEDIN_URL || '',
 	    socialGithubUrl: process.env.NUXT_PUBLIC_SOCIAL_GITHUB_URL || '',
+		    socialYoutubeUrl: process.env.NUXT_PUBLIC_SOCIAL_YOUTUBE_URL || DEFAULT_SOCIAL_YOUTUBE_URL,
 	    operatorLegalName: process.env.NUXT_PUBLIC_OPERATOR_LEGAL_NAME || ''
 	  }
 	},

@@ -25,7 +25,7 @@ export default defineEventHandler((event) => {
 	    url: `${site.url}/api/openapi.json`
     },
 	    logo_url: `${site.url}/icon.svg`,
-    contact_email: process.env.CONTACT_EMAIL || 'contact@example.com',
+	    contact_email: process.env.NUXT_PUBLIC_CONTACT_EMAIL || 'contact@example.com',
 	  legal_info_url: site.url
   }
 })

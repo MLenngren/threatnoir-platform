@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 
+import { emailSenders } from './emailConfig'
 import { getSiteConfig } from './siteConfig'
 
 export type ArticleData = {
@@ -81,7 +82,7 @@ export async function sendVerificationEmail(email: string, token: string): Promi
 
   const resend = getResendClient()
   await resend.emails.send({
-    from: 'ThreatNoir <noreply@threatnoir.com>',
+	  from: emailSenders.default(),
     to,
 	  subject: `Verify your ${site.name} subscription`,
     html,
@@ -106,7 +107,7 @@ export async function sendWelcomeEmail(params: {
 
   const resend = getResendClient()
   await resend.emails.send({
-    from: 'ThreatNoir <welcome@threatnoir.com>',
+	  from: emailSenders.welcome(),
     to,
     subject,
     html,
@@ -220,7 +221,7 @@ export async function sendNotificationEmail(
 
   const resend = getResendClient()
   await resend.emails.send({
-    from: 'ThreatNoir <notifications@threatnoir.com>',
+	  from: emailSenders.notifications(),
     to,
 	  subject: `${site.name}: ${(article?.brief || article?.title || 'New article').trim()}`,
     html: buildNotificationHtml(article, unsubscribeUrl)

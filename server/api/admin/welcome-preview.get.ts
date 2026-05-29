@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, getQuery, setResponseHeader } from 'h3'
 
+import { emailRecipients } from '../../utils/emailConfig'
 import { requireAdminUser } from '../../utils/requireAdmin'
 import {
   renderWelcomeDay0,
@@ -61,7 +62,7 @@ export default defineEventHandler(async (event) => {
   const wk = weeklyRes.data?.[0] as Record<string, unknown> | undefined
 
   const templateData = {
-    email: 'preview@threatnoir.com',
+	  email: emailRecipients.previewFixture(),
     siteUrl: base,
     manageUrl: `${base}/subscribe`,
     unsubscribeUrl: `${base}/api/subscribe/00000000-0000-0000-0000-000000000000?token=00000000-0000-0000-0000-000000000000`,

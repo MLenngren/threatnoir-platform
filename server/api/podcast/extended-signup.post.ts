@@ -1,4 +1,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
+
+import { emailSenders } from '../../utils/emailConfig'
 import { checkRateLimit, getClientIP } from '../../utils/rateLimit'
 import { getSiteConfig } from '../../utils/siteConfig'
 
@@ -59,7 +61,7 @@ export default defineEventHandler(async (event) => {
     const { Resend } = await import('resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
     await resend.emails.send({
-      from: 'ThreatNoir <noreply@threatnoir.com>',
+	      from: emailSenders.welcome(),
       to: email,
 	    subject: `You're on the list — ${site.name} Extended Podcast`,
       html: [
