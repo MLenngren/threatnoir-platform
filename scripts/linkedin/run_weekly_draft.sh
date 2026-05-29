@@ -1,28 +1,18 @@
 #!/usr/bin/env bash
-# Generate a LinkedIn weekly draft from the latest roundup.
-# Usage: ./run_weekly_draft.sh [output_dir] [--script-args...]
-#
-# Required env vars:
-#   ANTHROPIC_API_KEY
-#   SUPABASE_URL
-#   SUPABASE_SERVICE_KEY
-
 set -euo pipefail
+
+: "${SUPABASE_PROJECT_REF:?SUPABASE_PROJECT_REF env var required}"
+
+source "$HOME/.profile" 2>/dev/null || true
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VENV="$PROJECT_DIR/venv/bin/python3"
 
-required=(ANTHROPIC_API_KEY SUPABASE_URL SUPABASE_SERVICE_KEY)
-missing=()
-for var in "${required[@]}"; do
-    if [ -z "${!var:-}" ]; then
-        missing+=("$var")
-    fi
-done
-if [ ${#missing[@]} -gt 0 ]; then
-    echo "ERROR: Missing required env vars: ${missing[*]}" >&2
-    exit 1
-fi
+export ANTHROPIC_API_KEY="$(op read "op://Claude/Anthropic/api_key")"
+export SUPABASE_URL="https://${SUPABASE_PROJECT_REF}.supabase.co"
+PAT="$(op read "op://Claude/Supabase/PAT")"
+export SUPABASE_SERVICE_KEY="$(curl -s "https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_REF}/api-keys" \
+  -H "Authorization: Bearer $PAT" | python3 -c "import json,sys; keys=json.load(sys.stdin); print([k['api_key'] for k in keys if k['name']=='service_role'][0])")"
 
 OUTPUT_DIR="${1:-/tmp/linkedin-draft}"
 mkdir -p "$OUTPUT_DIR"
@@ -36,3 +26,4 @@ echo "Post text: $OUTPUT_DIR/post.txt"
 echo "Card image: $OUTPUT_DIR/card.png"
 echo ""
 cat "$OUTPUT_DIR/post.txt"
+

@@ -1,0 +1,39 @@
+import { Hono } from 'hono'
+import { serve } from '@hono/node-server'
+
+import { mountHealth } from './routes/health.js'
+import { mountSummarizeArticle } from './routes/summarize-article.js'
+
+function requireNonEmpty(name: string): string {
+  const v = process.env[name]
+  if (!v || !v.trim()) throw new Error(`${name} is required`)
+  return v
+}
+
+// Refuse to start with a blank token.
+requireNonEmpty('AI_GATEWAY_INTERNAL_TOKEN')
+
+const app = new Hono()
+
+app.use('*', async (c, next) => {
+  const start = Date.now()
+  try {
+    await next()
+  } finally {
+    const ms = Date.now() - start
+    // Keep logs grep-friendly for verification.
+    console.log(`${c.req.method} ${c.req.path} ${c.res.status} ${ms}ms`)
+  }
+})
+
+mountHealth(app)
+mountSummarizeArticle(app)
+
+app.onError((err, c) => {
+  console.error('[ai-gateway] unhandled error:', err)
+  return c.json({ error: 'internal_error' }, 500)
+})
+
+const port = Number(process.env.PORT || 8080)
+serve({ fetch: app.fetch, port, hostname: '0.0.0.0' })
+console.log(`[ai-gateway] listening on 0.0.0.0:${port}`)

@@ -92,6 +92,8 @@ Open http://localhost:3000.
 
 To log in to admin, use the email shown by `npx supabase status` for the local instance. See [`docs/local-dev.md`](docs/local-dev.md) for more.
 
+Prefer an all-in-one Docker Compose stack (app + self-hosted Supabase + local email)? See [`docs/CONTAINERS.md`](docs/CONTAINERS.md).
+
 ---
 
 ## Production deployment (~2 hours)

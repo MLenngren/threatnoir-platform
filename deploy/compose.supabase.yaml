@@ -1,0 +1,296 @@
+services:
+  supabase-db:
+    image: supabase/postgres:17.6.1.084
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: ${JWT_EXPIRY:-3600}
+      # Supabase image expects these too
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-postgres}
+
+    command: ["postgres", "-c", "listen_addresses=*", "-c", "log_min_messages=fatal"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - supabase-db-config:/etc/postgresql-custom
+    networks:
+      default:
+        aliases: [db]
+
+  # Optional: expose Postgres to the host ONLY when --profile dev
+  supabase-db-dev:
+    profiles: ["dev"]
+    image: alpine:3.21
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    command: >-
+      sh -c "apk add --no-cache socat >/dev/null && exec socat TCP-LISTEN:5432,fork,reuseaddr TCP-CONNECT:supabase-db:5432"
+    ports:
+      - "${SUPABASE_DB_PORT:-7110}:5432"
+
+  # One-shot job to set Supabase service role passwords.
+  # We do this outside the supabase/postgres init scripts so we don't need to
+  # bake secrets into repo-tracked SQL files.
+  db-roles-init:
+    image: postgres:17-alpine
+    restart: "no"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: supabase-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: supabase_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # Mount as a directory (more reliable than single-file bind mounts on Docker Desktop/WSL).
+      - ./supabase-init:/supabase-init:ro
+    command: ["sh", "/supabase-init/set-role-passwords.sh"]
+
+  db-init:
+    image: postgres:17-alpine
+    restart: "no"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-auth:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: supabase-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: supabase_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../supabase/migrations:/migrations:ro
+      - ../supabase/seed.sql:/seed.sql:ro
+      # Mount as a directory (more reliable than single-file bind mounts on Docker Desktop/WSL).
+      - ./supabase-init:/supabase-init:ro
+    command: ["sh", "/supabase-init/apply-migrations.sh"]
+
+  inbucket:
+    image: inbucket/inbucket:latest
+    restart: unless-stopped
+    ports:
+      - "${INBUCKET_PORT:-7111}:9000"
+
+  supabase-auth:
+    image: supabase/gotrue:v2.186.0
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      db-roles-init:
+        condition: service_completed_successfully
+    healthcheck:
+      # Avoid IPv6 ::1 resolution issues in minimal images
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:${SUPABASE_KONG_PORT:-7100}}
+
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+
+      GOTRUE_SITE_URL: ${SITE_URL:-http://localhost:${APP_PORT:-7000}}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_ISSUER: ${SUPABASE_PUBLIC_URL:-http://localhost:${SUPABASE_KONG_PORT:-7100}}/auth/v1
+
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP:-true}
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS:-false}
+      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM:-false}
+
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-admin@example.com}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-inbucket}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-2500}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-fake_mail_user}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-fake_mail_password}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-ThreatNoir Local}
+
+      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE:-/auth/v1/verify}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION:-/auth/v1/verify}
+      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY:-/auth/v1/verify}
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE:-/auth/v1/verify}
+    networks:
+      default:
+        aliases: [auth]
+
+  supabase-rest:
+    image: postgrest/postgrest:v14.8
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      db-roles-init:
+        condition: service_completed_successfully
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage,graphql_public}
+      PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
+      PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY:-3600}
+    networks:
+      default:
+        aliases: [rest]
+
+  supabase-storage:
+    image: supabase/storage-api:v1.48.26
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      db-roles-init:
+        condition: service_completed_successfully
+      supabase-rest:
+        condition: service_started
+    healthcheck:
+      # Avoid IPv6 ::1 resolution issues in minimal images
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    environment:
+      ANON_KEY: ${SUPABASE_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:${SUPABASE_KONG_PORT:-7100}}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: ${GLOBAL_S3_BUCKET:-stub}
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: ${STORAGE_TENANT_ID:-stub}
+      REGION: ${REGION:-stub}
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+    networks:
+      default:
+        aliases: [storage]
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.96.3
+    restart: unless-stopped
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB:-postgres}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY:-your-encryption-key-32-chars-min}
+    networks:
+      default:
+        aliases: [meta]
+
+  supabase-studio:
+    image: supabase/studio:2026.04.27-sha-5f60601
+    restart: unless-stopped
+    depends_on:
+      supabase-meta:
+        condition: service_started
+    environment:
+      HOSTNAME: 0.0.0.0
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY:-your-encryption-key-32-chars-min}
+      PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage,graphql_public}
+      PGRST_DB_MAX_ROWS: ${PGRST_DB_MAX_ROWS:-1000}
+      PGRST_DB_EXTRA_SEARCH_PATH: ${PGRST_DB_EXTRA_SEARCH_PATH:-public}
+      DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION:-Default Organization}
+      DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT:-Default Project}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:${SUPABASE_KONG_PORT:-7100}}
+      SUPABASE_ANON_KEY: ${SUPABASE_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${SUPABASE_STUDIO_PORT:-7101}:3000"
+    networks:
+      default:
+        aliases: [studio]
+
+  supabase-kong:
+    image: kong/kong:3.9.1
+    restart: unless-stopped
+    depends_on:
+      supabase-auth:
+        condition: service_started
+      supabase-rest:
+        condition: service_started
+      supabase-storage:
+        condition: service_started
+      supabase-studio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "${SUPABASE_KONG_PORT:-7100}:8000"
+    volumes:
+      - ./supabase/volumes/api/kong.yml:/home/kong/temp.yml:ro
+      - ./supabase/volumes/api/kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_DNS_NOT_FOUND_TTL: 1
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction,post-function
+      KONG_PROXY_ACCESS_LOG: /dev/stdout combined
+
+      SUPABASE_ANON_KEY: ${SUPABASE_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:-}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:-}
+      ANON_KEY_ASYMMETRIC: ${ANON_KEY_ASYMMETRIC:-}
+      SERVICE_ROLE_KEY_ASYMMETRIC: ${SERVICE_ROLE_KEY_ASYMMETRIC:-}
+
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:-supabase}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-this_password_is_insecure_and_should_be_updated}
+    entrypoint: /home/kong/kong-entrypoint.sh
+    networks:
+      default:
+        aliases: [kong, api-gw]
+
+volumes:
+  supabase-db-data:
+  supabase-db-config:
+  supabase-storage-data:

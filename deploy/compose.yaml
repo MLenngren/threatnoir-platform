@@ -1,0 +1,113 @@
+name: threatnoir-platform
+
+include:
+  - compose.supabase.yaml
+
+services:
+  ai-gateway:
+    build:
+      context: ./ai-gateway
+    image: threatnoir-platform-ai-gateway
+    restart: unless-stopped
+    depends_on:
+      supabase-kong:
+        condition: service_healthy
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+
+      AI_GATEWAY_INTERNAL_TOKEN: ${AI_GATEWAY_INTERNAL_TOKEN}
+      AI_ENABLED: ${AI_ENABLED:-true}
+      AI_DAILY_LIMIT: ${AI_DAILY_LIMIT:-500}
+      AI_MONTHLY_BUDGET_CENTS: ${AI_MONTHLY_BUDGET_CENTS:-500}
+    healthcheck:
+      # Avoid IPv6 ::1 resolution issues in minimal images
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/app/Dockerfile
+      args:
+        SUPABASE_URL: http://supabase-kong:8000
+        SUPABASE_KEY: ${SUPABASE_KEY}
+        SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+        # For Phase 1 we map secret key to the service role JWT.
+        SUPABASE_SECRET_KEY: ${SUPABASE_SERVICE_KEY}
+    image: threatnoir-platform-app
+    restart: unless-stopped
+    depends_on:
+      supabase-kong:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    ports:
+      - "${APP_PORT:-7000}:3000"
+    environment:
+      # App-required env vars (see repo root .env.example)
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_KEY: ${SUPABASE_KEY}
+      # Preferred server key (service role JWT). Newer codepaths look for this.
+      # For Phase 1 we map it to the service role JWT.
+      SUPABASE_SECRET_KEY: ${SUPABASE_SERVICE_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+
+      # Nuxt runtimeConfig (private) — required for @nuxtjs/supabase server helpers
+      # like serverSupabaseServiceRole(), which reads from useRuntimeConfig().supabase.*
+      NUXT_SUPABASE_SECRET_KEY: ${SUPABASE_SERVICE_KEY}
+      NUXT_SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+
+      # Used by the app container entrypoint to proxy localhost:${SUPABASE_KONG_PORT}
+      # back to supabase-kong:8000 (so the same public URL works in SSR + browser).
+      SUPABASE_KONG_PORT: ${SUPABASE_KONG_PORT:-7100}
+
+      CRON_SECRET: ${CRON_SECRET}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+
+      X_BEARER_TOKEN: ${X_BEARER_TOKEN:-}
+      X_CONSUMER_KEY: ${X_CONSUMER_KEY:-}
+      X_CONSUMER_SECRET: ${X_CONSUMER_SECRET:-}
+      X_ACCESS_TOKEN: ${X_ACCESS_TOKEN:-}
+      X_ACCESS_TOKEN_SECRET: ${X_ACCESS_TOKEN_SECRET:-}
+
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # With compose AI gateway, default AI to ON (set AI_ENABLED=false to kill-switch).
+      AI_ENABLED: ${AI_ENABLED:-true}
+      AI_DAILY_LIMIT: ${AI_DAILY_LIMIT:-500}
+      AI_MONTHLY_BUDGET_CENTS: ${AI_MONTHLY_BUDGET_CENTS:-500}
+      AI_AUTO_APPROVE_THRESHOLD: ${AI_AUTO_APPROVE_THRESHOLD:-8}
+      AI_AUTO_REJECT_THRESHOLD: ${AI_AUTO_REJECT_THRESHOLD:-3}
+
+      # AI gateway (internal-only service)
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://ai-gateway:8080}
+      AI_GATEWAY_INTERNAL_TOKEN: ${AI_GATEWAY_INTERNAL_TOKEN}
+
+      THREATNOIR_API_KEYS: ${THREATNOIR_API_KEYS:-your-key-here:admin}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://localhost:${APP_PORT:-7000}}
+
+      # Extra: client-side Supabase settings (Nuxt runtimeConfig public)
+      NUXT_PUBLIC_SUPABASE_URL: ${NUXT_PUBLIC_SUPABASE_URL:-http://localhost:${SUPABASE_KONG_PORT:-7100}}
+      NUXT_PUBLIC_SUPABASE_KEY: ${NUXT_PUBLIC_SUPABASE_KEY:-${SUPABASE_KEY}}
+
+      MAX_ARTICLE_AGE_HOURS: ${MAX_ARTICLE_AGE_HOURS:-48}
+
+  cron:
+    build:
+      context: ..
+      dockerfile: deploy/cron/Dockerfile
+    image: threatnoir-platform-cron
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+    environment:
+      CRON_SECRET: ${CRON_SECRET}
+
+      # Provided for parity with app container (future cron direct gateway calls)
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://ai-gateway:8080}
+      AI_GATEWAY_INTERNAL_TOKEN: ${AI_GATEWAY_INTERNAL_TOKEN}

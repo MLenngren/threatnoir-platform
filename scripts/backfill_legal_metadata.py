@@ -33,19 +33,9 @@ if _project_root and _project_root not in sys.path:
 from scripts.utils.ai_cost import log_ai_call  # noqa: E402
 
 
-def _supabase_ref_from_url() -> str:
-    """Extract project ref from SUPABASE_URL (https://<ref>.supabase.co)."""
-    url = (os.environ.get("SUPABASE_URL") or "").strip()
-    if not url:
-        raise SystemExit("SUPABASE_URL env var is required (e.g. https://abcdefgh.supabase.co)")
-    host = url.replace("https://", "").replace("http://", "").split("/")[0]
-    ref = host.split(".")[0]
-    if not ref:
-        raise SystemExit(f"Could not extract Supabase project ref from SUPABASE_URL={url!r}")
-    return ref
-
-
-SUPABASE_REF = _supabase_ref_from_url()
+SUPABASE_REF = os.environ.get("SUPABASE_PROJECT_REF")
+if not SUPABASE_REF:
+    raise RuntimeError("SUPABASE_PROJECT_REF env var required")
 SUPABASE_QUERY_URL = (
     f"https://api.supabase.com/v1/projects/{SUPABASE_REF}/database/query"
 )
@@ -94,14 +84,20 @@ def get_supabase_pat() -> str:
     env = os.environ.get("SUPABASE_PAT")
     if env:
         return env.strip()
-    raise SystemExit("SUPABASE_PAT env var is required (Supabase Management API personal access token)")
+    return subprocess.check_output(
+        ["op", "read", "op://Claude/Supabase/PAT"],
+        text=True,
+    ).strip()
 
 
 def get_anthropic_key() -> str:
     env = os.environ.get("ANTHROPIC_API_KEY")
     if env:
         return env.strip()
-    raise SystemExit("ANTHROPIC_API_KEY env var is required")
+    return subprocess.check_output(
+        ["op", "read", "op://Claude/Anthropic/api_key"],
+        text=True,
+    ).strip()
 
 
 def _sql_literal(value: str | None) -> str:

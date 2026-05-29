@@ -104,7 +104,9 @@ export async function processArticleAi(
     if (process.env.AI_ENABLED === 'false') {
       return { ok: false, error: 'ai_disabled' }
     }
-    if (!process.env.ANTHROPIC_API_KEY) {
+    // When the ai-gateway is configured, the app doesn't need an Anthropic
+    // key — the gateway holds it. Only require the key on the direct path.
+    if (!process.env.AI_GATEWAY_URL?.trim() && !process.env.ANTHROPIC_API_KEY) {
       return { ok: false, error: 'anthropic_key_missing' }
     }
 

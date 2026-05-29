@@ -46,7 +46,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  // In compose, the app calls the internal ai-gateway instead of Anthropic directly.
+  // Only require ANTHROPIC_API_KEY when we're using the direct-Anthropic path.
+  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+  if (!gatewayUrl && !process.env.ANTHROPIC_API_KEY) {
     throw createError({ statusCode: 500, statusMessage: 'ANTHROPIC_API_KEY is not configured' })
   }
 

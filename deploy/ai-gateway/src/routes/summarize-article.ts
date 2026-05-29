@@ -1,0 +1,20 @@
+import type { Hono } from 'hono'
+
+import { requireGatewayToken } from '../auth.js'
+import type { SummarizeArticleRequest } from '../types.js'
+import { classifyAndSummarizeClaude } from '../providers/claude.js'
+
+export function mountSummarizeArticle(app: Hono) {
+  app.post('/summarize-article', requireGatewayToken(), async (c) => {
+    const body = (await c.req.json().catch(() => null)) as SummarizeArticleRequest | null
+
+    const title = typeof body?.title === 'string' ? body.title.trim() : ''
+    const summary = typeof body?.summary === 'string' ? body.summary : body?.summary === null ? null : null
+    const fullText = typeof body?.fullText === 'string' ? body.fullText : body?.fullText === null ? null : null
+
+    if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
+
+    const result = await classifyAndSummarizeClaude(title, summary, fullText)
+    return c.json(result)
+  })
+}

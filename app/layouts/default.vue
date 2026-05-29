@@ -226,6 +226,7 @@
 	          <NuxtLink to="/awareness" class="font-label text-[10px] uppercase tracking-widest text-slate-600 hover:text-tn-primary">Awareness Lessons</NuxtLink>
           <NuxtLink to="/resources" class="font-label text-[10px] uppercase tracking-widest text-slate-600 hover:text-tn-primary">Resources</NuxtLink>
           <NuxtLink to="/developer" class="font-label text-[10px] uppercase tracking-widest text-slate-600 hover:text-tn-primary">Developer</NuxtLink>
+          <NuxtLink to="/opensource" class="font-label text-[10px] uppercase tracking-widest text-slate-600 hover:text-tn-primary">Open Source</NuxtLink>
           <NuxtLink to="/legal" class="font-label text-[10px] uppercase tracking-widest text-slate-600 hover:text-tn-primary">Legal</NuxtLink>
           <NuxtLink to="/contact" class="font-label text-[10px] uppercase tracking-widest text-slate-600 hover:text-tn-primary">Contact</NuxtLink>
         </div>
