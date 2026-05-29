@@ -1,5 +1,6 @@
 import { defineEventHandler, setResponseHeader } from 'h3'
 
+import { DEFAULT_SITE_URL } from '../../shared/siteDefaults'
 import { useSupabaseAdmin } from '../utils/supabase'
 
 type ChangeFreq = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly'
@@ -30,7 +31,7 @@ const toIsoOrNow = (value: unknown, nowIso: string) => {
 }
 
 const normalizeBaseUrl = () => {
-  const raw = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
+  const raw = (process.env.NUXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL).trim() || DEFAULT_SITE_URL
   return raw.replace(/\/$/, '')
 }
 
