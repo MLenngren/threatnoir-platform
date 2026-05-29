@@ -2,7 +2,7 @@
 @import "@nuxt/ui";
 
 @theme {
-  /* Tactical Sentinel (ThreatNoir) design tokens */
+  /* Tactical Sentinel design tokens */
   --color-tn-surface: #0e131f;
   --color-tn-surface-lowest: #080e1a;
   --color-tn-surface-low: #161c28;

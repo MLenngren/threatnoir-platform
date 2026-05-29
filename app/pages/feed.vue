@@ -68,11 +68,12 @@ import SearchBar from '~/components/SearchBar.vue'
 import { useArticles } from '~/composables/useArticles'
 
 type CategoryOption = { label: string; value: string | null }
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'Intel Feed Archive — ThreatNoir',
+	  title: `Intel Feed Archive — ${site.name}`,
   description: 'Latest approved security news—fast, clean, and source-referenced.',
-  ogTitle: 'Intel Feed Archive — ThreatNoir',
+	  ogTitle: `Intel Feed Archive — ${site.name}`,
   ogDescription: 'Latest approved security news—fast, clean, and source-referenced.',
   ogType: 'website'
 })

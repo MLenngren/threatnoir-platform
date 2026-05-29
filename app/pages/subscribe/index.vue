@@ -442,7 +442,7 @@
                 placeholder="123456789"
 	                class="w-full rounded-xl bg-black/20 px-3 py-2 text-sm text-tn-on-surface placeholder:text-white/30 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-tn-primary/25"
               >
-	              <p class="text-xs text-tn-on-surface-variant">Message @ThreatNoirBot on Telegram to get your chat ID</p>
+	              <p class="text-xs text-tn-on-surface-variant">Message the Telegram bot to get your chat ID</p>
             </div>
 
             <div v-else-if="channel === 'webhook'" class="space-y-2">
@@ -451,7 +451,7 @@
                 id="generic-webhook"
                 v-model.trim="webhookEndpointUrl"
                 type="url"
-                placeholder="https://example.com/threatnoir"
+					placeholder="https://example.com/webhook"
 	                class="w-full rounded-xl bg-black/20 px-3 py-2 text-sm text-tn-on-surface placeholder:text-white/30 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-tn-primary/25"
               >
 	              <p class="text-xs text-tn-on-surface-variant">We’ll POST JSON to this URL for each matching article</p>
@@ -543,9 +543,10 @@ type Category = {
 type Channel = 'email' | 'discord' | 'telegram' | 'webhook' | 'api' | 'x'
 
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 useSeoMeta({
-  title: 'Subscribe — ThreatNoir',
-  description: 'Subscribe to ThreatNoir notifications and tailor what you care about.'
+	  title: `Subscribe — ${site.name}`,
+	  description: `Subscribe to ${site.name} notifications and tailor what you care about.`
 })
 
 const { authenticated } = useAuthGate()

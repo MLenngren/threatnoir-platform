@@ -3,11 +3,18 @@
  * so the user knows it's working.
  */
 
+import { getSiteConfig } from './siteConfig'
+
+// eslint-disable-next-line no-useless-escape
+const escMarkdownV2 = (s: string) => s.replace(/([_*\[\]\(\)~`>#+\-=|{}.!])/g, '\\$1')
+
 export async function sendChannelWelcome(
   channelType: string,
   channelConfig: Record<string, unknown>
 ): Promise<void> {
   try {
+	    const site = getSiteConfig()
+	    const settingsUrl = `${site.url}/settings`
     switch (channelType) {
       case 'telegram': {
         const chatId = String(channelConfig.chat_id || channelConfig.telegram_chat_id || '')
@@ -20,12 +27,12 @@ export async function sendChannelWelcome(
           body: JSON.stringify({
             chat_id: chatId,
             text: [
-              '🔒 *ThreatNoir connected*',
+	              `🔒 ${escMarkdownV2(site.name)} connected`,
               '',
-              'This channel is now linked to your ThreatNoir subscription\\.',
+	              `This channel is now linked to your ${escMarkdownV2(site.name)} subscription\\.`,
               'You will receive security alerts here based on your preferences\\.',
               '',
-              'Manage your subscription at [threatnoir\\.com/settings](https://threatnoir.com/settings)',
+	              `Manage your subscription at ${escMarkdownV2(settingsUrl)}`,
             ].join('\n'),
             parse_mode: 'MarkdownV2',
           }),
@@ -43,11 +50,11 @@ export async function sendChannelWelcome(
           body: JSON.stringify({
             embeds: [
               {
-                title: '🔒 ThreatNoir connected',
+	                title: `🔒 ${site.name} connected`,
                 description:
-                  'This channel is now linked to your ThreatNoir subscription. You will receive security alerts here based on your preferences.',
+	                  `This channel is now linked to your ${site.name} subscription. You will receive security alerts here based on your preferences.`,
                 color: 0x06b6d4,
-                footer: { text: 'Manage at threatnoir.com/settings' },
+	                footer: { text: `Manage at ${settingsUrl.replace(/^https?:\/\//, '')}` },
               },
             ],
           }),
@@ -64,7 +71,7 @@ export async function sendChannelWelcome(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             event: 'channel_connected',
-            message: 'ThreatNoir webhook connected. You will receive security alerts at this endpoint.',
+	            message: `${site.name} webhook connected. You will receive security alerts at this endpoint.`,
           }),
         })
         break

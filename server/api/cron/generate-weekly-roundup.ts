@@ -5,6 +5,7 @@ import { safeCompare } from '../../utils/safeCompare'
 import { useSupabaseAdmin } from '../../utils/supabase'
 import { generateWeeklyRoundupDraft } from '../../utils/weeklyRoundup'
 import { pingOps } from '../../utils/discordOps'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 const requireCronSecret = (event: H3Event) => {
   const expected = process.env.CRON_SECRET
@@ -26,6 +27,7 @@ export default defineEventHandler(async (event) => {
   requireCronSecret(event)
 
   const supabase = useSupabaseAdmin()
+	const site = getSiteConfig()
 
   try {
     const res = await generateWeeklyRoundupDraft({ supabase })
@@ -33,15 +35,15 @@ export default defineEventHandler(async (event) => {
     // Best-effort ping. Always non-blocking.
     if (res.created) {
       await pingOps(
-        `🟢 ThreatNoir ${res.week_label} roundup published\n` +
-          `Read: https://threatnoir.com/weekly/${res.slug}\n` +
+				`🟢 ${site.name} ${res.week_label} roundup published\n` +
+					`Read: ${site.url}/weekly/${res.slug}\n` +
           `Email goes out at 08:00 UTC.`
       )
     } else if (res.skipped_reason === 'already_exists') {
-      await pingOps(`⚪ ThreatNoir weekly roundup skipped (already exists for ${res.week_label}).`)
+			await pingOps(`⚪ ${site.name} weekly roundup skipped (already exists for ${res.week_label}).`)
     } else {
       await pingOps(
-        `🚨 ThreatNoir weekly roundup generation skipped\n` +
+				`🚨 ${site.name} weekly roundup generation skipped\n` +
           `Reason: ${res.skipped_reason || 'unknown'}\n` +
           `Email cron will fall back to most recent published roundup.`
       )
@@ -50,7 +52,7 @@ export default defineEventHandler(async (event) => {
     return res
   } catch (err) {
     await pingOps(
-      `🚨 ThreatNoir weekly roundup generation FAILED\n` +
+			`🚨 ${site.name} weekly roundup generation FAILED\n` +
         `Reason: ${err instanceof Error ? err.message : String(err)}`
     )
     throw err

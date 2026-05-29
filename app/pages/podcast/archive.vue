@@ -14,7 +14,7 @@
               THE INTELLIGENCE BRIEFING
             </h1>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
-              Browse older weeks of ThreatNoir episodes.
+	              Browse older weeks of {{ site.name }} episodes.
             </p>
 
             <div class="mt-4">
@@ -74,11 +74,13 @@ import PodcastEpisodeCard from '~/components/PodcastEpisodeCard.vue'
 import { useWeekNav } from '~/composables/useWeekNav'
 import type { PublicPodcastEpisode } from '~/types/public'
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Podcast archive — ThreatNoir',
-  description: 'Browse older ThreatNoir podcast episodes by week.',
-  ogTitle: 'Podcast archive — ThreatNoir',
-  ogDescription: 'Browse older ThreatNoir podcast episodes by week.',
+	  title: `Podcast archive — ${site.name}`,
+	  description: `Browse older ${site.name} podcast episodes by week.`,
+	  ogTitle: `Podcast archive — ${site.name}`,
+	  ogDescription: `Browse older ${site.name} podcast episodes by week.`,
   ogType: 'website'
 })
 
@@ -87,7 +89,7 @@ useHead({
     {
       rel: 'alternate',
       type: 'application/rss+xml',
-      title: 'ThreatNoir Podcast',
+	      title: `${site.name} Podcast`,
       href: '/api/podcast/feed.xml'
     }
   ]

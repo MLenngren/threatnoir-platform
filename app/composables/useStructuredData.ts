@@ -1,26 +1,28 @@
 export function useOrganizationSchema() {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'ThreatNoir',
-    url: 'https://threatnoir.com',
-    logo: 'https://threatnoir.com/images/threatnoir-logo-wide.png',
-    sameAs: [],
-    description: 'Curated security intelligence for SOC analysts, threat hunters, and security leaders.'
+    name: site.name,
+    url: site.url,
+    logo: site.logoUrl,
+    sameAs: site.socialSameAs,
+    description: site.tagline
   }
 }
 
 export function useWebSiteSchema() {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'ThreatNoir',
-    url: 'https://threatnoir.com',
+    name: site.name,
+    url: site.url,
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://threatnoir.com/feed?q={search_term_string}'
+        urlTemplate: `${site.url}/feed?q={search_term_string}`
       },
       'query-input': 'required name=search_term_string'
     }
@@ -35,6 +37,7 @@ export function useNewsArticleSchema(article: {
   image_url?: string | null
   author?: string | null
 }) {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
@@ -42,17 +45,17 @@ export function useNewsArticleSchema(article: {
     description: article.description || undefined,
     datePublished: article.published_at || undefined,
     dateModified: article.published_at || undefined,
-    image: article.image_url || 'https://threatnoir.com/images/category-default.png',
+    image: article.image_url || site.ogImageUrl,
     author: {
       '@type': 'Organization',
-      name: 'ThreatNoir'
+      name: site.name
     },
     publisher: {
       '@type': 'Organization',
-      name: 'ThreatNoir',
+      name: site.name,
       logo: {
         '@type': 'ImageObject',
-        url: 'https://threatnoir.com/images/threatnoir-logo-wide.png'
+        url: site.logoUrl
       }
     },
     mainEntityOfPage: {
@@ -63,16 +66,17 @@ export function useNewsArticleSchema(article: {
 }
 
 export function usePodcastSeriesSchema() {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'PodcastSeries',
-    name: 'ThreatNoir Daily',
-    url: 'https://threatnoir.com/podcast',
+    name: `${site.name} Daily`,
+    url: `${site.url}/podcast`,
     description: 'Your daily 5-minute security briefing. Two editions per day.',
-    webFeed: 'https://threatnoir.com/api/podcast/feed.xml',
+    webFeed: `${site.url}/api/podcast/feed.xml`,
     author: {
       '@type': 'Organization',
-      name: 'ThreatNoir'
+      name: site.name
     },
     inLanguage: 'en'
   }
@@ -85,21 +89,22 @@ export function usePodcastEpisodeSchema(ep: {
   audio_url: string
   duration_seconds?: number | null
 }) {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'PodcastEpisode',
     name: ep.title,
     description: ep.description || undefined,
     datePublished: ep.date,
-    url: `https://threatnoir.com/podcast`,
+    url: `${site.url}/podcast`,
     associatedMedia: {
       '@type': 'MediaObject',
       contentUrl: ep.audio_url
     },
     partOfSeries: {
       '@type': 'PodcastSeries',
-      name: 'ThreatNoir Daily',
-      url: 'https://threatnoir.com/podcast'
+      name: `${site.name} Daily`,
+      url: `${site.url}/podcast`
     }
   }
 }
@@ -111,6 +116,7 @@ export function useBlogPostingSchema(lesson: {
   published_at?: string | null
   updated_at?: string | null
 }) {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -118,22 +124,22 @@ export function useBlogPostingSchema(lesson: {
     description: lesson.description || undefined,
     datePublished: lesson.published_at || undefined,
     dateModified: lesson.updated_at || lesson.published_at || undefined,
-    image: 'https://threatnoir.com/og-awareness.png',
+    image: `${site.url}/og-awareness.png`,
     author: {
       '@type': 'Organization',
-      name: 'ThreatNoir'
+      name: site.name
     },
     publisher: {
       '@type': 'Organization',
-      name: 'ThreatNoir',
+      name: site.name,
       logo: {
         '@type': 'ImageObject',
-        url: 'https://threatnoir.com/images/threatnoir-logo-wide.png'
+        url: site.logoUrl
       }
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://threatnoir.com/awareness/${lesson.slug}`
+      '@id': `${site.url}/awareness/${lesson.slug}`
     }
   }
 }
@@ -149,6 +155,7 @@ export function useEventSchema(event: {
   organizer?: string | null
   url?: string | null
 }) {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -163,7 +170,7 @@ export function useEventSchema(event: {
     location: event.is_virtual
       ? {
           '@type': 'VirtualLocation',
-          url: event.url || `https://threatnoir.com/events`
+          url: event.url || `${site.url}/events`
         }
       : {
           '@type': 'Place',
@@ -176,7 +183,7 @@ export function useEventSchema(event: {
           name: event.organizer
         }
       : undefined,
-    url: event.url || `https://threatnoir.com/events`
+    url: event.url || `${site.url}/events`
   }
 }
 
@@ -194,12 +201,13 @@ export function useBreadcrumbSchema(items: Array<{ name: string; url: string }>)
 }
 
 export function useCollectionPageSchema(opts: { name: string; url: string; description: string }) {
+  const site = useSiteConfig()
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: opts.name,
     url: opts.url,
     description: opts.description,
-    isPartOf: { '@type': 'WebSite', url: 'https://threatnoir.com', name: 'ThreatNoir' }
+    isPartOf: { '@type': 'WebSite', url: site.url, name: site.name }
   }
 }

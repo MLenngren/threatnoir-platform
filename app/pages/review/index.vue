@@ -94,11 +94,13 @@ type ReviewsIndexResponse = {
   items: ReviewIndexItem[]
 }
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Reviews — ThreatNoir',
-  description: 'Podcast companion review articles published with each ThreatNoir episode.',
-  ogTitle: 'Reviews — ThreatNoir',
-  ogDescription: 'Podcast companion review articles published with each ThreatNoir episode.',
+	  title: `Reviews — ${site.name}`,
+	  description: `Podcast companion review articles published with each ${site.name} episode.`,
+	  ogTitle: `Reviews — ${site.name}`,
+	  ogDescription: `Podcast companion review articles published with each ${site.name} episode.`,
   ogType: 'website'
 })
 

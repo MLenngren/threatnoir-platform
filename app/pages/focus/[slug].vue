@@ -139,11 +139,12 @@ if (error.value) {
 }
 
 const item = computed(() => data.value?.item || null)
+	const site = useSiteConfig()
 
-const seoTitle = computed(() => (item.value?.title ? `${item.value.title} — Focus alert | ThreatNoir` : 'Focus alert | ThreatNoir'))
+	const seoTitle = computed(() => (item.value?.title ? `${item.value.title} — Focus alert | ${site.name}` : `Focus alert | ${site.name}`))
 const seoDescription = computed(() => {
   const raw = (item.value?.summary || '').trim()
-  if (!raw) return 'Urgent security threat advisory from ThreatNoir.'
+	  if (!raw) return `Urgent security threat advisory from ${site.name}.`
   return raw.length <= 155 ? raw : raw.slice(0, 155).trim() + '…'
 })
 

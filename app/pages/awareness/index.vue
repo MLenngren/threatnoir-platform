@@ -103,19 +103,21 @@
 import AwarenessLessonCard from '~/components/AwarenessLessonCard.vue'
 import { useAwarenessLessons, useAwarenessTags } from '~/composables/useAwareness'
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Security Awareness Lessons | ThreatNoir',
+	  title: `Security Awareness Lessons | ${site.name}`,
   description: 'Root-cause takeaways from real security incidents. Learn what to look for in your own environment before it happens to you. Updated weekly.',
-  ogTitle: 'Security Awareness Lessons | ThreatNoir',
+	  ogTitle: `Security Awareness Lessons | ${site.name}`,
   ogDescription: 'Root-cause takeaways from real security incidents. Learn what to look for in your own environment before it happens to you. Updated weekly.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/awareness',
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/awareness`,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Security Awareness Lessons | ThreatNoir',
+	  twitterTitle: `Security Awareness Lessons | ${site.name}`,
   twitterDescription: 'Root-cause takeaways from real security incidents. Learn what to look for in your own environment before it happens to you. Updated weekly.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+	  twitterImage: site.ogImageUrl,
+	  author: site.name
 })
 
 const route = useRoute()

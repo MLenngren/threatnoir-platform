@@ -5,9 +5,9 @@
         <div class="flex flex-col gap-10 md:flex-row md:items-center">
           <div class="w-full md:w-1/3">
             <div class="aspect-square overflow-hidden rounded-xl bg-tn-surface-high ring-1 ring-white/10 relative group">
-              <img
-                src="/podcast-artwork.jpg"
-                alt="ThreatNoir podcast artwork"
+	              <img
+	                src="/podcast-artwork.jpg"
+	                :alt="`${site.name} podcast artwork`"
                 class="h-full w-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-105"
                 loading="lazy"
               >
@@ -85,6 +85,7 @@
 import { useScrollReveal } from '~/composables/useScrollReveal'
 import { safeHref } from '~/composables/useSafeHref'
 import type { PublicPodcastEpisode } from '~/types/public'
+	const site = useSiteConfig()
 
 type PodcastsResponse = {
   items: PublicPodcastEpisode[]

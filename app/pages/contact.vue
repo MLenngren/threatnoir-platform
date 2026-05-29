@@ -14,7 +14,7 @@
         </h1>
 
         <p class="mt-4 max-w-2xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
-          Reach the ThreatNoir team through a secure channel, or review the legal and compliance frameworks that govern our
+	          Reach the {{ site.name }} team through a secure channel, or review the legal and compliance frameworks that govern our
           curated intelligence distribution.
         </p>
       </header>
@@ -146,7 +146,7 @@
 
             <p class="text-xs text-tn-on-surface-variant">
               Prefer email? Write to
-              <a href="mailto:contact@threatnoir.com" class="text-tn-primary hover:underline">contact@threatnoir.com</a>.
+	              <a href="mailto:contact@example.com" class="text-tn-primary hover:underline">contact@example.com</a>.
             </p>
           </form>
         </section>
@@ -165,7 +165,7 @@
                 <div class="min-w-0">
                   <dt class="font-label text-[10px] font-bold uppercase tracking-widest text-tn-on-surface-variant">Email</dt>
                   <dd class="mt-1 text-sm text-tn-on-surface">
-                    <a href="mailto:contact@threatnoir.com" class="hover:underline">contact@threatnoir.com</a>
+	                    <a href="mailto:contact@example.com" class="hover:underline">contact@example.com</a>
                   </dd>
                 </div>
               </div>
@@ -241,11 +241,22 @@
 </template>
 
 <script setup lang="ts">
+	const site = useSiteConfig()
+
 definePageMeta({ layout: 'default' })
 
 useSeoMeta({
-  title: 'Contact & Legal — ThreatNoir',
-  description: 'Contact the ThreatNoir team and review legal and compliance information.'
+	  title: 'Contact & Legal',
+	  description: `Contact the ${site.name} team and review legal and compliance information.`,
+	  ogTitle: `Contact & Legal | ${site.name}`,
+	  ogDescription: `Contact the ${site.name} team and review legal and compliance information.`,
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/contact`,
+	  twitterCard: 'summary_large_image',
+	  twitterTitle: `Contact & Legal | ${site.name}`,
+	  twitterDescription: `Contact the ${site.name} team and review legal and compliance information.`,
+	  twitterImage: site.ogImageUrl,
+	  author: site.name
 })
 
 const subjectOptions = ['General Inquiry', 'Bug Report', 'Legal Inquiry', 'Partnership'] as const
@@ -278,7 +289,7 @@ const legalCards = [
   {
     icon: 'i-heroicons-document-text',
     title: 'Terms of service',
-    body: 'Platform usage terms, limitations, and acceptable use guidelines for interacting with ThreatNoir content.'
+	    body: `Platform usage terms, limitations, and acceptable use guidelines for interacting with ${site.name} content.`
   },
   {
     icon: 'i-heroicons-circle-stack',

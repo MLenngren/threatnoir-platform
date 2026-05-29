@@ -67,11 +67,13 @@ if (import.meta.server && categoriesData.value && !category.value) {
   throw createError({ statusCode: 404, statusMessage: 'Category not found' })
 }
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: () => `${category.value?.name ?? 'Category'} — ThreatNoir`,
+	  title: () => `${category.value?.name ?? 'Category'} — ${site.name}`,
   description: () =>
     category.value?.description ?? `Latest approved security news in ${category.value?.name ?? 'this category'}.`,
-  ogTitle: () => `${category.value?.name ?? 'Category'} — ThreatNoir`,
+	  ogTitle: () => `${category.value?.name ?? 'Category'} — ${site.name}`,
   ogDescription: () =>
     category.value?.description ?? `Latest approved security news in ${category.value?.name ?? 'this category'}.`,
   ogType: 'website'

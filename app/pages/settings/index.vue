@@ -332,8 +332,8 @@
 					  <div class="flex flex-wrap items-start justify-between gap-4">
 					    <div>
 					      <h2 class="font-label text-[11px] font-bold uppercase tracking-[0.2em] text-tn-on-surface">API Keys</h2>
-					      <p class="mt-1 max-w-2xl text-sm text-tn-on-surface-variant">
-					        Use API keys to authenticate with the ThreatNoir MCP server and IOC API.
+			      <p class="mt-1 max-w-2xl text-sm text-tn-on-surface-variant">
+			        Use API keys to authenticate with the {{ site.name }} MCP server and IOC API.
 					      </p>
 					    </div>
 					    <button
@@ -601,7 +601,7 @@
                     id="webhook-url"
                     v-model.trim="newWebhookEndpointUrl"
                     type="url"
-                    placeholder="https://example.com/threatnoir"
+								placeholder="https://example.com/webhook"
 	                    class="mt-2 w-full rounded-xl bg-black/20 px-3 py-2 text-sm text-tn-on-surface placeholder:text-white/30 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-tn-primary/25"
                   >
                 </div>
@@ -773,9 +773,10 @@ type Interests = {
 }
 
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 useSeoMeta({
-  title: 'Settings — ThreatNoir',
-  description: 'Manage your ThreatNoir notification preferences and channels.'
+	  title: `Settings — ${site.name}`,
+	  description: `Manage your ${site.name} notification preferences and channels.`
 })
 
 const supabase = useSupabaseClient()

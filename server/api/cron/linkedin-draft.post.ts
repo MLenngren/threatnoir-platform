@@ -7,6 +7,7 @@ import { checkAiQuota, logAiCall } from '../../utils/aiUsage'
 import { safeCompare } from '../../utils/safeCompare'
 import { useSupabaseAdmin } from '../../utils/supabase'
 import { formatWeeklyTweet, postTweet } from '../../utils/twitter'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 const LINKEDIN_VOICE_PROMPT =
   "When drafting LinkedIn posts for the weekly ThreatNoir roundup, match Marcus's actual posting style:\n\n" +
@@ -78,6 +79,7 @@ export default defineEventHandler(async (event) => {
   if (!quota.allowed) return { skipped: true, reason: quota.reason || 'AI quota exceeded' }
 
   const supabase = useSupabaseAdmin()
+	const site = getSiteConfig()
 
   const weeklyRes = await supabase
     .from('weekly_roundups')
@@ -115,10 +117,10 @@ export default defineEventHandler(async (event) => {
     .filter(Boolean)
 
   const stories = extractTopStories(weekly.full_brief || '', 6)
-  const link = `https://threatnoir.com/weekly/${weekly.slug}`
+	const link = `${site.url}/weekly/${weekly.slug}`
 
   const userPrompt =
-    `Write a LinkedIn post about this week's ThreatNoir roundup.\n\n` +
+	    `Write a LinkedIn post about this week's ${site.name} roundup.\n\n` +
     `Week: ${weekly.week_label}\n\n` +
     `TLDR:\n${(weekly.tldr || '').trim()}\n\n` +
     `Top stories (summaries):\n${(stories.length ? stories : ['(none)']).map((s) => `- ${s}`).join('\n')}\n\n` +
@@ -188,7 +190,7 @@ export default defineEventHandler(async (event) => {
 
   // Auto-post to X (fire and forget)
   try {
-    const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').replace(/\/$/, '')
+	  const siteUrl = site.url
     const tweet = formatWeeklyTweet({
       weekLabel: weekly.week_label || '',
       slug: weekly.slug || '',

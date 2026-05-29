@@ -1,4 +1,5 @@
 import { defineEventHandler, readBody } from 'h3'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 type TelegramUpdate = {
   message?: {
@@ -26,13 +27,15 @@ export default defineEventHandler(async (event) => {
 
   // Only respond to /start
   if (text === '/start') {
+	  const site = getSiteConfig()
+	  const subscribeUrl = `${site.url}/subscribe`
     const replyText = [
-      '👋 Welcome to ThreatNoir Alerts!',
+	    `👋 Welcome to ${site.name} Alerts!`,
       '',
       `Your Chat ID is: \`${chatId}\``,
       '',
       'To receive notifications:',
-      '1. Go to https://threatnoir.com/subscribe',
+	    `1. Go to ${subscribeUrl}`,
       '2. Choose "Telegram" as your notification channel',
       `3. Enter your Chat ID: \`${chatId}\``,
       '4. Select your interests and subscribe!',

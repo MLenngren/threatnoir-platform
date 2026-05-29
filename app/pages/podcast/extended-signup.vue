@@ -113,11 +113,12 @@
 </template>
 
 <script setup lang="ts">
+	const site = useSiteConfig()
 useSeoMeta({
-  title: 'Extended Podcast Edition — ThreatNoir',
-  description: "Sign up for ThreatNoir's extended 20-minute podcast with deeper security analysis.",
-  ogTitle: 'Extended Podcast Edition — ThreatNoir',
-  ogDescription: "Sign up for ThreatNoir's extended 20-minute podcast with deeper security analysis.",
+	  title: `Extended Podcast Edition — ${site.name}`,
+	  description: `Sign up for ${site.name}'s extended 20-minute podcast with deeper security analysis.`,
+	  ogTitle: `Extended Podcast Edition — ${site.name}`,
+	  ogDescription: `Sign up for ${site.name}'s extended 20-minute podcast with deeper security analysis.`,
   ogType: 'website'
 })
 

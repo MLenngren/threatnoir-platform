@@ -16,8 +16,8 @@
               Apache 2.0
             </span>
           </div>
-          <h1 class="mt-4 text-balance font-headline text-3xl font-black uppercase tracking-tight text-tn-on-surface md:text-5xl">
-            ThreatNoir is open source
+	          <h1 class="mt-4 text-balance font-headline text-3xl font-black uppercase tracking-tight text-tn-on-surface md:text-5xl">
+	            {{ site.name }} is open source
           </h1>
           <p class="mt-3 max-w-2xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
             The entire platform — ingest pipeline, AI summarization, IOC extraction, admin UI, public API — is available under Apache 2.0. Deploy your own instance, customize it, contribute back, or just read the code.
@@ -47,8 +47,8 @@
       <!-- Why -->
       <section class="mt-8 glass-panel rounded-3xl p-6 md:p-8">
         <h2 class="font-label text-[11px] font-bold uppercase tracking-[0.2em] text-tn-on-surface">Why open source?</h2>
-        <p class="mt-4 text-sm leading-7 text-tn-on-surface-variant md:text-base">
-          ThreatNoir was built to solve a real problem: making curated security intelligence accessible without locked-in vendors. Open-sourcing the platform means SOC teams, ISACs, security educators, and individual researchers can deploy their own instance — tuned to their sources, audience, and budget — without rebuilding the pipeline from scratch.
+	          <p class="mt-4 text-sm leading-7 text-tn-on-surface-variant md:text-base">
+	          {{ site.name }} was built to solve a real problem: making curated security intelligence accessible without locked-in vendors. Open-sourcing the platform means SOC teams, ISACs, security educators, and individual researchers can deploy their own instance — tuned to their sources, audience, and budget — without rebuilding the pipeline from scratch.
         </p>
         <p class="mt-3 text-sm leading-7 text-tn-on-surface-variant md:text-base">
           We also wanted the code to be inspectable. If you're going to trust an AI pipeline to summarize and classify your security news, you should be able to read exactly how it works.
@@ -180,17 +180,18 @@ npm run dev</code></pre>
 </template>
 
 <script setup lang="ts">
+	const site = useSiteConfig()
 useSeoMeta({
-  title: 'Open Source — ThreatNoir',
-  description: 'ThreatNoir is open source under Apache 2.0. Deploy your own curated security news platform with AI summarization, IOC extraction, and a public API.',
-  ogTitle: 'ThreatNoir is open source — Apache 2.0',
-  ogDescription: 'The entire ThreatNoir platform — ingest, AI summarization, IOC extraction, admin UI, API — available under Apache 2.0. Deploy your own.',
+	  title: `Open Source — ${site.name}`,
+	  description: `${site.name} is open source under Apache 2.0. Deploy your own curated security news platform with AI summarization, IOC extraction, and a public API.`,
+	  ogTitle: `${site.name} is open source — Apache 2.0`,
+	  ogDescription: `The entire ${site.name} platform — ingest, AI summarization, IOC extraction, admin UI, API — available under Apache 2.0. Deploy your own.`,
   ogType: 'website',
-  ogUrl: 'https://threatnoir.com/opensource',
+	  ogUrl: `${site.url}/opensource`,
   twitterCard: 'summary_large_image'
 })
 
 useHead({
-  link: [{ rel: 'canonical', href: 'https://threatnoir.com/opensource' }]
+	  link: [{ rel: 'canonical', href: `${site.url}/opensource` }]
 })
 </script>

@@ -1,3 +1,5 @@
+import { DEFAULT_SITE_URL } from '../../../shared/siteDefaults'
+
 type WeeklyDigestInput = {
   email: string
   siteUrl: string
@@ -34,7 +36,7 @@ function escapeHtml(input: string): string {
 }
 
 function normalizeSiteUrl(raw?: string | null): string {
-  const v = (raw || '').trim() || 'https://threatnoir.com'
+	const v = (raw || '').trim() || DEFAULT_SITE_URL
   return v.replace(/\/$/, '')
 }
 

@@ -97,14 +97,15 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'Learn Security From What’s Actually Happening | ThreatNoir',
+	  title: `Learn Security From What’s Actually Happening | ${site.name}`,
   description:
-    'Learn cybersecurity by studying real incidents. ThreatNoir Awareness Lessons extract root-cause takeaways you can apply immediately—no fluff, no hypotheticals.',
-  ogTitle: 'Learn Security From What’s Actually Happening | ThreatNoir',
+	    `Learn cybersecurity by studying real incidents. ${site.name} Awareness Lessons extract root-cause takeaways you can apply immediately—no fluff, no hypotheticals.`,
+	  ogTitle: `Learn Security From What’s Actually Happening | ${site.name}`,
   ogDescription:
-    'Learn cybersecurity by studying real incidents. ThreatNoir Awareness Lessons extract root-cause takeaways you can apply immediately—no fluff, no hypotheticals.',
+	    `Learn cybersecurity by studying real incidents. ${site.name} Awareness Lessons extract root-cause takeaways you can apply immediately—no fluff, no hypotheticals.`,
   ogType: 'website'
 })
 

@@ -22,7 +22,7 @@
 					class="text-tn-on-surface"
 					style="margin: 0; font-size: 72px; line-height: 1; font-weight: 800; letter-spacing: -0.025em;"
 				>
-					ThreatNoir<br>
+					{{ site.name }}<br>
 					<span class="text-tn-primary">Daily Brief</span>
 				</h1>
 
@@ -77,4 +77,5 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 const sponsor = computed(() => (config.public.sponsorLabel || '').trim())
+	const site = useSiteConfig()
 </script>

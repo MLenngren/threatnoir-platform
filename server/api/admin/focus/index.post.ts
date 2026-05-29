@@ -16,6 +16,7 @@ import { formatFocusPost, postToMastodon } from '../../../utils/mastodon'
 import { formatFocusTweet, postTweet } from '../../../utils/twitter'
 import { notifyAdmin } from '../../../utils/notifyAdmin'
 import { requireAdminUser } from '../../../utils/requireAdmin'
+import { getSiteConfig } from '../../../utils/siteConfig'
 
 type Body = {
   title?: unknown
@@ -130,7 +131,7 @@ export default defineEventHandler(async (event) => {
 
 	// Mastodon auto-post (critical only, fire-and-forget)
 	if (severity === 'critical' && focusId) {
-		const siteUrl = ((process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com').replace(/\/$/, '')
+			const siteUrl = getSiteConfig().url
 		postToMastodon(formatFocusPost({ title, severity, summary, siteUrl }))
 			.then((res) => {
 				if (!res) return null

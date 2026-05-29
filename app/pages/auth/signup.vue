@@ -149,19 +149,20 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 useSeoMeta({
-  title: 'Sign Up — Free Security Briefings | ThreatNoir',
+	  title: `Sign Up — Free Security Briefings | ${site.name}`,
   description: 'Create a free account to get daily security briefings, the weekly roundup, and custom alerts via email, Discord, Telegram, or webhook.',
-  ogTitle: 'Sign Up — Free Security Briefings | ThreatNoir',
+	  ogTitle: `Sign Up — Free Security Briefings | ${site.name}`,
   ogDescription: 'Create a free account to get daily security briefings, the weekly roundup, and custom alerts via email, Discord, Telegram, or webhook.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/auth/signup',
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/auth/signup`,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Sign Up — Free Security Briefings | ThreatNoir',
+	  twitterTitle: `Sign Up — Free Security Briefings | ${site.name}`,
   twitterDescription: 'Create a free account to get daily security briefings, the weekly roundup, and custom alerts via email, Discord, Telegram, or webhook.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir',
+	  twitterImage: site.ogImageUrl,
+	  author: site.name,
   robots: 'noindex'
 })
 

@@ -103,9 +103,9 @@
 	        v-if="article.slug"
 	        :to="`/article/${article.slug}`"
 	        class="shrink-0 rounded-lg bg-tn-surface-lowest/60 px-3 py-2 font-label text-[10px] font-bold uppercase tracking-widest text-tn-on-surface ring-1 ring-white/10 hover:text-tn-primary hover:ring-tn-primary/30"
-	        title="Open ThreatNoir view"
+	        :title="`Open ${site.name} view`"
 	      >
-	        ThreatNoir view
+	        {{ site.name }} view
 	      </NuxtLink>
     </div>
   </article>
@@ -116,6 +116,7 @@ import { useTimeAgo } from '@vueuse/core'
 		import { safeHref } from '~/composables/useSafeHref'
 
 	const isClient = import.meta.client
+		const site = useSiteConfig()
 
 const props = defineProps({
   article: {

@@ -17,6 +17,7 @@ import process from 'node:process'
 import { Resend } from 'resend'
 
 import { generateSubscriberApiKey } from '../server/utils/api-keys'
+import { DEFAULT_SITE_URL } from '../shared/siteDefaults'
 
 const SUPABASE_REF = process.env.SUPABASE_PROJECT_REF
 if (!SUPABASE_REF) throw new Error('SUPABASE_PROJECT_REF env var required')
@@ -169,7 +170,7 @@ async function main(): Promise<void> {
 
   // Email API key
   const resend = new Resend(getResendApiKey())
-  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
+	  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL).trim() || DEFAULT_SITE_URL
   const endpoint = `${siteUrl.replace(/\/$/, '')}/api/v1/notifications`
 
   eprint(`[approve-api-request] sending API key email via Resend to=${email}`)

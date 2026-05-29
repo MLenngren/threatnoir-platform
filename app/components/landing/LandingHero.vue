@@ -24,8 +24,8 @@
             Security <span class="text-tn-primary">intelligence,</span> curated for practitioners.
           </h1>
 
-	          <p class="mt-6 max-w-2xl text-pretty text-sm leading-relaxed text-tn-on-surface md:text-base">
-	            ThreatNoir is a daily-updated security intelligence platform with curated articles, real-time IOCs, podcasts, and weekly briefs for SOC analysts, security leaders, and engineers.
+			  <p class="mt-6 max-w-2xl text-pretty text-sm leading-relaxed text-tn-on-surface md:text-base">
+			    {{ site.name }} is a daily-updated security intelligence platform with curated articles, real-time IOCs, podcasts, and weekly briefs for SOC analysts, security leaders, and engineers.
 	          </p>
 
 	          <p class="mt-4 max-w-xl text-pretty text-lg leading-relaxed text-tn-on-surface-variant">
@@ -155,6 +155,7 @@
 
 <script setup lang="ts">
 import { safeHref } from '~/composables/useSafeHref'
+	const site = useSiteConfig()
 
 type HeroArticle = {
   id: string

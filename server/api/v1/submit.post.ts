@@ -7,6 +7,7 @@ import { validateApiKey } from '../../utils/apiKey'
 import { fetchUrlMeta } from '../../utils/fetchMeta'
 import { generateArticleSlug } from '../../utils/slugify'
 import { checkRateLimit, getClientIP } from '../../utils/rateLimit'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 type Body = {
   url?: string
@@ -118,7 +119,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const sourceName = (body?.source_name ?? '').trim() || 'Manual / API'
-  const defaultSiteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim()
+	  const defaultSiteUrl = getSiteConfig().url
   const sourceUrl = (() => {
     try {
       return urlObj.origin

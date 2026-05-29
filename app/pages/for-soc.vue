@@ -18,8 +18,8 @@
           <h1 class="mt-4 text-balance font-headline text-3xl font-black tracking-tight text-tn-on-surface md:text-5xl">
             Threat Intel for <span class="text-tn-primary">SOC Analysts</span> &amp; Threat Hunters
           </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-tn-on-surface-variant md:text-base">
-            Daily signal, actionable context, and IOCs you can operationalize. Use ThreatNoir as your fast start to triage what matters today.
+	          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-tn-on-surface-variant md:text-base">
+	            Daily signal, actionable context, and IOCs you can operationalize. Use {{ site.name }} as your fast start to triage what matters today.
           </p>
 
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -88,8 +88,8 @@
               <span v-if="typeof featured.article_count === 'number'" class="ml-2 text-tn-on-surface-variant">• {{ featured.article_count }} articles</span>
             </div>
           </div>
-          <div class="mt-2 text-balance font-headline text-lg font-bold text-tn-on-surface">
-            {{ (featured.title || '').trim() || 'ThreatNoir Daily Briefing' }}
+	          <div class="mt-2 text-balance font-headline text-lg font-bold text-tn-on-surface">
+	            {{ (featured.title || '').trim() || `${site.name} Daily Briefing` }}
           </div>
           <p v-if="featuredNote" class="mt-2 text-sm leading-relaxed text-tn-on-surface-variant">{{ featuredNote }}</p>
         </div>
@@ -100,12 +100,13 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'Threat Intel for SOC Analysts & Threat Hunters | ThreatNoir',
+	  title: `Threat Intel for SOC Analysts & Threat Hunters | ${site.name}`,
   description:
     'Daily threat intelligence briefings for SOC analysts and threat hunters. Get actionable context, IOC discovery, and fast signal to prioritize investigations.',
-  ogTitle: 'Threat Intel for SOC Analysts & Threat Hunters | ThreatNoir',
+	  ogTitle: `Threat Intel for SOC Analysts & Threat Hunters | ${site.name}`,
   ogDescription:
     'Daily threat intelligence briefings for SOC analysts and threat hunters. Get actionable context, IOC discovery, and fast signal to prioritize investigations.',
   ogType: 'website'

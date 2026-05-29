@@ -144,10 +144,12 @@ type TipsResponse = {
   items: TipItem[]
 }
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Security Tips & Tricks — ThreatNoir',
+	  title: `Security Tips & Tricks — ${site.name}`,
   description: 'High-density security tips for practitioners: prompts, compliance shortcuts, and operational tactics.',
-  ogTitle: 'Security Tips & Tricks — ThreatNoir',
+	  ogTitle: `Security Tips & Tricks — ${site.name}`,
   ogDescription: 'High-density security tips for practitioners: prompts, compliance shortcuts, and operational tactics.',
   ogType: 'website'
 })

@@ -69,8 +69,8 @@
           Bluesky
         </a>
 
-        <a
-          :href="`mailto:?subject=${encodedTitle}&body=Check out this security awareness lesson from ThreatNoir:%0A%0A${encodedUrl}`"
+	        <a
+	          :href="`mailto:?subject=${encodedTitle}&body=Check out this security awareness lesson from ${site.name}:%0A%0A${encodedUrl}`"
           class="inline-flex items-center gap-2 rounded-lg bg-tn-surface-lowest/40 px-3 py-2 font-label text-[10px] font-bold uppercase tracking-widest text-tn-on-surface-variant ring-1 ring-white/10 transition-colors hover:bg-tn-primary/10 hover:text-tn-primary"
         >
           <UIcon name="i-heroicons-envelope" class="h-4 w-4" />
@@ -102,28 +102,32 @@ const seoDescription = computed(() => {
   return raw.length <= 155 ? raw : raw.slice(0, 155).trim() + '...'
 })
 
+	const site = useSiteConfig()
+	const canonicalUrl = computed(() => (lesson.value?.slug ? `${site.url}/awareness/${lesson.value.slug}` : `${site.url}/awareness`))
+	const ogImage = computed(() => `${site.url}/og-awareness.png`)
+
 useSeoMeta({
-  title: computed(() => (lesson.value ? `${lesson.value.title} | ThreatNoir Awareness` : 'ThreatNoir Awareness')),
+	  title: computed(() => (lesson.value ? `${lesson.value.title} | ${site.name} Awareness` : `${site.name} Awareness`)),
   description: seoDescription,
-  ogTitle: computed(() => lesson.value?.title || 'ThreatNoir Awareness'),
+	  ogTitle: computed(() => (lesson.value ? `${lesson.value.title} | ${site.name} Awareness` : `${site.name} Awareness`)),
   ogDescription: seoDescription,
-  ogUrl: computed(() => (lesson.value?.slug ? `https://threatnoir.com/awareness/${lesson.value.slug}` : 'https://threatnoir.com/awareness')),
+	  ogUrl: canonicalUrl,
   ogType: 'article',
-  ogImage: 'https://threatnoir.com/og-awareness.png',
+	  ogImage,
   twitterCard: 'summary_large_image',
-  twitterTitle: computed(() => lesson.value?.title || 'ThreatNoir Awareness'),
+	  twitterTitle: computed(() => lesson.value?.title || `${site.name} Awareness`),
   twitterDescription: seoDescription,
-  twitterImage: 'https://threatnoir.com/og-awareness.png'
+	  twitterImage: ogImage
 })
 
-const shareUrl = computed(() => lesson.value?.slug ? `https://threatnoir.com/awareness/${lesson.value.slug}` : '')
+	const shareUrl = computed(() => (lesson.value?.slug ? canonicalUrl.value : ''))
 const encodedUrl = computed(() => encodeURIComponent(shareUrl.value))
-const encodedTitle = computed(() => encodeURIComponent(lesson.value?.title || 'ThreatNoir Awareness'))
+	const encodedTitle = computed(() => encodeURIComponent(lesson.value?.title || `${site.name} Awareness`))
 
 const structuredData = computed(() => {
   if (!lesson.value || !slug.value) return null
 
-  const url = `https://threatnoir.com/awareness/${slug.value}`
+	  const url = `${site.url}/awareness/${slug.value}`
 
   return [
     useBlogPostingSchema({
@@ -134,8 +138,8 @@ const structuredData = computed(() => {
       updated_at: null
     }),
     useBreadcrumbSchema([
-      { name: 'Home', url: 'https://threatnoir.com' },
-      { name: 'Awareness', url: 'https://threatnoir.com/awareness' },
+	      { name: 'Home', url: site.url },
+	      { name: 'Awareness', url: `${site.url}/awareness` },
       { name: lesson.value.title, url }
     ])
   ]

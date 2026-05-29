@@ -229,19 +229,21 @@ type ResourcesResponse = {
   items: ResourceRow[]
 }
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Security Resources, Infographics & Guides | ThreatNoir',
+	  title: `Security Resources, Infographics & Guides | ${site.name}`,
   description: 'Curated security posters, infographics, cheat sheets, and practical guides. Free references for security teams, students, and practitioners.',
-  ogTitle: 'Security Resources, Infographics & Guides | ThreatNoir',
+	  ogTitle: `Security Resources, Infographics & Guides | ${site.name}`,
   ogDescription: 'Curated security posters, infographics, cheat sheets, and practical guides. Free references for security teams, students, and practitioners.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/resources',
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/resources`,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Security Resources, Infographics & Guides | ThreatNoir',
+	  twitterTitle: `Security Resources, Infographics & Guides | ${site.name}`,
   twitterDescription: 'Curated security posters, infographics, cheat sheets, and practical guides. Free references for security teams, students, and practitioners.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+	  twitterImage: site.ogImageUrl,
+	  author: site.name
 })
 
 const route = useRoute()

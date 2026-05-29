@@ -6,6 +6,7 @@ import { notifyAdmin } from './notifyAdmin'
 import { isoWeekLabel, startOfIsoWeekUtc } from './isoWeek'
 import { generateAndUploadWeeklyCover } from './weeklyCover'
 import type { useSupabaseAdmin } from './supabase'
+import { getSiteConfig } from './siteConfig'
 
 type SupabaseAdminClient = ReturnType<typeof useSupabaseAdmin>
 
@@ -227,8 +228,9 @@ export async function generateWeeklyRoundupDraft(params: {
     }))
   }
 
-	  const prompt =
-	    `You are ThreatNoir's weekly threat intelligence analyst. Write a comprehensive Weekly Threat Roundup for security practitioners based on the provided articles.\n\n` +
+		  const site = getSiteConfig()
+		  const prompt =
+		    `You are ${site.name}'s weekly threat intelligence analyst. Write a comprehensive Weekly Threat Roundup for security practitioners based on the provided articles.\n\n` +
 	    `Return ONLY valid JSON with this shape:\n` +
 	    `{"tldr":"<5-7 bullet points, markdown list, each starts with emoji>","full_brief":"<markdown brief>","executive_summary":"<markdown executive summary>","tagline":"<tagline>","social_linkedin":"<ready-to-post>","social_x":"<ready-to-post, <= 280 chars if possible>"}\n\n` +
 	    `Rules for full_brief:\n` +
@@ -252,7 +254,7 @@ export async function generateWeeklyRoundupDraft(params: {
 	    `- 5-7 bullet points, each starting with an emoji.\n` +
 	    `- Cover the week's biggest themes, not individual articles.\n\n` +
 	    `Rules for social:\n` +
-	    `- social_linkedin: hook + 5 bullets + "Full roundup: https://threatnoir.com/weekly/${slug}" + 3-5 hashtags. No em dashes.\n` +
+		    `- social_linkedin: hook + 5 bullets + "Full roundup: ${site.url}/weekly/${slug}" + 3-5 hashtags. No em dashes.\n` +
 	    `- social_x: punchy, under 280 chars, link to roundup.\n\n` +
 	    `Rules for executive_summary and tagline:\n` +
 	    `- executive_summary: VALID MARKDOWN with EXACTLY 4 sections, each introduced by an H3 header. Sections in this exact order with these exact titles:\n` +
@@ -394,7 +396,7 @@ export async function generateWeeklyRoundupDraft(params: {
   await notifyAdmin('weekly_roundup_ready', {
     week_label: weekLabel,
     slug,
-    url: `https://threatnoir.com/admin/weekly?week=${encodeURIComponent(weekLabel)}`
+	  url: `${getSiteConfig().url}/admin/weekly?week=${encodeURIComponent(weekLabel)}`
   })
 
   return { created: true, week_label: weekLabel, slug }

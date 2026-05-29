@@ -397,19 +397,21 @@ type EventItem = {
 
 type EventsResponse = { items: EventItem[]; total: number }
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Upcoming Security Events & Conferences | ThreatNoir',
+	  title: `Upcoming Security Events & Conferences | ${site.name}`,
   description: 'Cybersecurity conferences, workshops, CTFs, and meetups. Filtered by category, audience, and date. Submit your own event.',
-  ogTitle: 'Upcoming Security Events & Conferences | ThreatNoir',
+	  ogTitle: `Upcoming Security Events & Conferences | ${site.name}`,
   ogDescription: 'Cybersecurity conferences, workshops, CTFs, and meetups. Filtered by category, audience, and date. Submit your own event.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/events',
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/events`,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Upcoming Security Events & Conferences | ThreatNoir',
+	  twitterTitle: `Upcoming Security Events & Conferences | ${site.name}`,
   twitterDescription: 'Cybersecurity conferences, workshops, CTFs, and meetups. Filtered by category, audience, and date. Submit your own event.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+	  twitterImage: site.ogImageUrl,
+	  author: site.name
 })
 
 const categoryOptions: Array<{ key: '' | EventCategory; label: string }> = [

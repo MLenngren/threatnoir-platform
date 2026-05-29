@@ -19,9 +19,10 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 useSeoMeta({
-  title: 'Confirm account — ThreatNoir',
-  description: 'Confirm your ThreatNoir account.'
+	  title: `Confirm account — ${site.name}`,
+	  description: `Confirm your ${site.name} account.`
 })
 
 const user = useSupabaseUser()

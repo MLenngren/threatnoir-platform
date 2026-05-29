@@ -66,11 +66,13 @@ type WeekCard = {
   count: number
 }
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Review archive — ThreatNoir',
-  description: 'Browse older ThreatNoir reviews by week.',
-  ogTitle: 'Review archive — ThreatNoir',
-  ogDescription: 'Browse older ThreatNoir reviews by week.',
+	  title: `Review archive — ${site.name}`,
+	  description: `Browse older ${site.name} reviews by week.`,
+	  ogTitle: `Review archive — ${site.name}`,
+	  ogDescription: `Browse older ${site.name} reviews by week.`,
   ogType: 'website'
 })
 

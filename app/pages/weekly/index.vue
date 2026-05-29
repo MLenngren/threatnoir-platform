@@ -10,8 +10,8 @@
 	            For security leaders
 	          </span>
 	        </div>
-        <p class="mt-2 max-w-2xl text-sm leading-relaxed text-tn-on-surface-variant">
-          A weekly practitioner-grade brief across ThreatNoir's approved intelligence. Drafted by AI, reviewed before publishing.
+	        <p class="mt-2 max-w-2xl text-sm leading-relaxed text-tn-on-surface-variant">
+	          A weekly practitioner-grade brief across {{ site.name }}'s approved intelligence. Drafted by AI, reviewed before publishing.
         </p>
       </header>
 
@@ -68,11 +68,12 @@ type WeeklyRoundupItem = {
 }
 
 type WeeklyResponse = { items: WeeklyRoundupItem[] }
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'Weekly Threat Roundup | ThreatNoir',
+	  title: `Weekly Threat Roundup | ${site.name}`,
   description: 'Weekly threat intelligence roundup curated for practitioners.',
-  ogTitle: 'Weekly Threat Roundup | ThreatNoir',
+	  ogTitle: `Weekly Threat Roundup | ${site.name}`,
   ogDescription: 'Weekly threat intelligence roundup curated for practitioners.',
   ogType: 'website'
 })
@@ -82,7 +83,7 @@ useHead({
     {
       rel: 'alternate',
       type: 'application/rss+xml',
-      title: 'ThreatNoir Weekly Roundup',
+	      title: `${site.name} Weekly Roundup`,
       href: '/api/weekly/feed.xml'
     }
   ]

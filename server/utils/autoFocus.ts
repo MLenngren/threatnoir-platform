@@ -5,6 +5,7 @@ import { checkAiQuota, logAiCall } from './aiUsage'
 import { generateAndEmailFocusDraft } from './linkedinFocusDraft'
 import { formatFocusPost, postToMastodon } from './mastodon'
 import { formatFocusTweet, postTweet } from './twitter'
+import { getSiteConfig } from './siteConfig'
 
 type SupabaseClient = ReturnType<typeof useSupabaseAdmin>
 
@@ -383,7 +384,7 @@ async function createFocusItems(
 
     // Mastodon auto-post (critical only, fire-and-forget)
     if (focusId && insertedSeverity === 'critical') {
-      const siteUrl = ((process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com').replace(/\/$/, '')
+	      const siteUrl = getSiteConfig().url
       postToMastodon(
         formatFocusPost({
           title: String(insertedItem.title || ''),

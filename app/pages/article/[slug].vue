@@ -107,6 +107,8 @@
 
 <script setup lang="ts">
 	import { useToast } from '~/composables/useToast'
+
+const site = useSiteConfig()
 type Article = {
   id: string
   title: string
@@ -185,26 +187,27 @@ const ogImage = computed(() => {
     policy: 'policy'
   }
   const mapped = cat && catMap[cat] ? catMap[cat] : 'default'
-  return `https://threatnoir.com/images/category-${mapped}.png`
+	  return `${site.url}/images/category-${mapped}.png`
 })
 
 const canonicalUrl = computed(() => {
   const s = article.value?.slug
-  return s ? `https://threatnoir.com/article/${s}` : 'https://threatnoir.com'
+	  return s ? `${site.url}/article/${s}` : site.url
 })
 
 useSeoMeta({
-  title: computed(() => (article.value ? `${article.value.title} | ThreatNoir` : 'Article | ThreatNoir')),
+	  title: computed(() => (article.value ? article.value.title : 'Article')),
   description: seoDescription,
-  ogTitle: computed(() => (article.value ? `${article.value.title} | ThreatNoir` : 'Article | ThreatNoir')),
+	  ogTitle: computed(() => (article.value ? `${article.value.title} | ${site.name}` : `Article | ${site.name}`)),
   ogDescription: seoDescription,
   ogImage,
   ogUrl: canonicalUrl,
   ogType: 'article',
   twitterCard: 'summary_large_image',
-  twitterTitle: computed(() => (article.value ? article.value.title : 'Article')),
+	  twitterTitle: computed(() => (article.value ? article.value.title : 'Article')),
   twitterDescription: seoDescription,
-  twitterImage: ogImage
+	  twitterImage: ogImage,
+	  author: site.name
 })
 
 useHead({
@@ -231,11 +234,11 @@ useHead({
           mainEntityOfPage: canonicalUrl.value,
           url: canonicalUrl.value,
           image: [ogImage.value],
-          author: [{ '@type': 'Person', name: 'ThreatNoir' }],
+	          author: [{ '@type': 'Person', name: site.name }],
           publisher: {
             '@type': 'Organization',
-            name: 'ThreatNoir',
-            url: 'https://threatnoir.com'
+	            name: site.name,
+	            url: site.url
           }
         }
         return JSON.stringify(jsonLd)

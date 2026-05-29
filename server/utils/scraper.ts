@@ -2,6 +2,9 @@ import { ofetch } from 'ofetch'
 import { load } from 'cheerio'
 
 import { validateUrlSafe } from './ssrf'
+import { DEFAULT_SITE_URL } from '../../shared/siteDefaults'
+
+const USER_AGENT = `ThreatIntel/1.0 (+${DEFAULT_SITE_URL})`
 
 const SKIP_HOSTS = ['x.com', 'twitter.com', 'github.com']
 
@@ -30,7 +33,7 @@ export async function scrapeArticleText(url: string): Promise<string | null> {
     await validateUrlSafe(url)
 
     const html = await ofetch(url, {
-      headers: { 'User-Agent': 'ThreatNoir/1.0 (+https://threatnoir.com)' },
+		  headers: { 'User-Agent': USER_AGENT },
       timeout: 10000,
       responseType: 'text'
     })
@@ -79,7 +82,7 @@ export async function scrapeArticleWithImage(url: string): Promise<{ text: strin
     await validateUrlSafe(url)
 
     const html = await ofetch(url, {
-      headers: { 'User-Agent': 'ThreatNoir/1.0 (+https://threatnoir.com)' },
+		  headers: { 'User-Agent': USER_AGENT },
       timeout: 10000,
       responseType: 'text'
     })

@@ -2,6 +2,8 @@ import { createError, defineEventHandler, setResponseHeader } from 'h3'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+import { getSiteConfig } from '../../utils/siteConfig'
+
 type ShowEpisodeRow = {
   date: string
   slug: string | null
@@ -28,8 +30,7 @@ const wrapCdata = (s: string) => {
 }
 
 const normalizeSiteUrl = () => {
-  const raw = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  return raw.replace(/\/$/, '')
+	  return getSiteConfig().url
 }
 
 const contentTypeForVideoUrl = (url: string) => {
@@ -41,7 +42,8 @@ const contentTypeForVideoUrl = (url: string) => {
 }
 
 export default defineEventHandler(async (event) => {
-  const siteUrl = normalizeSiteUrl()
+	  const site = getSiteConfig()
+	  const siteUrl = normalizeSiteUrl()
   const supabase = serverSupabaseServiceRole(event)
 
   const { data, error } = await supabase
@@ -91,7 +93,7 @@ export default defineEventHandler(async (event) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
-    <title>ThreatNoir — Red vs Blue Show</title>
+	    <title>${site.name} — Red vs Blue Show</title>
     <link>${escXml(`${siteUrl}/show`)}</link>
     <description>${wrapCdata('Red team attacks, blue team defends. Tactical security breakdowns of real vulnerabilities.')}</description>
     <language>en</language>
