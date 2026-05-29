@@ -1,11 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk'
-
 import type { useSupabaseAdmin } from './supabase'
-import { checkAiQuota, logAiCall } from './aiUsage'
+import { checkAiQuota } from './aiUsage'
 import { generateAndEmailFocusDraft } from './linkedinFocusDraft'
 import { formatFocusPost, postToMastodon } from './mastodon'
 import { formatFocusTweet, postTweet } from './twitter'
 import { getSiteConfig } from './siteConfig'
+import { autoFocusTopicsDirect } from './anthropic'
 
 type SupabaseClient = ReturnType<typeof useSupabaseAdmin>
 
@@ -65,90 +64,72 @@ function mapCategory(slug: string | null): string {
 }
 
 async function generateFocusSummary(
-  article: CandidateArticle,
-  apiKey: string
+  article: CandidateArticle
 ): Promise<{ summary: string; action_required: string; severity: string } | null> {
-  const client = new Anthropic({ apiKey })
-
   const articleText = [article.title, article.ai_summary || article.brief || ''].join('\n\n')
   const cves = extractCves(articleText)
 
-  const prompt = `You are a SOC team lead writing an urgent threat advisory for your blue team.
+  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+  if (gatewayUrl) {
+    const token = process.env.AI_GATEWAY_INTERNAL_TOKEN
+    if (!token || !token.trim()) {
+      throw new Error('AI_GATEWAY_INTERNAL_TOKEN must be set when AI_GATEWAY_URL is set')
+    }
 
-Based on this security article, write a brief focus item for threat hunters and SOC analysts.
+    const base = gatewayUrl.replace(/\/+$/, '')
+    const url = `${base}/auto-focus-topics`
+    const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
 
-Article title: ${article.title}
-Summary: ${article.ai_summary || article.brief || 'No summary available'}
-CVEs: ${cves.length ? cves.join(', ') : 'None identified'}
-Relevance score: ${article.relevance_score}/10
+    let res: Awaited<ReturnType<typeof fetch>>
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-gateway-token': token
+        },
+        body: JSON.stringify({
+          title: article.title,
+          summary: article.ai_summary || article.brief || 'No summary available',
+          relevance_score: article.relevance_score,
+          cves
+        }),
+        signal: AbortSignal.timeout(timeoutMs)
+      })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+      throw new Error(
+        `[ai-gateway] ${isTimeout ? `timeout after ${timeoutMs}ms` : 'network error'} calling ${url}: ${msg}`
+      )
+    }
 
-Return ONLY valid JSON:
-{
-  "summary": "2-3 sentences. What happened, who is affected, what is the risk. Practitioner voice, direct, no fluff.",
-  "action_required": "One clear action. e.g. 'Patch Firefox to latest version immediately' or 'Block IOCs and scan for lateral movement' or 'Monitor for exploitation of CVE-XXXX-XXXX'. Be specific.",
-  "severity": "critical or high or medium"
-}
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+	      const e = new Error(
+	        `[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText)
+	      ) as Error & { status?: number }
+	      e.status = res.status
+	      throw e
+    }
 
-Rules:
-- severity: critical = active exploitation or RCE with public PoC. high = serious vuln or major breach. medium = notable but not urgent.
-- action_required: must be actionable. Not 'be aware' but 'do X now'.
-- No em dashes. Use periods or colons.
-- Practitioner voice: direct, no corporate speak.`
+    const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
+    if (!data) return null
+    const summary = typeof data.summary === 'string' ? data.summary.trim() : ''
+    const action = typeof data.action_required === 'string' ? data.action_required.trim() : ''
+    const sev = typeof data.severity === 'string' ? data.severity.trim().toLowerCase() : 'high'
+    if (!summary || !action) return null
+    const validSev = ['critical', 'high', 'medium'].includes(sev) ? sev : 'high'
+    return { summary, action_required: action, severity: validSev }
+  }
 
-	const model = 'claude-haiku-4-5-20251001'
-	const startedAt = Date.now()
-	let resp: Awaited<ReturnType<typeof client.messages.create>>
-	try {
-	  resp = await client.messages.create({
-	    model,
-	    max_tokens: 400,
-	    messages: [{ role: 'user', content: prompt }]
-	  })
-	} catch {
-	  await logAiCall({
-	    pipeline: 'focus_item',
-	    model,
-	    response: null,
-	    durationMs: Date.now() - startedAt,
-	    status: 'error',
-	    metadata: {
-	      article_id: article.id,
-	      title: article.title.slice(0, 200)
-	    }
-	  })
-	  return null
-	}
-
-	await logAiCall({
-	  pipeline: 'focus_item',
-	  model,
-	  response: resp,
-	  durationMs: Date.now() - startedAt,
-	  status: 'success',
-	  metadata: {
-	    article_id: article.id,
-	    title: article.title.slice(0, 200),
-	    relevance_score: article.relevance_score
-	  }
-	})
-
-	try {
-	  const text = resp.content?.[0]?.type === 'text' ? resp.content[0].text : ''
-	  const m = text.match(/\{[\s\S]*\}/)
-	  if (!m) return null
-
-	  const parsed = JSON.parse(m[0]) as Record<string, unknown>
-	  const summary = typeof parsed.summary === 'string' ? parsed.summary.trim() : ''
-	  const action = typeof parsed.action_required === 'string' ? parsed.action_required.trim() : ''
-	  const sev = typeof parsed.severity === 'string' ? parsed.severity.trim().toLowerCase() : 'high'
-
-	  if (!summary || !action) return null
-
-	  const validSev = ['critical', 'high', 'medium'].includes(sev) ? sev : 'high'
-	  return { summary, action_required: action, severity: validSev }
-	} catch {
-	  return null
-	}
+  return await autoFocusTopicsDirect({
+    article_id: article.id,
+    title: article.title,
+    summary: article.ai_summary || article.brief || 'No summary available',
+    relevance_score: article.relevance_score,
+    cves
+  })
 }
 
 /**
@@ -164,8 +145,9 @@ export async function refreshFocusItems(supabase: SupabaseClient): Promise<{
   archived: number
   skipped_reason?: string
 }> {
-  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-  if (!apiKey) return { created: 0, archived: 0, skipped_reason: 'no_api_key' }
+	  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+	  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+	  if (!gatewayUrl && !apiKey) return { created: 0, archived: 0, skipped_reason: 'no_api_key' }
 
   const quota = await checkAiQuota()
   if (!quota.allowed) return { created: 0, archived: 0, skipped_reason: 'quota' }

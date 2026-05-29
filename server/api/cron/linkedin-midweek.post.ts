@@ -1,36 +1,14 @@
 import { createError, defineEventHandler, getHeader, getQuery } from 'h3'
 import type { H3Event } from 'h3'
-import Anthropic from '@anthropic-ai/sdk'
 import { Resend } from 'resend'
 
-import { checkAiQuota, logAiCall } from '../../utils/aiUsage'
+import { checkAiQuota } from '../../utils/aiUsage'
 import { emailRecipients, emailSenders } from '../../utils/emailConfig'
 import { safeCompare } from '../../utils/safeCompare'
 import { useSupabaseAdmin } from '../../utils/supabase'
 import { formatInsightTweet, postTweet } from '../../utils/twitter'
 import { getSiteConfig } from '../../utils/siteConfig'
-
-function buildLinkedinVoicePrompt(siteName: string): string {
-  return (
-    `When drafting LinkedIn posts for the weekly ${siteName} roundup, match Marcus's actual posting style:\n\n` +
-  '**Why:** Marcus posted the W14 roundup manually and the voice was much better than the AI-drafted numbered list. His style got engagement because it felt like a real person sharing, not a news bulletin.\n\n' +
-  '**How to apply:**\n\nStructure:\n' +
-  '- Open with personal commentary, not a cold hook. "I read that...", "Last week was...", a question or observation\n' +
-  '- Flow as conversational paragraphs, NOT numbered lists\n' +
-  '- Each story gets its own paragraph with 1-2 sentences\n' +
-  '- Add parenthetical asides that show opinion: "(it does feel like Fortinet gets hit a lot?)", "(rougher than usual?)"\n' +
-  '- End with the punchy tagline from the card\n' +
-  '- Link at the bottom, standalone, not inline\n' +
-  '- Hashtags at the very end: #cybersecurity + 1-2 topic-specific\n\nTone:\n' +
-  '- Practitioner sharing with peers, not analyst briefing executives\n' +
-  '- "I read that..." not "This week brought..."\n' +
-  '- Personal takes: "not sure how long you would survive" not "organizations face significant risk"\n' +
-  '- Slight provocations as questions, not statements\n' +
-  '- No bold, no bullet points, no numbered lists\n' +
-  '- No emoji\n\nReference post (W14):\n' +
-    '"I read that last week was rough (rougher than usual?), if you are a business (big or small) good IT hygiene can be optional if you accept the risk, but not sure how long you would survive..."'
-  )
-}
+import { draftLinkedinMidweekPostText } from '../../utils/linkedinMidweekDrafter'
 
 const requireCronSecret = (event: H3Event) => {
   const expected = process.env.CRON_SECRET
@@ -62,9 +40,14 @@ export default defineEventHandler(async (event) => {
     return { skipped: true, reason: 'not Wednesday' }
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw createError({ statusCode: 500, statusMessage: 'ANTHROPIC_API_KEY is not configured' })
-  }
+	const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+	const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+	if (!gatewayUrl && !apiKey) {
+		throw createError({ statusCode: 500, statusMessage: 'ANTHROPIC_API_KEY is not configured (and AI_GATEWAY_URL is unset)' })
+	}
+	if (gatewayUrl && !process.env.AI_GATEWAY_INTERNAL_TOKEN?.trim()) {
+		throw createError({ statusCode: 500, statusMessage: 'AI_GATEWAY_INTERNAL_TOKEN must be set when AI_GATEWAY_URL is set' })
+	}
   if (!process.env.RESEND_API_KEY) {
     throw createError({ statusCode: 500, statusMessage: 'RESEND_API_KEY is not configured' })
   }
@@ -104,43 +87,16 @@ export default defineEventHandler(async (event) => {
     return { skipped: true, reason: 'no recent articles found' }
   }
 
-  const userPrompt = `Write a LinkedIn insight post about this security article. Share your personal take as a practitioner — what it means, why it matters, what teams should do.
-
-Title: ${article.title}
-Summary: ${article.ai_summary || ''}
-
-End with the link standalone on its own line: ${site.url}/article/${article.slug}
-Add #cybersecurity and 1-2 relevant hashtags at the very end.
-
-Keep it 150-200 words. Conversational paragraphs, not lists.`
-
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-	  const model = 'claude-haiku-4-5-20251001'
-	  const startedAt = Date.now()
-	  const resp = await client.messages.create({
-	    model,
-    max_tokens: 1000,
-    temperature: 0.8,
-	    system: buildLinkedinVoicePrompt(site.name),
-    messages: [{ role: 'user', content: userPrompt }]
-  })
-
-	  await logAiCall({
-	    pipeline: 'linkedin_draft_midweek',
-	    model,
-	    response: resp,
-	    durationMs: Date.now() - startedAt,
-	    metadata: {
-	      article_id: article.id,
-	      slug: article.slug
-	    }
-	  })
-
-  const postText = (resp.content || [])
-    .map((c) => (c.type === 'text' ? (c.text || '') : ''))
-    .filter(Boolean)
-    .join('\n')
-    .trim()
+	const postText = await draftLinkedinMidweekPostText({
+		siteName: site.name,
+		siteUrl: site.url,
+		article: {
+			id: article.id,
+			title: article.title,
+			slug: article.slug,
+			ai_summary: article.ai_summary
+		}
+	})
   if (!postText) throw createError({ statusCode: 500, statusMessage: 'Anthropic response was empty' })
 
   const subject = `Your midweek LinkedIn post is ready — ${article.title.slice(0, 60)}`

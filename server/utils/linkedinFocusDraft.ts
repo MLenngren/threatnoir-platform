@@ -1,32 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { logAiCall } from './aiUsage'
 import { emailRecipients } from './emailConfig'
 import { sendWelcomeEmail } from './resend'
 import { getSiteConfig } from './siteConfig'
-
-function buildLinkedinVoicePrompt(siteName: string): string {
-  return (
-    `When drafting LinkedIn posts for the weekly ${siteName} roundup, match Marcus's actual posting style:\n\n` +
-  "**Why:** Marcus posted the W14 roundup manually and the voice was much better than the AI-drafted numbered list. His style got engagement because it felt like a real person sharing, not a news bulletin.\n\n" +
-  "**How to apply:**\n\nStructure:\n" +
-  "- Open with personal commentary, not a cold hook. \"I read that...\", \"Last week was...\", a question or observation\n" +
-  "- Flow as conversational paragraphs, NOT numbered lists\n" +
-  "- Each story gets its own paragraph with 1-2 sentences\n" +
-  "- Add parenthetical asides that show opinion: \"(it does feel like Fortinet gets hit a lot?)\", \"(rougher than usual?)\"\n" +
-  "- End with the punchy tagline from the card\n" +
-  "- Link at the bottom, standalone, not inline\n" +
-  "- Hashtags at the very end: #cybersecurity + 1-2 topic-specific\n\nTone:\n" +
-  "- Practitioner sharing with peers, not analyst briefing executives\n" +
-  "- \"I read that...\" not \"This week brought...\"\n" +
-  "- Personal takes: \"not sure how long you would survive\" not \"organizations face significant risk\"\n" +
-  "- Slight provocations as questions, not statements\n" +
-  "- No bold, no bullet points, no numbered lists\n" +
-  "- No emoji\n\nReference post (W14):\n" +
-    "\"I read that last week was rough (rougher than usual?), if you are a business (big or small) good IT hygiene can be optional if you accept the risk, but not sure how long you would survive...\""
-  )
-}
+import { draftLinkedinFocusDirect } from './anthropic'
 
 type FocusItemInput = {
   id: string
@@ -68,52 +45,67 @@ export async function generateAndEmailFocusDraft(
 
     if ((existing as Record<string, unknown> | null)?.linkedin_drafted_at) return
 
-    const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-    if (!apiKey) {
-      console.error('[linkedinFocusDraft] ANTHROPIC_API_KEY is not configured')
-      return
-    }
+			const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+			const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+			if (!gatewayUrl && !apiKey) {
+				console.error('[linkedinFocusDraft] ANTHROPIC_API_KEY is not configured (and AI_GATEWAY_URL is unset)')
+				return
+			}
 
-    const userPrompt =
-      `Write an urgent LinkedIn post about this critical security issue. ` +
-      `Title: ${focusItem.title}. ` +
-      `Summary: ${focusItem.summary}. ` +
-      `CVEs: ${(focusItem.cve_ids && focusItem.cve_ids.length) ? focusItem.cve_ids.join(', ') : '(none)'}. ` +
-      `Affected: ${(focusItem.affected_products && focusItem.affected_products.length) ? focusItem.affected_products.join(', ') : '(unknown)'}. ` +
-      `Action: ${(focusItem.action_required || '').trim() || '(none provided)'}. ` +
-      `Keep it under 150 words. Direct, first-person, practitioner sharing an alert. ` +
-		      `End with link to ${site.url}/focus. No emoji, no bold, no lists.`
+			const focus = {
+				id: focusItem.id,
+				title: focusItem.title,
+				summary: focusItem.summary,
+				severity: focusItem.severity,
+				cve_ids: focusItem.cve_ids,
+				affected_products: focusItem.affected_products,
+				action_required: focusItem.action_required
+			}
 
-    const client = new Anthropic({ apiKey })
-	    const model = 'claude-haiku-4-5-20251001'
-	    const startedAt = Date.now()
-	    const resp = await client.messages.create({
-	      model,
-      max_tokens: 500,
-      temperature: 0.7,
-	      system: buildLinkedinVoicePrompt(site.name),
-      messages: [{ role: 'user', content: userPrompt }]
-    })
+			let postText = ''
+			if (gatewayUrl) {
+				const token = process.env.AI_GATEWAY_INTERNAL_TOKEN
+				if (!token || !token.trim()) {
+					throw new Error('AI_GATEWAY_INTERNAL_TOKEN must be set when AI_GATEWAY_URL is set')
+				}
 
-	    await logAiCall({
-	      pipeline: 'linkedin_draft_focus',
-	      model,
-	      response: resp,
-	      durationMs: Date.now() - startedAt,
-	      metadata: {
-	        focus_item_id: focusItem.id,
-	        severity: focusItem.severity
-	      }
-	    })
+				const base = gatewayUrl.replace(/\/+$/, '')
+				const url = `${base}/draft-linkedin-focus`
+				const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
+				let res: Awaited<ReturnType<typeof fetch>>
+				try {
+					res = await fetch(url, {
+						method: 'POST',
+						headers: {
+							'content-type': 'application/json',
+							'x-gateway-token': token
+						},
+						body: JSON.stringify({ siteName: site.name, siteUrl: site.url, focus }),
+						signal: AbortSignal.timeout(timeoutMs)
+					})
+				} catch (err) {
+					const msg = err instanceof Error ? err.message : String(err)
+					const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+					throw new Error(
+						`[ai-gateway] ${isTimeout ? `timeout after ${timeoutMs}ms` : 'network error'} calling ${url}: ${msg}`
+					)
+				}
 
-    const postText = (resp.content || [])
-      .map((c) => (c.type === 'text' ? (c.text || '') : ''))
-      .filter(Boolean)
-      .join('\n')
-      .trim()
+				if (!res.ok) {
+					const body = await res.text().catch(() => '')
+					throw new Error(
+						`[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText)
+					)
+				}
+
+				const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
+				postText = typeof data?.text === 'string' ? data.text.trim() : ''
+			} else {
+				postText = (await draftLinkedinFocusDirect({ siteName: site.name, siteUrl: site.url, focus })).trim()
+			}
 
     if (!postText) {
-      console.error('[linkedinFocusDraft] Anthropic response was empty')
+			  console.error('[linkedinFocusDraft] AI response was empty')
       return
     }
 

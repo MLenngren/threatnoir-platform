@@ -1,13 +1,11 @@
 import { createError, defineEventHandler, getHeader } from 'h3'
 import type { H3Event } from 'h3'
 
-import Anthropic from '@anthropic-ai/sdk'
-
 import { safeCompare } from '../../utils/safeCompare'
 import { useSupabaseAdmin } from '../../utils/supabase'
 import { resolveHttpUserAgent } from '../../utils/httpUserAgent'
-import { aiLimits, checkAiQuota, logAiCall } from '../../utils/aiUsage'
-import { computeCostMicroCents } from '../../utils/aiPricing'
+import { aiLimits, checkAiQuota } from '../../utils/aiUsage'
+import { extractEventsFromHtmlDirect } from '../../utils/anthropic'
 
 type EventSourceRow = {
   id: string
@@ -193,8 +191,6 @@ export default defineEventHandler(async (event) => {
   const todayIso = toIsoDate(new Date())
   const cutoffEndedIso = toIsoDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
 
-  const client = new Anthropic({ apiKey })
-
   let sourcesProcessed = 0
   let eventsFound = 0
   let eventsInserted = 0
@@ -266,31 +262,15 @@ Rules:
 HTML:
 ${truncated}`
 
-	      const model = 'claude-haiku-4-5-20251001'
-	      const startedAt = Date.now()
-	      const aiResp = await client.messages.create({
-	        model,
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-
-	      await logAiCall({
-	        pipeline: 'event_ingest',
-	        model,
-	        response: aiResp,
-	        durationMs: Date.now() - startedAt,
-	        metadata: {
-	          source_id: source.id,
-	          source_name: source.name
-	        }
-	      })
-
-      const text = aiResp.content?.[0]?.type === 'text' ? aiResp.content[0].text : ''
-	      // Count this call against quota for mid-run early stop.
-	      const costMicro = computeCostMicroCents(model, aiResp.usage ?? {})
-	      const costTenths = Math.round(costMicro / 1000)
-	      callsToday += 1
-	      monthSpendTenths += costTenths
+		      const ai = await extractEventsFromHtmlDirect({
+		        prompt,
+		        source_id: source.id,
+		        source_name: source.name
+		      })
+	      const text = ai.text
+		      // Count this call against quota for mid-run early stop.
+		      callsToday += 1
+		      monthSpendTenths += ai.costTenths
 
       const parsed = extractJson(text) as Record<string, unknown>
       const rawEvents = Array.isArray(parsed.events) ? parsed.events : []

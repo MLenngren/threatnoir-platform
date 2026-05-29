@@ -1,17 +1,40 @@
 import Anthropic from '@anthropic-ai/sdk'
 
 import { logAiCall } from '../usage.js'
+import { computeCostMicroCents } from '../pricing.js'
 import { cleanArticleText } from '../utils/textClean.js'
 import { CATEGORIES, STABLE_INSTRUCTIONS } from '../prompts/summarize-article.js'
 import { STABLE_INSTRUCTIONS as AWARENESS_INSTRUCTIONS } from '../prompts/generate-awareness.js'
 import { STABLE_INSTRUCTIONS as RELEVANCE_INSTRUCTIONS } from '../prompts/rank-articles.js'
 import { SHORTEN_INSTRUCTIONS, STABLE_INSTRUCTIONS as SOCIAL_DRAFT_INSTRUCTIONS } from '../prompts/draft-social-post.js'
+import { buildLinkedinVoicePrompt } from '../prompts/linkedin-voice.js'
+import { STABLE_SYSTEM as SHOW_SYSTEM, buildUserPrompt as buildShowUserPrompt } from '../prompts/summarize-show.js'
+import { buildWeeklyRoundupPrompt } from '../prompts/weekly-roundup.js'
+import { buildAutoFocusPrompt } from '../prompts/auto-focus.js'
+import { buildLinkedinFocusUserPrompt } from '../prompts/draft-linkedin-focus.js'
+import { buildFindRelatedPrompt } from '../prompts/find-related-articles.js'
+import { buildLinkedinMidweekUserPrompt } from '../prompts/draft-linkedin-midweek.js'
+import { CATEGORIES as RESOURCE_CATEGORIES, buildTagResourcePrompt } from '../prompts/tag-resource.js'
 import type {
   ClassifiedSummary,
   DraftSocialPostRequest,
   DraftSocialPostResponse,
   ExtractIocsResponse,
-  GenerateAwarenessResponse
+  GenerateAwarenessResponse,
+  AutoFocusTopicsRequest,
+  AutoFocusTopicsResponse,
+  DraftLinkedinFocusRequest,
+  DraftLinkedinFocusResponse,
+  DraftLinkedinMidweekRequest,
+  DraftLinkedinMidweekResponse,
+  DraftWeeklyRoundupRequest,
+  DraftWeeklyRoundupResponse,
+  FindRelatedArticlesRequest,
+  FindRelatedArticlesResponse,
+  SummarizeShowRequest,
+  SummarizeShowResponse,
+  TagResourceRequest,
+  TagResourceResponse
 } from '../types.js'
 
 let anthropicClient: Anthropic | null = null
@@ -51,6 +74,7 @@ async function callClaude(params: {
   maxTokens: number
   systemText?: string
   userText: string
+  temperature?: number
   metadata?: Record<string, unknown>
 }): Promise<Anthropic.Messages.Message> {
   const startedAt = Date.now()
@@ -61,6 +85,7 @@ async function callClaude(params: {
     const raw = await client.messages.create({
       model: params.model,
       max_tokens: params.maxTokens,
+      ...(typeof params.temperature === 'number' ? { temperature: params.temperature } : {}),
       ...(params.systemText
         ? {
             system: [
@@ -74,6 +99,82 @@ async function callClaude(params: {
           }
         : {}),
       messages: [{ role: 'user', content: params.userText }]
+    })
+
+    if (!raw || typeof raw !== 'object' || !('content' in raw)) {
+      throw new Error('Unexpected streaming response from Anthropic client')
+    }
+    response = raw as Anthropic.Messages.Message
+  } catch (err) {
+    await logAiCall({
+      pipeline: params.pipeline,
+      model: params.model,
+      response: null,
+      durationMs: Date.now() - startedAt,
+      status: 'error',
+      metadata: params.metadata
+    })
+    throw err
+  }
+
+  await logAiCall({
+    pipeline: params.pipeline,
+    model: params.model,
+    response,
+    durationMs: Date.now() - startedAt,
+    status: 'success',
+    metadata: params.metadata
+  })
+
+  return response
+}
+
+async function callClaudeWithImage(params: {
+  pipeline: string
+  model: string
+  maxTokens: number
+  systemText?: string
+  temperature?: number
+  userText: string
+  image: { mediaType: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif'; base64: string }
+  metadata?: Record<string, unknown>
+}): Promise<Anthropic.Messages.Message> {
+  const startedAt = Date.now()
+  let response: Anthropic.Messages.Message | null = null
+
+  try {
+    const client = getAnthropicClient()
+    const raw = await client.messages.create({
+      model: params.model,
+      max_tokens: params.maxTokens,
+      ...(typeof params.temperature === 'number' ? { temperature: params.temperature } : {}),
+      ...(params.systemText
+        ? {
+            system: [
+              {
+                type: 'text',
+                text: params.systemText,
+                cache_control: { type: 'ephemeral', ttl: '1h' }
+              }
+            ]
+          }
+        : {}),
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: params.image.mediaType,
+                data: params.image.base64
+              }
+            },
+            { type: 'text', text: params.userText }
+          ]
+        }
+      ]
     })
 
     if (!raw || typeof raw !== 'object' || !('content' in raw)) {
@@ -400,5 +501,242 @@ export async function draftSocialPostClaude(params: DraftSocialPostRequest): Pro
     article_ids: article_ids.slice(0, 3),
     text_x,
     text_linkedin
+  }
+}
+
+export async function summarizeShowClaude(req: SummarizeShowRequest): Promise<SummarizeShowResponse> {
+  const title = (req.title || '').trim()
+  const script = (req.script || '').trim()
+  if (!title) throw new Error('title is required')
+  if (!script) throw new Error('script is required')
+
+  const model = 'claude-haiku-4-5-20251001'
+  const userText = buildShowUserPrompt(title, script)
+  const response = await callClaude({
+    pipeline: 'video_briefing',
+    model,
+    maxTokens: 140,
+    temperature: 0.2,
+    systemText: SHOW_SYSTEM,
+    userText,
+    metadata: {
+      title: title.slice(0, 200)
+    }
+  })
+
+  const parts: string[] = []
+  for (const block of response.content ?? []) {
+    if (block?.type === 'text' && typeof block.text === 'string') parts.push(block.text)
+  }
+  const summary = parts.join('\n').trim()
+  if (!summary) throw new Error('Empty model response')
+
+  const costMicro = computeCostMicroCents(model, (response.usage ?? {}) as unknown as { input_tokens?: number; output_tokens?: number })
+  const costCents = Number((costMicro / 10000).toFixed(1))
+
+  return { summary, costCents }
+}
+
+export async function draftWeeklyRoundupClaude(req: DraftWeeklyRoundupRequest): Promise<DraftWeeklyRoundupResponse> {
+  const siteName = (req.siteName || '').trim()
+  const siteUrl = (req.siteUrl || '').trim()
+  if (!siteName) throw new Error('siteName is required')
+  if (!siteUrl) throw new Error('siteUrl is required')
+
+  const prompt = buildWeeklyRoundupPrompt({ siteName, siteUrl, promptPayload: req.promptPayload })
+
+  const model = 'claude-sonnet-4-20250514'
+  const response = await callClaude({
+    pipeline: 'weekly_roundup',
+    model,
+    maxTokens: 6000,
+    userText: prompt,
+    metadata: {
+      week_label: String((req.promptPayload as Record<string, unknown>)?.week_label ?? '').slice(0, 32),
+      slug: String((req.promptPayload as Record<string, unknown>)?.slug ?? '').slice(0, 80)
+    }
+  })
+
+  const text = response.content?.[0]?.type === 'text' ? response.content[0].text : ''
+  const parsed = extractJson(text) as Record<string, unknown>
+
+  const tldr = typeof parsed.tldr === 'string' ? parsed.tldr.trim() : ''
+  const fullBrief = typeof parsed.full_brief === 'string' ? parsed.full_brief.trim() : ''
+  if (!tldr || !fullBrief) throw new Error('Model response missing required fields (tldr/full_brief)')
+
+  const executiveSummaryRaw = typeof parsed.executive_summary === 'string' ? parsed.executive_summary.trim() : ''
+  const taglineRaw = typeof parsed.tagline === 'string' ? parsed.tagline.trim() : ''
+  const socialLinkedIn = typeof parsed.social_linkedin === 'string' ? parsed.social_linkedin.trim() : ''
+  const socialX = typeof parsed.social_x === 'string' ? parsed.social_x.trim() : ''
+
+  return {
+    tldr,
+    full_brief: fullBrief,
+    executive_summary: executiveSummaryRaw || null,
+    tagline: taglineRaw || null,
+    social_linkedin: socialLinkedIn || null,
+    social_x: socialX || null
+  }
+}
+
+export async function autoFocusTopicsClaude(req: AutoFocusTopicsRequest): Promise<AutoFocusTopicsResponse> {
+  const title = (req.title || '').trim()
+  const summary = (req.summary || '').trim()
+  if (!title) throw new Error('title is required')
+  if (!summary) throw new Error('summary is required')
+
+  const model = 'claude-haiku-4-5-20251001'
+  const prompt = buildAutoFocusPrompt({
+    title,
+    summary,
+    cves: Array.isArray(req.cves) ? req.cves : [],
+    relevance_score: Number(req.relevance_score ?? 0)
+  })
+
+  const response = await callClaude({
+    pipeline: 'auto_focus',
+    model,
+    maxTokens: 400,
+    userText: prompt,
+    metadata: {
+      title: title.slice(0, 200),
+      relevance_score: Number(req.relevance_score ?? 0)
+    }
+  })
+
+  try {
+    const text = response.content?.[0]?.type === 'text' ? response.content[0].text : ''
+    const parsed = extractJson(text) as Record<string, unknown>
+    const outSummary = typeof parsed.summary === 'string' ? parsed.summary.trim() : ''
+    const action = typeof parsed.action_required === 'string' ? parsed.action_required.trim() : ''
+    const sev = typeof parsed.severity === 'string' ? parsed.severity.trim().toLowerCase() : 'high'
+    if (!outSummary || !action) return null
+    const validSev: 'critical' | 'high' | 'medium' =
+      sev === 'critical' || sev === 'high' || sev === 'medium' ? (sev as 'critical' | 'high' | 'medium') : 'high'
+    return { summary: outSummary, action_required: action, severity: validSev }
+  } catch {
+    return null
+  }
+}
+
+export async function draftLinkedinFocusClaude(req: DraftLinkedinFocusRequest): Promise<DraftLinkedinFocusResponse> {
+  const siteName = (req.siteName || '').trim()
+  const siteUrl = (req.siteUrl || '').trim()
+  if (!siteName) throw new Error('siteName is required')
+  if (!siteUrl) throw new Error('siteUrl is required')
+
+  const focus =
+    req.focus ??
+    ({
+      id: '',
+      title: '',
+      summary: '',
+      severity: ''
+    } satisfies DraftLinkedinFocusRequest['focus'])
+  const userText = buildLinkedinFocusUserPrompt(siteUrl, focus)
+
+  const model = 'claude-haiku-4-5-20251001'
+  const response = await callClaude({
+    pipeline: 'linkedin_focus_draft',
+    model,
+    maxTokens: 500,
+    temperature: 0.7,
+    systemText: buildLinkedinVoicePrompt(siteName),
+    userText,
+    metadata: {
+      focus_item_id: String(focus.id ?? '').slice(0, 80),
+      severity: String(focus.severity ?? '').slice(0, 32)
+    }
+  })
+
+  const text = (response.content || []).map((c) => (c.type === 'text' ? (c.text || '') : '')).join('\n').trim()
+  if (!text) throw new Error('Anthropic response was empty')
+  return { text }
+}
+
+export async function findRelatedArticlesClaude(req: FindRelatedArticlesRequest): Promise<FindRelatedArticlesResponse> {
+  const prompt = buildFindRelatedPrompt(req)
+  const model = 'claude-haiku-4-5-20251001'
+  const response = await callClaude({
+    pipeline: 'related_articles',
+    model,
+    maxTokens: 10,
+    userText: prompt,
+    metadata: {
+      parent_title: (req.parentTitle || '').slice(0, 160),
+      child_title: (req.childTitle || '').slice(0, 160)
+    }
+  })
+
+  const text = (response.content || [])
+    .map((c) => (c.type === 'text' ? c.text : ''))
+    .join('\n')
+    .trim()
+    .toUpperCase()
+
+  return { decision: text.startsWith('YES') }
+}
+
+export async function draftLinkedinMidweekClaude(req: DraftLinkedinMidweekRequest): Promise<DraftLinkedinMidweekResponse> {
+  const siteName = (req.siteName || '').trim()
+  const siteUrl = (req.siteUrl || '').trim()
+  if (!siteName) throw new Error('siteName is required')
+  if (!siteUrl) throw new Error('siteUrl is required')
+
+  const userText = buildLinkedinMidweekUserPrompt(siteUrl, req.article)
+
+  const model = 'claude-haiku-4-5-20251001'
+  const response = await callClaude({
+    pipeline: 'linkedin_midweek',
+    model,
+    maxTokens: 1000,
+    temperature: 0.8,
+    systemText: buildLinkedinVoicePrompt(siteName),
+    userText,
+    metadata: {
+      article_id: String(req.article?.id ?? '').slice(0, 80),
+      slug: String(req.article?.slug ?? '').slice(0, 80)
+    }
+  })
+
+  const text = (response.content || []).map((c) => (c.type === 'text' ? (c.text || '') : '')).join('\n').trim()
+  if (!text) throw new Error('Anthropic response was empty')
+  return { text }
+}
+
+export async function tagResourceClaude(req: TagResourceRequest): Promise<TagResourceResponse> {
+  const base64 = (req.base64 || '').trim()
+  const mediaType = req.mediaType
+  if (!base64) throw new Error('base64 is required')
+  if (!mediaType) throw new Error('mediaType is required')
+  if (!RESOURCE_CATEGORIES.length) throw new Error('No categories configured')
+
+  const model = 'claude-haiku-4-5-20251001'
+  const response = await callClaudeWithImage({
+    pipeline: 'resource_tagger',
+    model,
+    maxTokens: 500,
+    userText: buildTagResourcePrompt(RESOURCE_CATEGORIES),
+    image: { mediaType, base64 },
+    metadata: {
+      media_type: mediaType
+    }
+  })
+
+  const text = (response.content || []).map((c) => (c.type === 'text' ? c.text : '')).join('').trim()
+  const parsed = extractJson(text) as Record<string, unknown>
+
+  const title = typeof parsed.title === 'string' ? parsed.title.trim() : ''
+  const description = typeof parsed.description === 'string' ? parsed.description.trim() : ''
+  const category = typeof parsed.category === 'string' ? parsed.category.trim() : ''
+  const tags = Array.isArray(parsed.tags)
+    ? parsed.tags.filter((t): t is string => typeof t === 'string').map((t) => t.trim()).filter(Boolean).slice(0, 8)
+    : []
+
+  return {
+    title,
+    description,
+    category: RESOURCE_CATEGORIES.includes(category) ? category : '',
+    tags
   }
 }

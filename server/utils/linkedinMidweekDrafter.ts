@@ -1,30 +1,17 @@
-import { draftSocialPostDirect } from './anthropic'
+import { draftLinkedinMidweekDirect } from './anthropic'
 
-export type SocialPostDraftArticle = {
+type MidweekArticle = {
   id: string
   title: string
-  summary: string
+  slug: string
+  ai_summary: string | null
 }
 
-export type DraftSocialPostParams = {
-  hookText: string
-  recentHooks: string[]
-  hooks: readonly string[]
+export async function draftLinkedinMidweekPostText(params: {
   siteName: string
-  siteHost: string
-  articles: SocialPostDraftArticle[]
-  // For backward-compatible logging: original cron logged candidate_count as the
-  // full candidate list length, not just the prompt-truncated list.
-  candidateCount?: number
-}
-
-export type DraftSocialPostResult = {
-  article_ids: string[]
-  text_x: string
-  text_linkedin: string
-}
-
-export async function draftSocialPost(params: DraftSocialPostParams): Promise<DraftSocialPostResult> {
+  siteUrl: string
+  article: MidweekArticle
+}): Promise<string> {
   const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
   if (gatewayUrl) {
     const token = process.env.AI_GATEWAY_INTERNAL_TOKEN
@@ -33,7 +20,7 @@ export async function draftSocialPost(params: DraftSocialPostParams): Promise<Dr
     }
 
     const base = gatewayUrl.replace(/\/+$/, '')
-    const url = `${base}/draft-social-post`
+    const url = `${base}/draft-linkedin-midweek`
     const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
 
     let res: Awaited<ReturnType<typeof fetch>>
@@ -45,12 +32,9 @@ export async function draftSocialPost(params: DraftSocialPostParams): Promise<Dr
           'x-gateway-token': token
         },
         body: JSON.stringify({
-          hookText: params.hookText,
-          recentHooks: params.recentHooks,
-          hooks: [...params.hooks],
           siteName: params.siteName,
-          siteHost: params.siteHost,
-          articles: params.articles
+          siteUrl: params.siteUrl,
+          article: params.article
         }),
         signal: AbortSignal.timeout(timeoutMs)
       })
@@ -67,17 +51,13 @@ export async function draftSocialPost(params: DraftSocialPostParams): Promise<Dr
       throw new Error(`[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText))
     }
 
-    return (await res.json()) as DraftSocialPostResult
+    const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
+    return typeof data?.text === 'string' ? data.text.trim() : ''
   }
 
-	// No gateway available; fall back to direct SDK call (encapsulated in server/utils/anthropic.ts).
-	return await draftSocialPostDirect({
-		hookText: params.hookText,
-		recentHooks: [...params.recentHooks],
-		hooks: [...params.hooks],
-		siteName: params.siteName,
-		siteHost: params.siteHost,
-		articles: params.articles,
-		candidateCount: params.candidateCount
-	})
+  return (await draftLinkedinMidweekDirect({
+    siteName: params.siteName,
+    siteUrl: params.siteUrl,
+    article: params.article
+  })).trim()
 }

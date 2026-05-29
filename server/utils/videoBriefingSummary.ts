@@ -1,9 +1,4 @@
-import { getAnthropicClient } from './anthropic'
-import { logAiCall } from './aiUsage'
-import { computeCostMicroCents } from './aiPricing'
-import { errorMessage, isPermanentError, isTransientError, sleep } from './llmRetry'
-
-const MODEL = 'claude-haiku-4-5-20251001'
+import { summarizeShowDirect } from './anthropic'
 
 function sanitizeSummary(raw: string): string {
   let s = (raw || '').trim()
@@ -79,73 +74,60 @@ export async function summarizeVideoBriefing(
   if (!scriptText) throw new Error('Missing script')
   if (!titleText) throw new Error('Missing title')
 
-  const client = getAnthropicClient()
 
-  const system = [
-    'Write a concise episode description for a security news video briefing.',
-    '',
-    'Output exactly TWO short sentences. Each sentence must be under 130 characters. Combined output must be under 260 characters.',
-    '',
-    'Sentence 1: state what happened (the incident, vulnerability, or event in one complete clause).',
-    'Sentence 2: state why it matters to a security practitioner (the takeaway, consequence, or systemic issue).',
-    '',
-    'Output plain text only. No markdown, no quotes, no Unicode bullets, no "In today\'s episode..." or "This episode covers..." framing. Practitioner tone: neutral, factual, no hype.',
-    '',
-    'End each sentence with a period, exclamation mark, or question mark.'
-  ].join('\n')
+  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+  if (gatewayUrl) {
+    const token = process.env.AI_GATEWAY_INTERNAL_TOKEN
+    if (!token || !token.trim()) {
+      throw new Error('AI_GATEWAY_INTERNAL_TOKEN must be set when AI_GATEWAY_URL is set')
+    }
 
-  const user = `Title: ${titleText}\n\nScript:\n${scriptText.slice(0, 12000)}`
+    const base = gatewayUrl.replace(/\/+$/, '')
+    const url = `${base}/summarize-show`
 
-  let lastErr: unknown
-  for (let attempt = 1; attempt <= 5; attempt++) {
+    const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
+    let res: Awaited<ReturnType<typeof fetch>>
     try {
-	    const startedAt = Date.now()
-      const resp = await client.messages.create({
-        model: MODEL,
-        max_tokens: 140,
-        temperature: 0.2,
-        system,
-        messages: [{ role: 'user', content: user }]
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-gateway-token': token
+        },
+        body: JSON.stringify({ title: titleText, script: scriptText }),
+        signal: AbortSignal.timeout(timeoutMs)
       })
-
-	    await logAiCall({
-	      pipeline: 'video_briefing_summary',
-	      model: MODEL,
-	      response: resp,
-	      durationMs: Date.now() - startedAt,
-	      metadata: {
-	        title: titleText.slice(0, 200)
-	      }
-	    })
-
-      const parts: string[] = []
-      for (const block of resp.content ?? []) {
-        if (block?.type === 'text' && typeof block.text === 'string') {
-          parts.push(block.text)
-        }
-      }
-      const raw = parts.join('\n').trim()
-      if (!raw) throw new Error('Empty model response')
-
-      const summary = sanitizeSummary(raw)
-
-	    const costMicro = computeCostMicroCents(MODEL, resp.usage ?? {})
-      return {
-        summary,
-	      costCents: Number((costMicro / 10000).toFixed(1))
-      }
     } catch (err) {
-      lastErr = err
-      if (isPermanentError(err) || !isTransientError(err) || attempt >= 5) {
-        throw err
-      }
+      const msg = err instanceof Error ? err.message : String(err)
+      const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+      throw new Error(
+        `[ai-gateway] ${isTimeout ? `timeout after ${timeoutMs}ms` : 'network error'} calling ${url}: ${msg}`
+      )
+    }
 
-      const backoffMs = Math.min(8000, 500 * 2 ** (attempt - 1))
-      const jitterMs = Math.floor(Math.random() * 200)
-      await sleep(backoffMs + jitterMs)
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+			const e = new Error(
+				`[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText)
+			) as Error & { status?: number }
+			e.status = res.status
+			throw e
+    }
+
+    const data = (await res.json().catch(() => null)) as { summary?: unknown; costCents?: unknown } | null
+    const raw = typeof data?.summary === 'string' ? data.summary : ''
+    const costCents = typeof data?.costCents === 'number' ? data.costCents : Number(data?.costCents ?? 0)
+    if (!raw) throw new Error('Empty model response')
+
+    return {
+      summary: sanitizeSummary(raw),
+      costCents: Number.isFinite(costCents) ? costCents : 0
     }
   }
 
-  // Should be unreachable.
-  throw lastErr instanceof Error ? lastErr : new Error(errorMessage(lastErr))
+  const direct = await summarizeShowDirect({ title: titleText, script: scriptText })
+  return {
+    summary: sanitizeSummary(direct.summary),
+    costCents: direct.costCents
+  }
 }

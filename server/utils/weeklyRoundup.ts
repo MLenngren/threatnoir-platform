@@ -1,12 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk'
-
-import { checkAiQuota, logAiCall } from './aiUsage'
+import { checkAiQuota } from './aiUsage'
 import { retryLlmCall } from './llmRetry'
 import { notifyAdmin } from './notifyAdmin'
 import { isoWeekLabel, startOfIsoWeekUtc } from './isoWeek'
 import { generateAndUploadWeeklyCover } from './weeklyCover'
 import type { useSupabaseAdmin } from './supabase'
 import { getSiteConfig } from './siteConfig'
+import { draftWeeklyRoundupDirect } from './anthropic'
 
 type SupabaseAdminClient = ReturnType<typeof useSupabaseAdmin>
 
@@ -128,10 +127,11 @@ export async function generateWeeklyRoundupDraft(params: {
     return { created: false, skipped_reason: quota.reason || 'ai_quota', week_label: weekLabel, slug }
   }
 
-  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
-  if (!apiKey) {
-    return { created: false, skipped_reason: 'anthropic_missing', week_label: weekLabel, slug }
-  }
+	const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+	const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+	if (!gatewayUrl && !apiKey) {
+		return { created: false, skipped_reason: 'anthropic_missing', week_label: weekLabel, slug }
+	}
 
   const { data: rawArticles, error: artErr } = await params.supabase
     .from('articles')
@@ -280,8 +280,6 @@ export async function generateWeeklyRoundupDraft(params: {
 	    `- No em dashes anywhere.\n\n` +
 	    JSON.stringify(promptPayload)
 
-  const client = new Anthropic({ apiKey })
-
 	  let lastRawText = ''
 	  let result: {
 	    parsed: Record<string, unknown>
@@ -290,51 +288,89 @@ export async function generateWeeklyRoundupDraft(params: {
 	    fullBrief: string
 	  }
 
-	  try {
-	    result = await retryLlmCall(
-	      async () => {
-		        const model = 'claude-sonnet-4-20250514'
-		        const startedAt = Date.now()
-		        const resp = await client.messages.create({
-		          model,
-	          max_tokens: 6000,
-	          messages: [{ role: 'user', content: prompt }]
-	        })
+		try {
+			result = await retryLlmCall(
+				async () => {
+					if (gatewayUrl) {
+						const token = process.env.AI_GATEWAY_INTERNAL_TOKEN
+						if (!token || !token.trim()) {
+							throw new Error('AI_GATEWAY_INTERNAL_TOKEN must be set when AI_GATEWAY_URL is set')
+						}
 
-		        await logAiCall({
-		          pipeline: 'weekly_roundup',
-		          model,
-		          response: resp,
-		          durationMs: Date.now() - startedAt,
-		          metadata: {
-		            week_label: weekLabel,
-		            slug
-		          }
-		        })
+						const base = gatewayUrl.replace(/\/+$/, '')
+						const url = `${base}/draft-weekly-roundup`
+						const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
+						let res: Awaited<ReturnType<typeof fetch>>
+						try {
+							res = await fetch(url, {
+								method: 'POST',
+								headers: {
+									'content-type': 'application/json',
+									'x-gateway-token': token
+								},
+								body: JSON.stringify({ siteName: site.name, siteUrl: site.url, promptPayload }),
+								signal: AbortSignal.timeout(timeoutMs)
+							})
+						} catch (err) {
+							const msg = err instanceof Error ? err.message : String(err)
+							const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+							throw new Error(
+								`[ai-gateway] ${isTimeout ? `timeout after ${timeoutMs}ms` : 'network error'} calling ${url}: ${msg}`
+							)
+						}
 
-	        const text = resp.content?.[0]?.type === 'text' ? resp.content[0].text : ''
-	        lastRawText = text
+						if (!res.ok) {
+							const body = await res.text().catch(() => '')
+							const e = new Error(
+								`[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText)
+							) as Error & { status?: number }
+							e.status = res.status
+							throw e
+						}
 
-	        let parsed: Record<string, unknown>
-	        try {
-	          parsed = extractJson(text) as Record<string, unknown>
-	        } catch {
-	          console.warn('[weeklyRoundup] JSON parse failed, raw response (truncated):', text.slice(0, 2000))
-	          throw new Error('TRANSIENT: weekly roundup JSON parse failed')
-	        }
+						const gw = (await res.json().catch(() => null)) as Record<string, unknown> | null
+						const tldr = typeof gw?.tldr === 'string' ? gw.tldr.trim() : ''
+						const fullBrief = typeof gw?.full_brief === 'string' ? String(gw.full_brief).trim() : ''
+						if (!tldr || !fullBrief) {
+							throw new Error('TRANSIENT: model response missing required fields (tldr/full_brief)')
+						}
 
-	        const tldr = typeof parsed.tldr === 'string' ? parsed.tldr.trim() : ''
-	        const fullBrief = typeof parsed.full_brief === 'string' ? parsed.full_brief.trim() : ''
-	        if (!tldr || !fullBrief) {
-	          console.warn('[weeklyRoundup] missing fields, raw response (truncated):', text.slice(0, 2000))
-	          throw new Error('TRANSIENT: model response missing required fields (tldr/full_brief)')
-	        }
+						const parsed: Record<string, unknown> = {
+							tldr,
+							full_brief: fullBrief,
+							executive_summary: typeof gw?.executive_summary === 'string' ? gw.executive_summary : null,
+							tagline: typeof gw?.tagline === 'string' ? gw.tagline : null,
+							social_linkedin: typeof gw?.social_linkedin === 'string' ? gw.social_linkedin : null,
+							social_x: typeof gw?.social_x === 'string' ? gw.social_x : null
+						}
+						const text = JSON.stringify(parsed)
+						lastRawText = text
+						return { parsed, text, tldr, fullBrief }
+					}
 
-	        return { parsed, text, tldr, fullBrief }
-	      },
-	      { tag: 'weeklyRoundup' }
-	    )
-	  } catch (err) {
+					const text = await draftWeeklyRoundupDirect({ prompt, week_label: weekLabel, slug })
+					lastRawText = text
+
+					let parsed: Record<string, unknown>
+					try {
+						parsed = extractJson(text) as Record<string, unknown>
+					} catch {
+						console.warn('[weeklyRoundup] JSON parse failed, raw response (truncated):', text.slice(0, 2000))
+						throw new Error('TRANSIENT: weekly roundup JSON parse failed')
+					}
+
+					const tldr = typeof parsed.tldr === 'string' ? parsed.tldr.trim() : ''
+					const fullBrief = typeof parsed.full_brief === 'string' ? parsed.full_brief.trim() : ''
+					if (!tldr || !fullBrief) {
+						console.warn('[weeklyRoundup] missing fields, raw response (truncated):', text.slice(0, 2000))
+						throw new Error('TRANSIENT: model response missing required fields (tldr/full_brief)')
+					}
+
+					return { parsed, text, tldr, fullBrief }
+				},
+				{ tag: 'weeklyRoundup' }
+			)
+		} catch (err) {
 	    if (lastRawText) {
 	      console.error(
 	        '[weeklyRoundup] all retries failed, final raw response (truncated):',
