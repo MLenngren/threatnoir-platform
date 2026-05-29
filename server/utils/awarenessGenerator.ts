@@ -41,6 +41,12 @@ export async function generateAwarenessLessons(
   supabase: SupabaseClient,
   options?: AwarenessGeneratorOptions
 ): Promise<AwarenessGeneratorResult> {
+  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+  const gatewayToken = gatewayUrl ? process.env.AI_GATEWAY_INTERNAL_TOKEN : null
+  if (gatewayUrl && (!gatewayToken || !gatewayToken.trim())) {
+    throw new Error('AI_GATEWAY_INTERNAL_TOKEN must be set when AI_GATEWAY_URL is set')
+  }
+
   const maxPerRun = Number.isFinite(options?.maxPerRun ?? NaN) ? (options?.maxPerRun as number) : 10
   const hoursBack = Number.isFinite(options?.hoursBack ?? NaN) ? (options?.hoursBack as number) : 24
 
@@ -112,7 +118,7 @@ export async function generateAwarenessLessons(
     return { processed: 0, created: 0, skipped_existing: candidates.length, errors: [] }
   }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const client = gatewayUrl ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   let created = 0
   const errors: Array<{ article_id: string; error: string }> = []
@@ -123,7 +129,41 @@ export async function generateAwarenessLessons(
     const summary = cleanText(a.ai_summary || a.summary, 1800)
 
     try {
-      const prompt = `You are a security awareness analyst. Given this security news article, identify:
+      let parsed: Record<string, unknown>
+
+      if (gatewayUrl) {
+        const base = gatewayUrl.replace(/\/+$/, '')
+        const url = `${base}/generate-awareness`
+        const timeoutMs = Number(process.env.AI_GATEWAY_TIMEOUT_MS) || 60_000
+        let res: Awaited<ReturnType<typeof fetch>>
+        try {
+          res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'x-gateway-token': gatewayToken as string
+            },
+            body: JSON.stringify({ title, summary }),
+            signal: AbortSignal.timeout(timeoutMs)
+          })
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          const isTimeout = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+          throw new Error(
+            `[ai-gateway] ${isTimeout ? `timeout after ${timeoutMs}ms` : 'network error'} calling ${url}: ${msg}`
+          )
+        }
+
+        if (!res.ok) {
+          const body = await res.text().catch(() => '')
+          throw new Error(
+            `[ai-gateway] ${res.status} calling ${url}: ` + (body ? body.slice(0, 800) : res.statusText)
+          )
+        }
+
+        parsed = (await res.json()) as Record<string, unknown>
+      } else {
+        const prompt = `You are a security awareness analyst. Given this security news article, identify:
 1. The root cause category (one of: Patch Management, Access Control, Configuration Management, Security Awareness, Incident Response, Network Segmentation, Data Protection, Supply Chain, Logging & Monitoring, Regulatory Compliance, Backup & Recovery, Vulnerability Management)
 2. Write a concise lesson (3-5 sentences) explaining what went wrong and why it matters
 3. Write a structured "prevention" section with actionable bullet points
@@ -153,27 +193,28 @@ regulatory-compliance
 backup-recovery
 vulnerability-management`
 
-      const model = 'claude-sonnet-4-20250514'
-      const startedAt = Date.now()
-      const resp = await client.messages.create({
-        model,
-        max_tokens: 900,
-        messages: [{ role: 'user', content: prompt }]
-      })
+        const model = 'claude-sonnet-4-20250514'
+        const startedAt = Date.now()
+        const resp = await (client as Anthropic).messages.create({
+          model,
+          max_tokens: 900,
+          messages: [{ role: 'user', content: prompt }]
+        })
 
-      await logAiCall({
-        pipeline: 'awareness_lesson',
-        model,
-        response: resp,
-        durationMs: Date.now() - startedAt,
-        metadata: {
-          article_id: articleId,
-          title
-        }
-      })
+        await logAiCall({
+          pipeline: 'awareness_lesson',
+          model,
+          response: resp,
+          durationMs: Date.now() - startedAt,
+          metadata: {
+            article_id: articleId,
+            title
+          }
+        })
 
-      const text = resp.content?.[0]?.type === 'text' ? resp.content[0].text : ''
-      const parsed = extractJson(text) as Record<string, unknown>
+        const text = resp.content?.[0]?.type === 'text' ? resp.content[0].text : ''
+        parsed = extractJson(text) as Record<string, unknown>
+      }
 
       const lessonTitle = cleanText(parsed.title, 200) || `Awareness Lessons: ${title}`.slice(0, 200)
       const body = typeof parsed.body === 'string' ? parsed.body.trim() : ''

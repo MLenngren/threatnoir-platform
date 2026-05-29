@@ -3,6 +3,10 @@ import { serve } from '@hono/node-server'
 
 import { mountHealth } from './routes/health.js'
 import { mountSummarizeArticle } from './routes/summarize-article.js'
+import { mountExtractIocs } from './routes/extract-iocs.js'
+import { mountGenerateAwareness } from './routes/generate-awareness.js'
+import { mountRankArticles } from './routes/rank-articles.js'
+import { mountDraftSocialPost } from './routes/draft-social-post.js'
 
 function requireNonEmpty(name: string): string {
   const v = process.env[name]
@@ -28,6 +32,10 @@ app.use('*', async (c, next) => {
 
 mountHealth(app)
 mountSummarizeArticle(app)
+mountExtractIocs(app)
+mountGenerateAwareness(app)
+mountRankArticles(app)
+mountDraftSocialPost(app)
 
 app.onError((err, c) => {
   console.error('[ai-gateway] unhandled error:', err)

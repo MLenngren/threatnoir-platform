@@ -20,6 +20,7 @@ RUN npm ci
 
 # Copy only what Nuxt needs to build (avoid copying host node_modules)
 COPY nuxt.config.ts tsconfig.json eslint.config.mjs ./
+	COPY shared ./shared
 COPY app ./app
 COPY server ./server
 COPY public ./public

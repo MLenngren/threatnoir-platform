@@ -1,11 +1,10 @@
 import { createError, defineEventHandler, getHeader, readBody } from 'h3'
 import type { H3Event } from 'h3'
 
-import Anthropic from '@anthropic-ai/sdk'
-
 import { useSupabaseAdmin } from '../../utils/supabase'
 import { safeCompare } from '../../utils/safeCompare'
-import { aiLimits, checkAiQuota, logAiCall } from '../../utils/aiUsage'
+import { aiLimits, checkAiQuota } from '../../utils/aiUsage'
+import { draftSocialPost } from '../../utils/socialPostDrafter'
 import { notifyAdmin } from '../../utils/notifyAdmin'
 import { getSiteConfig } from '../../utils/siteConfig'
 
@@ -34,12 +33,6 @@ const requireCronSecret = (event: H3Event) => {
   }
 }
 
-function extractJson(text: string): unknown {
-  const m = text.match(/\{[\s\S]*\}/)
-  if (!m) throw new Error('No JSON in response')
-  return JSON.parse(m[0])
-}
-
 function pickHook(recentHooks: string[]): string {
   const recent = new Set(recentHooks.map((h) => (h || '').trim()).filter(Boolean))
   for (const h of HOOKS) {
@@ -66,7 +59,10 @@ export default defineEventHandler(async (event) => {
     return { generated: false, reason: 'ai_disabled' }
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  // In compose, the app calls the internal ai-gateway instead of Anthropic directly.
+  // Only require ANTHROPIC_API_KEY when we're using the direct-Anthropic path.
+  const gatewayUrl = process.env.AI_GATEWAY_URL?.trim()
+  if (!gatewayUrl && !process.env.ANTHROPIC_API_KEY) {
     throw createError({ statusCode: 500, statusMessage: 'ANTHROPIC_API_KEY is not configured' })
   }
 
@@ -217,66 +213,25 @@ export default defineEventHandler(async (event) => {
 	const site = getSiteConfig()
 	const siteHost = new URL(site.url).host
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  const articlesForPrompt = candidates.slice(0, 20).map((a) => ({
-    id: a.id,
-    title: a.title,
-    summary: (a.ai_summary || a.summary || '').slice(0, 500)
-  }))
+	  const articlesForPrompt = candidates.slice(0, 20).map((a) => ({
+	    id: a.id,
+	    title: a.title,
+	    summary: (a.ai_summary || a.summary || '').slice(0, 500)
+	  }))
 
-	const prompt = `You are ${site.name}'s social media writer. Pick the 3 most interesting and diverse stories from the provided articles and write social media posts.
-
-Rules:
-- Practitioner voice, not marketing. Direct and useful.
-- No em dashes anywhere. Use periods, colons, or pipes instead.
-- Each story gets a one-line summary with the "so what" angle.
-	- Link to ${siteHost} (not individual article URLs).
-- Max 3-4 hashtags: #cybersecurity #threatintel and 1-2 topic-specific ones.
-- Pick diverse stories. Avoid 3 of the same category.
-
-Return ONLY valid JSON:
-{
-  "article_ids": ["uuid1", "uuid2", "uuid3"],
-  "text_x": "<X/Twitter version, MUST be under 280 characters including link and hashtags>",
-  "text_linkedin": "<LinkedIn version, longer format with bold titles and context>"
-}
-
-Hook text to use (vary from previous posts): "${hookText}"
-Do NOT use any of these recent hooks: ${recentHooks.length ? recentHooks.map((h) => `"${h}"`).join(', ') : '(none)'}
-
-Available hooks (pick one):
-${HOOKS.map((h) => `- "${h}"`).join('\n')}
-
-Available articles (choose exactly 3):
-${JSON.stringify(articlesForPrompt, null, 2)}
-`
-
-	  const model = 'claude-haiku-4-5-20251001'
-	  const startedAt = Date.now()
-	  const resp = await client.messages.create({
-	    model,
-    max_tokens: 900,
-    messages: [{ role: 'user', content: prompt }]
-  })
-
-	  await logAiCall({
-	    pipeline: 'social_post_generate',
-	    model,
-	    response: resp,
-	    durationMs: Date.now() - startedAt,
-	    metadata: {
-	      hook_text: hookText,
-	      candidate_count: candidates.length
-	    }
+	  const parsed = await draftSocialPost({
+	    hookText,
+	    recentHooks,
+	    hooks: HOOKS,
+	    siteName: site.name,
+	    siteHost,
+	    articles: articlesForPrompt,
+	    candidateCount: candidates.length
 	  })
 
-  const text = resp.content?.[0]?.type === 'text' ? resp.content[0].text : ''
-  const parsed = extractJson(text) as Record<string, unknown>
-
-  const rawIds = Array.isArray(parsed.article_ids) ? parsed.article_ids : []
-  const requestedIds = rawIds
-    .map((x) => (typeof x === 'string' ? x.trim() : ''))
-    .filter(Boolean)
+	  const requestedIds = (parsed.article_ids || [])
+	    .map((x) => (typeof x === 'string' ? x.trim() : ''))
+	    .filter(Boolean)
 
   const candidateIdSet = new Set(candidates.map((a) => a.id))
   const articleIds = Array.from(new Set(requestedIds.filter((id) => candidateIdSet.has(id)))).slice(0, 3)
@@ -288,52 +243,16 @@ ${JSON.stringify(articlesForPrompt, null, 2)}
     }
   }
 
-  let textX = normalizeString(parsed.text_x)
+	  const textX = normalizeString(parsed.text_x)
   const textLinkedIn = normalizeString(parsed.text_linkedin)
 
   if (!textX || !textLinkedIn) {
     throw createError({ statusCode: 500, statusMessage: 'Model response missing text_x or text_linkedin' })
   }
 
-  // Hard enforcement: ensure X text fits.
-  if (textX.length > 280) {
-    const shortenPrompt = `Shorten this X post to be under 280 characters total.
-Rules:
-- Keep the same 3 numbered items.
-	- Keep the final line with "${siteHost}".
-- Keep 2-4 hashtags.
-- No em dashes.
-
-Return ONLY valid JSON: { "text_x": "..." }
-
-Post:
-${textX}`
-
-	    const model2 = 'claude-haiku-4-5-20251001'
-	    const startedAt2 = Date.now()
-	    const resp2 = await client.messages.create({
-	      model: model2,
-      max_tokens: 200,
-      messages: [{ role: 'user', content: shortenPrompt }]
-    })
-	    await logAiCall({
-	      pipeline: 'social_post_shorten',
-	      model: model2,
-	      response: resp2,
-	      durationMs: Date.now() - startedAt2,
-	      metadata: {
-	        original_length: textX.length
-	      }
-	    })
-    const t2 = resp2.content?.[0]?.type === 'text' ? resp2.content[0].text : ''
-    const p2 = extractJson(t2) as Record<string, unknown>
-    const shortened = normalizeString(p2.text_x)
-    if (shortened && shortened.length <= 280) textX = shortened
-  }
-
-  if (textX.length > 280) {
-    throw createError({ statusCode: 500, statusMessage: `Generated X text exceeds 280 chars (${textX.length})` })
-  }
+	  if (textX.length > 280) {
+	    throw createError({ statusCode: 500, statusMessage: `Generated X text exceeds 280 chars (${textX.length})` })
+	  }
 
   const { data: inserted, error: insertErr } = await supabase
     .from('social_drafts')
