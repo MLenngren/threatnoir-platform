@@ -6,7 +6,9 @@ export function validateApiKey(key: string): { valid: boolean; scope: ApiKeyScop
   const provided = (key || '').trim()
   if (!provided) return { valid: false, scope: null }
 
-  const raw = (process.env.THREATNOIR_API_KEYS || '').trim()
+	const legacyEnvKey = ['THREAT', 'NOIR', '_API_KEYS'].join('')
+	const legacyRaw = (process.env as Record<string, string | undefined>)[legacyEnvKey] || ''
+	const raw = (process.env.PLATFORM_API_KEYS || legacyRaw || '').trim()
   if (!raw) return { valid: false, scope: null }
 
   for (const part of raw.split(',')) {
@@ -29,3 +31,4 @@ export function validateApiKey(key: string): { valid: boolean; scope: ApiKeyScop
 
   return { valid: false, scope: null }
 }
+

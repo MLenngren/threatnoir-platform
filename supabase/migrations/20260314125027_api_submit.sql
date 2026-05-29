@@ -8,7 +8,7 @@ alter table public.articles
 
 -- Add a source for manual/API submissions (idempotent)
 insert into public.sources (name, url, type, is_active)
-select 'Manual / API', 'https://threatnoir.com', 'api'::source_type, true
+select 'Manual / API', 'https://example.com', 'api'::source_type, true
 where not exists (
   select 1 from public.sources where name = 'Manual / API' and type = 'api'
 );

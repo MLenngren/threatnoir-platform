@@ -88,7 +88,7 @@
               </button>
             </div>
             <pre class="mt-3 overflow-x-auto rounded-2xl bg-tn-surface-lowest/60 p-4 font-mono text-sm text-tn-on-surface ring-1 ring-white/10"><code>{{ mcpConfig }}</code></pre>
-            <p class="mt-3 text-xs text-tn-on-surface-variant">Set <span class="font-mono">THREATNOIR_API_KEY</span> to your generated key.</p>
+            <p class="mt-3 text-xs text-tn-on-surface-variant">Set <span class="font-mono">PLATFORM_API_KEY</span> to your generated key.</p>
           </div>
         </div>
       </section>
@@ -161,8 +161,8 @@
 	                <a href="/.well-known/ai-plugin.json" class="text-tn-primary hover:underline" target="_blank" rel="noopener noreferrer">AI plugin manifest</a>
 	              </li>
 	              <li>
-	                <a href="/downloads/threatnoir-skill/skill.md" class="text-tn-primary hover:underline" target="_blank" rel="noopener noreferrer">Claude Code skill</a>
-	                <span class="ml-1 text-[10px] text-tn-on-surface-variant">(copy to ~/.claude/skills/threatnoir/)</span>
+	                <a href="/downloads/claude-skill/skill.md" class="text-tn-primary hover:underline" target="_blank" rel="noopener noreferrer">Claude Code skill</a>
+	                <span class="ml-1 text-[10px] text-tn-on-surface-variant">(copy to ~/.claude/skills/your-skill/)</span>
 	              </li>
 	            </ul>
 	          </div>
@@ -271,7 +271,7 @@
 	              </button>
 	            </div>
 	            <pre class="mt-3 overflow-x-auto rounded-2xl bg-tn-surface-lowest/60 p-4 font-mono text-sm text-tn-on-surface ring-1 ring-white/10"><code>{{ mcpConfigClaudeCode }}</code></pre>
-	            <p class="mt-3 text-xs text-tn-on-surface-variant">Set <span class="font-mono">THREATNOIR_API_KEY</span> to your generated key.</p>
+	            <p class="mt-3 text-xs text-tn-on-surface-variant">Set <span class="font-mono">PLATFORM_API_KEY</span> to your generated key.</p>
 	          </div>
 	        </div>
 	      </section>
@@ -303,16 +303,16 @@ useSeoMeta({
 })
 
 const installSnippet = `# Using npx (recommended)
-npx threatnoir-mcp-iocs
+npx your-mcp-iocs-package
 
 # Or add to your .mcp.json`
 
 const mcpConfig = `{
   "mcpServers": {
-    "threatnoir-iocs": {
+    "iocs": {
       "command": "npx",
-      "args": ["threatnoir-mcp-iocs"],
-      "env": { "THREATNOIR_API_KEY": "your-key-here" }
+      "args": ["your-mcp-iocs-package"],
+      "env": { "PLATFORM_API_KEY": "your-key-here" }
     }
   }
 }`
@@ -331,11 +331,11 @@ const activeCodeLang = computed<CodeExampleLang>(() => (activeCodeTab.value === 
 
 const mcpConfigClaudeCode = `{
   "mcpServers": {
-    "threatnoir": {
+    "iocs": {
       "command": "npx",
-      "args": ["-y", "threatnoir-mcp-iocs"],
+      "args": ["-y", "your-mcp-iocs-package"],
       "env": {
-        "THREATNOIR_API_KEY": "tn_live_your_key_here"
+        "PLATFORM_API_KEY": "tn_live_your_key_here"
       }
     }
   }

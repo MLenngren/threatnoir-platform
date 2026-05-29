@@ -12,7 +12,7 @@ export const ClosingScene: React.FC<{closingText: string; totalSegments: number}
     extrapolateRight: 'clamp',
   });
 
-  const url = 'threatnoir.com';
+	const url = 'example.com';
   const chars = Math.round(
     interpolate(frame, [20, 70], [0, url.length], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})
   );

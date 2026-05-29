@@ -79,7 +79,14 @@ export default defineNuxtConfig({
     '/subscribe/**': { ssr: true, headers: { 'cache-control': 'private, no-store' } }
   },
 
-  modules: ['@nuxtjs/supabase', '@nuxt/ui', '@nuxt/fonts', '@vueuse/nuxt', '@nuxt/eslint', '@vercel/analytics/nuxt'],
+	modules: [
+	  '@nuxtjs/supabase',
+	  '@nuxt/ui',
+	  '@nuxt/fonts',
+	  '@vueuse/nuxt',
+	  '@nuxt/eslint',
+	  ...(process.env.VERCEL_ANALYTICS_ENABLED === 'true' ? ['@vercel/analytics/nuxt'] : [])
+	],
 
   fonts: {
     families: [

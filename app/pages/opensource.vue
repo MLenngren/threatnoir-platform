@@ -24,16 +24,16 @@
           </p>
 
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="https://github.com/MLenngren/threatnoir-platform"
+	            <a
+	              href="https://github.com/your-org/your-repo"
               target="_blank"
               rel="noopener"
               class="inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-tn-primary to-tn-primary-container px-6 py-4 font-label text-[11px] font-bold uppercase tracking-[0.2em] text-black hover:brightness-110"
             >
               View on GitHub →
             </a>
-            <a
-              href="https://github.com/MLenngren/threatnoir-platform#quick-start-local-15-minutes"
+	            <a
+	              href="https://github.com/your-org/your-repo#quick-start-local-15-minutes"
               target="_blank"
               rel="noopener"
               class="inline-flex items-center justify-center rounded-xl bg-tn-surface-lowest/60 px-6 py-4 font-label text-[11px] font-bold uppercase tracking-[0.2em] text-tn-on-surface ring-1 ring-white/10 hover:bg-tn-surface-lowest"
@@ -109,8 +109,8 @@
                 <p class="mt-1 text-sm text-tn-on-surface-variant">
                   Requires Node 20+, npm, Docker (for local Supabase). 15 minutes to first run.
                 </p>
-                <pre class="mt-3 overflow-x-auto rounded-xl bg-tn-surface-lowest/60 p-3 font-mono text-xs text-tn-on-surface ring-1 ring-white/10"><code>git clone https://github.com/MLenngren/threatnoir-platform
-cd threatnoir-platform
+	                <pre class="mt-3 overflow-x-auto rounded-xl bg-tn-surface-lowest/60 p-3 font-mono text-xs text-tn-on-surface ring-1 ring-white/10"><code>git clone https://github.com/your-org/your-repo
+	cd your-repo
 npm install
 npx supabase start
 cp .env.local.example .env.local
@@ -138,7 +138,7 @@ npm run dev</code></pre>
                 <div class="text-sm font-semibold text-tn-on-surface">Wire env vars + deploy</div>
                 <p class="mt-1 text-sm text-tn-on-surface-variant">
                   Configure ~7 required env vars in Vercel, push to main, auto-deploy. Optional integrations (podcast, video, social posting) layer on per-feature. See the
-                  <a href="https://github.com/MLenngren/threatnoir-platform#production-deployment-2-hours" target="_blank" rel="noopener" class="text-tn-primary hover:underline">full deployment guide</a>.
+	                  <a href="https://github.com/your-org/your-repo#production-deployment-2-hours" target="_blank" rel="noopener" class="text-tn-primary hover:underline">full deployment guide</a>.
                 </p>
               </div>
             </div>
@@ -154,7 +154,7 @@ npm run dev</code></pre>
             Apache License 2.0. You're free to use, modify, redistribute, and commercialize the code. You must preserve the license + notice files. Modifications must be marked.
           </p>
           <a
-            href="https://github.com/MLenngren/threatnoir-platform/blob/main/LICENSE"
+	            href="https://github.com/your-org/your-repo/blob/main/LICENSE"
             target="_blank"
             rel="noopener"
             class="mt-4 inline-flex items-center text-sm text-tn-primary hover:underline"
@@ -167,7 +167,7 @@ npm run dev</code></pre>
           <h2 class="font-label text-[11px] font-bold uppercase tracking-[0.2em] text-tn-on-surface">Contribute</h2>
           <p class="mt-3 text-sm leading-7 text-tn-on-surface-variant">
             Bug fixes, new RSS sources, accessibility improvements, performance tuning, documentation — all welcome. Read
-            <a href="https://github.com/MLenngren/threatnoir-platform/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener" class="text-tn-primary hover:underline">CONTRIBUTING.md</a>
+	            <a href="https://github.com/your-org/your-repo/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener" class="text-tn-primary hover:underline">CONTRIBUTING.md</a>
             first.
           </p>
           <p class="mt-3 text-sm leading-7 text-tn-on-surface-variant">

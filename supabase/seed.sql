@@ -1,4 +1,4 @@
--- Local dev seed data for ThreatNoir
+-- Local dev seed data for an example deployment
 -- This runs after all migrations during `npx supabase db reset`.
 
 begin;
@@ -580,7 +580,7 @@ values
   (gen_random_uuid(),
    current_date,
    'morning',
-   'ThreatNoir Morning Brief — ' || to_char(current_date, 'Mon DD'),
+	   'Morning Brief — ' || to_char(current_date, 'Mon DD'),
    245,
    'https://example.com/podcast/morning.mp3',
    4,
@@ -595,7 +595,7 @@ values
   (gen_random_uuid(),
    current_date,
    'afternoon',
-   'ThreatNoir Afternoon Brief — ' || to_char(current_date, 'Mon DD'),
+	   'Afternoon Brief — ' || to_char(current_date, 'Mon DD'),
    220,
    'https://example.com/podcast/afternoon.mp3',
    3,

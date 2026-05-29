@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ThreatNoir Morning Podcast — synthesize dialogue lines to MP3 via TTS (LEN-1078).
+"""Morning Podcast — synthesize dialogue lines to MP3 via TTS (LEN-1078).
 
 Supports OpenAI TTS and ElevenLabs engines (swappable via engine parameter).
 ElevenLabs uses context-aware synthesis (previous_text/next_text) for natural
@@ -422,7 +422,7 @@ def estimate_tts_cost_usd(total_characters: int, engine: str = DEFAULT_ENGINE) -
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Synthesize ThreatNoir podcast dialogue to MP3"
+	        description="Synthesize podcast dialogue to MP3"
     )
     p.add_argument("--dialogue", required=True, help="Path to dialogue JSON")
     p.add_argument(

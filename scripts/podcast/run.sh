@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# ThreatNoir Podcast — cron wrapper
+# Podcast — cron wrapper
 # Runs the daily podcast generation pipeline.
 #
-# Usage: 0 6 * * * /path/to/threatnoir/scripts/podcast/run.sh >> /tmp/threatnoir-podcast.log 2>&1
-#        0 14 * * * /path/to/threatnoir/scripts/podcast/run.sh --edition afternoon >> /tmp/threatnoir-podcast.log 2>&1
+# Usage: 0 6 * * * /path/to/your-project/scripts/podcast/run.sh >> /tmp/podcast.log 2>&1
+#        0 14 * * * /path/to/your-project/scripts/podcast/run.sh --edition afternoon >> /tmp/podcast.log 2>&1
 #
 # Required env vars (set in the shell environment that invokes this script):
 #   ELEVENLABS_API_KEY        — for podcast TTS narration

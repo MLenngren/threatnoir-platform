@@ -3,6 +3,7 @@ import { createError, defineEventHandler, setResponseHeader } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
 
 import { getSiteConfig } from '../utils/siteConfig'
+import { getFeedMetadata } from '../utils/feedConfig'
 
 type ArticleRow = {
   title: string | null
@@ -96,7 +97,8 @@ function podcastPubDate(ep: PodcastRow) {
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
 	  const site = getSiteConfig()
-  const siteUrl = normalizeSiteUrl()
+	const siteUrl = normalizeSiteUrl()
+	const meta = getFeedMetadata()
 
   const [articlesRes, awarenessRes, focusRes, weeklyRes, podcastRes] = await Promise.all([
     supabase
@@ -149,7 +151,7 @@ export default defineEventHandler(async (event) => {
     const link = `${siteUrl}/article/${encodeURIComponent(slug)}`
     const pubDate = new Date(a.published_at || new Date().toISOString())
     items.push({
-      title: (a.title || '').trim() || 'ThreatNoir Article',
+	      title: (a.title || '').trim() || `${site.name} Article`,
       link,
       guid: { value: link, isPermaLink: true },
       pubDate,
@@ -163,7 +165,7 @@ export default defineEventHandler(async (event) => {
     if (!slug) continue
     const link = `${siteUrl}/awareness/${encodeURIComponent(slug)}`
     items.push({
-      title: (l.title || '').trim() || 'ThreatNoir Awareness Lesson',
+	      title: (l.title || '').trim() || `${site.name} Awareness Lesson`,
       link,
       guid: { value: link, isPermaLink: true },
       pubDate: new Date(l.created_at),
@@ -175,7 +177,7 @@ export default defineEventHandler(async (event) => {
   for (const f of (focusRes.data ?? []) as FocusRow[]) {
     const link = `${siteUrl}/focus`
     items.push({
-      title: (f.title || '').trim() || 'ThreatNoir Focus Item',
+	      title: (f.title || '').trim() || `${site.name} Focus Item`,
       link,
       guid: { value: f.id, isPermaLink: false },
       pubDate: new Date(f.created_at),
@@ -209,7 +211,7 @@ export default defineEventHandler(async (event) => {
     const audio = (p.audio_url || '').trim()
 
     items.push({
-      title: (p.title || '').trim() || `ThreatNoir Podcast (${edition})`,
+	      title: (p.title || '').trim() || `${site.name} Podcast (${edition})`,
       link,
       guid: { value: guid, isPermaLink: false },
       pubDate: pub,
@@ -240,15 +242,14 @@ export default defineEventHandler(async (event) => {
     })
     .join('\n')
 
-  const year = new Date().getFullYear()
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
 	    <title>${site.name} — All Content</title>
     <link>${escXml(siteUrl)}</link>
 	    <description>${wrapCdata('Curated cybersecurity news and analysis')}</description>
-    <language>en</language>
-    <copyright>ThreatNoir ${year}</copyright>
+	    <language>${escXml(meta.language)}</language>
+	    <copyright>${escXml(meta.copyright)}</copyright>
     <atom:link href="${escXml(`${siteUrl}/api/feed.xml`)}" rel="self" type="application/rss+xml"/>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
 ${itemXml}

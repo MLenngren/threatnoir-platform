@@ -1,4 +1,4 @@
-"""ElevenLabs Text to Dialogue integration for ThreatNoir Podcast (LEN-1367).
+"""ElevenLabs Text to Dialogue integration for podcast generation (LEN-1367).
 
 Morning edition uses the /v1/text-to-dialogue API (model eleven_v3) which
 returns a full multi-speaker conversation as one unified MP3. This replaces
@@ -35,7 +35,7 @@ def _eprint(*args: object) -> None:
 
 
 def build_inputs(dialogue: dict[str, Any]) -> list[dict[str, str]]:
-    """Flatten ThreatNoir dialogue JSON into ElevenLabs input items."""
+    """Flatten dialogue JSON into ElevenLabs input items."""
 
     out: list[dict[str, str]] = []
     for _section, speaker, text in _iter_dialogue_lines(dialogue):

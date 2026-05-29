@@ -10,8 +10,8 @@ const md = readFileSync('tests/fixtures/weekly-digest-w19-loose-list.md', 'utf8'
 try {
   const rendered = renderWeeklyDigest({
     email: 't@example.com',
-    siteUrl: 'https://threatnoir.com',
-    unsubscribeUrl: 'https://threatnoir.com/unsubscribe',
+	    siteUrl: 'https://example.com',
+	    unsubscribeUrl: 'https://example.com/unsubscribe',
     weekLabel: 'Week 19, 2026',
     weeklySlug: null,
     weeklyTldr: md,

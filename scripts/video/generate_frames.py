@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate atmospheric background frames for ThreatNoir video briefings.
+"""Generate atmospheric background frames for video briefings.
 
 This script calls OpenRouter's chat-completions endpoint with a Gemini image model
 and saves returned base64-encoded images as 1920x1080 PNGs.
@@ -15,6 +15,10 @@ import sys
 import time
 from dataclasses import dataclass
 from typing import Any
+
+
+SITE_NAME = (os.getenv("NUXT_PUBLIC_SITE_NAME") or os.getenv("SITE_NAME") or "Example Site").strip() or "Example Site"
+DEFAULT_OPENROUTER_TITLE = f"{SITE_NAME} Video Briefings"
 
 
 STYLE_SUFFIX = (
@@ -70,7 +74,7 @@ def _openrouter_headers() -> dict[str, str]:
     referer = os.getenv("OPENROUTER_HTTP_REFERER") or os.getenv("NUXT_PUBLIC_SITE_URL")
     if referer:
         headers["HTTP-Referer"] = referer
-    headers["X-Title"] = os.getenv("OPENROUTER_APP_TITLE", "ThreatNoir Video Briefings")
+    headers["X-Title"] = os.getenv("OPENROUTER_APP_TITLE", DEFAULT_OPENROUTER_TITLE)
     return headers
 
 

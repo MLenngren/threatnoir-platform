@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ThreatNoir video briefing script generator.
+"""Video briefing script generator.
 
 Reads a JSON list of articles (from stdin or --articles file) and asks Claude to
 produce a structured narration script JSON for Remotion.
@@ -41,7 +41,7 @@ INTRO_SECONDS = 10
 CLOSING_SECONDS = 8
 
 
-SYSTEM_PROMPT_COMMON = """You are ThreatNoir's daily security video briefing script writer.
+SYSTEM_PROMPT_COMMON = """You are a daily security video briefing script writer.
 
 Return ONLY valid JSON. Do not wrap in markdown. Do not include code fences. Do not include commentary.
 
@@ -54,7 +54,7 @@ Output JSON schema (exact keys, types):
 {
   "audience": "executive" | "soc" | "engineer",
   "date": "YYYY-MM-DD",
-  "title": "ThreatNoir Daily Briefing — <Audience>",
+	  "title": "Daily Briefing — <Audience>",
   "intro": {
     "text": "...",
     "visual_prompt": "..."
@@ -105,7 +105,7 @@ Rules:
     * 3 impact cards: 10–13 seconds
 
 Visual prompts (for each segment + intro + closing):
-- Always describe a DARK NOIR aesthetic scene consistent with ThreatNoir.
+	- Always describe a DARK NOIR aesthetic scene consistent with a noir brand.
 - Cinematic, atmospheric language; relevant to the story.
 - Use specific security imagery (shields, locks, network diagrams, server racks, threat actors in shadows).
 - Color palette: deep blues, blacks, amber accents.
@@ -387,7 +387,8 @@ def coerce_script_schema(
 
     estimated_duration_seconds = seg_seconds_sum + INTRO_SECONDS + CLOSING_SECONDS
     title_suffix = AUDIENCE_TO_TITLE.get(audience, audience)
-    title = f"ThreatNoir Daily Briefing — {title_suffix}"
+
+    title = f"Daily Briefing — {title_suffix}"
 
     return {
         "audience": audience,
@@ -443,7 +444,7 @@ def generate_script(
     }
 
     user_text = (
-        "Generate today's ThreatNoir video briefing script as JSON. "
+        "Generate today's video briefing script as JSON. "
         "Remember: output ONLY JSON, no markdown.\n\n"
         + json.dumps(user_payload, ensure_ascii=False)
     )
@@ -490,9 +491,10 @@ def generate_script(
     return script_obj, read_usage(resp)
 
 
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Generate ThreatNoir video briefing script JSON via Claude"
+        description="Generate video briefing script JSON via Claude"
     )
     p.add_argument(
         "--audience",

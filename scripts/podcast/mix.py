@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ThreatNoir Morning Podcast — mix per-line MP3s into a single episode (LEN-1079)."""
+"""Morning Podcast — mix per-line MP3s into a single episode (LEN-1079)."""
 
 from __future__ import annotations
 

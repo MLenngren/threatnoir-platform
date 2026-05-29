@@ -82,7 +82,8 @@ export default defineEventHandler(async (event) => {
 
     const supabase = serverSupabaseServiceRole(event)
 
-	    const base = getSiteConfig().url
+			const site = getSiteConfig()
+			const base = site.url
 
     const todayIso = toIsoDate(now)
     const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
@@ -171,8 +172,8 @@ export default defineEventHandler(async (event) => {
 				`[weekly-digest] aborting: latest published roundup is ${latestPublishedWeekLabel || '(none)'}, current ISO week is ${currentIsoWeekLabel}. Subscribers will NOT be emailed this week.`
 			)
 
-			await pingOps(
-				`🚨 ThreatNoir weekly digest SKIPPED. Latest published roundup is ${latestPublishedWeekLabel || '(none)'}, current ISO week is ${currentIsoWeekLabel}. Generation must succeed before subscribers are notified.\n` +
+				await pingOps(
+					`🚨 ${site.name} weekly digest SKIPPED. Latest published roundup is ${latestPublishedWeekLabel || '(none)'}, current ISO week is ${currentIsoWeekLabel}. Generation must succeed before subscribers are notified.\n` +
 					`Manual recovery: POST /api/cron/generate-weekly-roundup, then POST /api/cron/weekly-digest, then if a bad digest already went out, POST /api/cron/weekly-digest-correction?week=${encodeURIComponent(currentIsoWeekLabel)}.`
 			)
 
@@ -322,9 +323,9 @@ export default defineEventHandler(async (event) => {
         console.error('[weekly-digest] render failed, falling back to plaintext:', err)
         if (!renderFallbackNotified) {
           renderFallbackNotified = true
-          await pingOps(
-            '🚨 ThreatNoir weekly digest render failed, sent plaintext fallback. Investigate the markdown that broke marked.'
-          )
+					await pingOps(
+						`🚨 ${site.name} weekly digest render failed, sent plaintext fallback. Investigate the markdown that broke marked.`
+					)
         }
         rendered = renderWeeklyDigestPlaintextFallback(digestParams)
       }

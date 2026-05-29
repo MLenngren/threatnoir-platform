@@ -1,4 +1,4 @@
-name: threatnoir-platform
+name: oss-platform
 
 include:
   - compose.supabase.yaml
@@ -7,7 +7,7 @@ services:
   ai-gateway:
     build:
       context: ./ai-gateway
-    image: threatnoir-platform-ai-gateway
+    image: oss-platform-ai-gateway
     restart: unless-stopped
     depends_on:
       supabase-kong:
@@ -38,7 +38,7 @@ services:
         SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
         # For Phase 1 we map secret key to the service role JWT.
         SUPABASE_SECRET_KEY: ${SUPABASE_SERVICE_KEY}
-    image: threatnoir-platform-app
+    image: oss-platform-app
     restart: unless-stopped
     depends_on:
       supabase-kong:
@@ -87,7 +87,7 @@ services:
       AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://ai-gateway:8080}
       AI_GATEWAY_INTERNAL_TOKEN: ${AI_GATEWAY_INTERNAL_TOKEN}
 
-      THREATNOIR_API_KEYS: ${THREATNOIR_API_KEYS:-your-key-here:admin}
+      PLATFORM_API_KEYS: ${PLATFORM_API_KEYS:-your-key-here:admin}
       NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://localhost:${APP_PORT:-7000}}
 
       # Extra: client-side Supabase settings (Nuxt runtimeConfig public)
@@ -100,7 +100,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/cron/Dockerfile
-    image: threatnoir-platform-cron
+    image: oss-platform-cron
     restart: unless-stopped
     depends_on:
       app:

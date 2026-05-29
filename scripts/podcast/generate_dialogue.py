@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ThreatNoir Morning Podcast — generate two-host dialogue JSON (LEN-1077).
+"""Morning Podcast — generate two-host dialogue JSON (LEN-1077).
 
 Reads a JSON list of articles and asks Claude Haiku to produce a structured
 two-host conversational script.
@@ -74,7 +74,7 @@ HAIKU_INPUT_USD_PER_MTOK = 3.00
 HAIKU_OUTPUT_USD_PER_MTOK = 15.00
 
 
-SYSTEM_PROMPT = """You are ThreatNoir's daily podcast script writer.
+SYSTEM_PROMPT = """You are a daily podcast script writer.
 
 Return ONLY valid JSON. Do not wrap in markdown. Do not include code fences. Do not include commentary.
 
@@ -303,17 +303,17 @@ Per-article plugs (natural, not salesy):
 - Max 1-2 plugs per ENTIRE episode. Pick the most relevant articles.
 
 Site plug (closing):
-- If schedule.episode_number is provided, ONLY mention threatnoir.com when (schedule.episode_number % 3 == 0).
-- Vary: "Check out the full writeups on threatnoir.com", "Weekly roundup dropping on threatnoir.com", "All the IOCs and details are on threatnoir.com"
+- If schedule.episode_number is provided, ONLY mention the site when (schedule.episode_number % 3 == 0).
+- Vary: "Check out the full writeups on our site", "Weekly roundup dropping on the site", "All the IOCs and details are on our site"
 - Keep it to one brief line, not a sales pitch.
 - For awareness/IOC plugs, say "our awareness page" or "the IOC list on our site" — never spell out full URLs.
-- Exception: the closing site plug may explicitly say "threatnoir.com".
+
 
 ## OUTPUT JSON SCHEMA (exact keys, types)
 
 {
   "date": "YYYY-MM-DD",
-  "title": "ThreatNoir Morning Brief — <Month> <Day>",
+	"title": "Morning Brief — <Month> <Day>",
   "hosts": {
     "alex": {"voice": "nova", "role": "lead anchor"},
     "marcus": {"voice": "echo", "role": "analyst"}
@@ -356,7 +356,7 @@ Before outputting, re-read your ENTIRE response and verify:
 - "wait, seriously" appears max 1 time across ALL segments
 - "honestly" appears max 1 time across ALL segments
 - If an article has "cross_promo_hint", at least one host mentions it in that segment
-- If schedule.episode_number % 3 == 0, the closing mentions threatnoir.com
+- If schedule.episode_number % 3 == 0, the closing mentions the site
 If any violation found, rephrase the offending line(s) before outputting.
 """
 
@@ -392,7 +392,7 @@ DAY NAME ANTI-REPETITION:
 Keep lines SHORT (max 100 chars). Natural, conversational.
 
 CROSS-PROMOTION (important — we need to grow the site):
-- In the closing section, naturally mention threatnoir.com about every 2-3 episodes.
+- In the closing section, naturally mention the site about every 2-3 episodes.
 - If schedule.episode_number is provided, ONLY do this when (schedule.episode_number % 3 == 0).
 - Keep it to one brief line, not a sales pitch.
 
@@ -1054,7 +1054,7 @@ def coerce_dialogue_schema(
 
     return {
         "date": date_str,
-        "title": f"ThreatNoir {edition_label} — {_pretty_month_day(date_str)}",
+        "title": f"{edition_label} — {_pretty_month_day(date_str)}",
         "hosts": {
             "alex": {"voice": "nova", "role": "lead anchor"},
             "marcus": {"voice": "echo", "role": "analyst"},
@@ -1307,7 +1307,7 @@ def generate_dialogue(
         user_payload["todays_events"] = events
 
     user_text = (
-        f"Generate today's ThreatNoir {edition_label} Podcast dialogue as JSON. "
+        f"Generate today's {edition_label} podcast dialogue as JSON. "
         "Remember: output ONLY JSON, no markdown.\n\n"
         + json.dumps(user_payload, ensure_ascii=False)
     )
@@ -1358,7 +1358,7 @@ def generate_dialogue(
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Generate ThreatNoir Morning Podcast dialogue JSON via Claude"
+        description="Generate morning podcast dialogue JSON via Claude"
     )
     p.add_argument(
         "--articles",

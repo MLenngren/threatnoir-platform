@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ThreatNoir Podcast — generate accompanying written article (LEN-1098).
+"""Podcast — generate accompanying written article (LEN-1098).
 
 Uses Claude Haiku via the Anthropic SDK to turn the same set of input articles
 into a clean, non-dialogue markdown report.
@@ -39,7 +39,10 @@ from scripts.utils.ai_cost import log_ai_call  # noqa: E402
 MODEL = "claude-haiku-4-5-20251001"
 
 
-SYSTEM_PROMPT = """You are ThreatNoir's IT security journalist.
+SITE_NAME = (os.getenv("NUXT_PUBLIC_SITE_NAME") or os.getenv("SITE_NAME") or "Example Site").strip() or "Example Site"
+
+
+SYSTEM_PROMPT = f"""You are {SITE_NAME}'s IT security journalist.
 
 Write a professional written report in markdown format.
 
@@ -182,7 +185,7 @@ def generate_article(
     }
 
     user_text = (
-        "Write the accompanying ThreatNoir podcast article/report as markdown. "
+	        "Write the accompanying podcast article/report as markdown. "
         "Use the provided title exactly as the H1 heading. "
         "Cover ALL provided stories. "
         "For each story section, include a sentence containing: "
@@ -241,7 +244,7 @@ def _validate_date(date_str: str) -> str:
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Generate ThreatNoir podcast accompanying article via Claude"
+	        description="Generate podcast accompanying article via Claude"
     )
     p.add_argument("--articles", required=True, help="Path to articles JSON file")
     p.add_argument("--date", required=True, help="Podcast date (YYYY-MM-DD)")

@@ -1,5 +1,5 @@
 {
-  "name": "threatnoir",
+	"name": "oss-platform",
   "type": "module",
   "private": true,
   "scripts": {

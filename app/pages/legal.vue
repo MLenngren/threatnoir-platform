@@ -202,10 +202,12 @@
 <script setup lang="ts">
 import { safeHref } from '~/composables/useSafeHref'
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'Legal & Privacy — ThreatNoir',
+	  title: `Legal & Privacy — ${site.name}`,
   description: 'Regulatory enforcement, fines, and compliance updates by jurisdiction and regulation.',
-  ogTitle: 'Legal & Privacy — ThreatNoir',
+	  ogTitle: `Legal & Privacy — ${site.name}`,
   ogDescription: 'Regulatory enforcement, fines, and compliance updates by jurisdiction and regulation.',
   ogType: 'website'
 })

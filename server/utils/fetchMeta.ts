@@ -1,5 +1,7 @@
 import { UrlBlockedError, isPrivateIP, resolvesToPrivateIP } from './ssrf'
 
+import { resolveHttpUserAgent } from './httpUserAgent'
+
 type UrlMeta = {
   title?: string
   description?: string
@@ -128,7 +130,7 @@ async function fetchWithRedirectLimit(startUrl: URL, signal: AbortSignal): Promi
       redirect: 'manual',
       signal,
       headers: {
-        'user-agent': 'ThreatNoir/1.0',
+	    'user-agent': resolveHttpUserAgent(),
         accept: 'text/html,application/xhtml+xml'
       }
     })
@@ -218,7 +220,7 @@ async function readHeadHtml(res: Response, signal: AbortSignal): Promise<string>
 /**
  * Fetches and parses basic Open Graph metadata from a URL.
  * - Timeout: 5 seconds
- * - User-Agent: ThreatNoir/1.0
+ * - User-Agent: resolved via HTTP_USER_AGENT (or derived from site config)
  */
 export async function fetchUrlMeta(url: string): Promise<UrlMeta> {
   let urlObj: URL

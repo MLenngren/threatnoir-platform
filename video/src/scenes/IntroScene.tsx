@@ -69,7 +69,7 @@ export const IntroScene: React.FC<Pick<BriefingProps, 'audience' | 'date' | 'tit
               textShadow: '0 2px 8px rgba(0,0,0,0.8)',
             }}
           >
-            ThreatNoir
+			Security Briefing
           </div>
           <div style={{fontSize: 28, color: '#d1d5db', marginTop: 10}}>{intro.text}</div>
         </div>
