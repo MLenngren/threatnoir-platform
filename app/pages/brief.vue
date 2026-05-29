@@ -130,17 +130,19 @@ type BriefTodayResponse = {
 	lastUpdatedTime: string | null
 }
 
-const structuredData = computed(() => [
-	useCollectionPageSchema({
-		name: "Today's Cyber Threat Brief",
-		url: 'https://threatnoir.com/brief',
-		description: "Today's morning and evening cyber threat briefings."
-	}),
-	useBreadcrumbSchema([
-		{ name: 'ThreatNoir', url: 'https://threatnoir.com' },
-		{ name: "Today's Brief", url: 'https://threatnoir.com/brief' }
+	const site = useSiteConfig()
+
+	const structuredData = computed(() => [
+		useCollectionPageSchema({
+			name: "Today's Cyber Threat Brief",
+			url: `${site.url}/brief`,
+			description: "Today's morning and evening cyber threat briefings."
+		}),
+		useBreadcrumbSchema([
+			{ name: site.name, url: site.url },
+			{ name: "Today's Brief", url: `${site.url}/brief` }
+		])
 	])
-])
 
 const { data: briefData } = await useFetch<BriefTodayResponse>('/api/brief/today', {
 	key: 'brief-today'
@@ -170,20 +172,22 @@ const secondaryBrief = computed(() => (secondaryKind.value === 'morning' ? brief
 const quickScanLabel = computed(() => (morningIsPrimary.value ? 'Overnight Activity' : "Today's Developments"))
 const scanAccent = computed(() => (morningIsPrimary.value ? '#2EE6C8' : '#3FA9F5'))
 
-useHead({
-	link: [{ rel: 'canonical', href: 'https://threatnoir.com/brief' }]
-})
+	const ogBriefImage = `${site.url}/og-brief.png`
+
+	useHead({
+		link: [{ rel: 'canonical', href: `${site.url}/brief` }]
+	})
 
 useSeoMeta({
-	title: "Today's Cyber Threat Brief — ThreatNoir",
+		title: `Today's Cyber Threat Brief — ${site.name}`,
 	description: 'Morning and evening cyber threat briefings. Curated, vendor-agnostic, multi-format. New brief every 12 hours.',
 	ogTitle: "Today's Cyber Threat Brief",
 	ogDescription: 'Morning and evening cyber threat briefings. Curated, vendor-agnostic, multi-format. New brief every 12 hours.',
 	ogType: 'website',
-	ogImage: 'https://threatnoir.com/og-brief.png',
+		ogImage: ogBriefImage,
 	ogImageWidth: 1200,
 	ogImageHeight: 630,
 	twitterCard: 'summary_large_image',
-	twitterImage: 'https://threatnoir.com/og-brief.png'
+		twitterImage: ogBriefImage
 })
 </script>

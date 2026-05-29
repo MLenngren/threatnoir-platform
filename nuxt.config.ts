@@ -1,4 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE, DEFAULT_SITE_URL } from './shared/siteDefaults'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -13,7 +16,20 @@ export default defineNuxtConfig({
 
 	runtimeConfig: {
 	  public: {
-	    sponsorLabel: process.env.NUXT_PUBLIC_SPONSOR_LABEL || ''
+	    sponsorLabel: process.env.NUXT_PUBLIC_SPONSOR_LABEL || '',
+
+		    contactEmail: process.env.NUXT_PUBLIC_CONTACT_EMAIL || 'contact@example.com',
+
+	    siteName: process.env.NUXT_PUBLIC_SITE_NAME || DEFAULT_SITE_NAME,
+	    siteTagline: process.env.NUXT_PUBLIC_SITE_TAGLINE || DEFAULT_SITE_TAGLINE,
+	    siteUrl: process.env.NUXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL,
+	    siteLogoUrl: process.env.NUXT_PUBLIC_SITE_LOGO_URL || '',
+	    siteOgImageUrl: process.env.NUXT_PUBLIC_SITE_OG_IMAGE_URL || '',
+	    podcastArtworkUrl: process.env.NUXT_PUBLIC_PODCAST_ARTWORK_URL || '',
+	    socialXUrl: process.env.NUXT_PUBLIC_SOCIAL_X_URL || '',
+	    socialLinkedinUrl: process.env.NUXT_PUBLIC_SOCIAL_LINKEDIN_URL || '',
+	    socialGithubUrl: process.env.NUXT_PUBLIC_SOCIAL_GITHUB_URL || '',
+	    operatorLegalName: process.env.NUXT_PUBLIC_OPERATOR_LEGAL_NAME || ''
 	  }
 	},
 
@@ -83,13 +99,8 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'ThreatNoir — Curated Security News',
-      meta: [
-        {
-          name: 'description',
-          content: 'ThreatNoir — Curated Security News.'
-        }
-      ],
+	    // Brand/title/meta defaults are configured at runtime via app/app.vue using useSiteConfig().
+	    meta: [],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' },
         { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/icon-512.png' },
@@ -97,13 +108,7 @@ export default defineNuxtConfig({
         {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
-	        },
-	        { rel: 'alternate', type: 'application/rss+xml', title: 'ThreatNoir — All Content', href: '/api/feed.xml' },
-	        { rel: 'alternate', type: 'application/rss+xml', title: 'ThreatNoir — Articles', href: '/api/articles/feed.xml' },
-	        { rel: 'alternate', type: 'application/rss+xml', title: 'ThreatNoir — Awareness Lessons', href: '/api/awareness/feed.xml' },
-	        { rel: 'alternate', type: 'application/rss+xml', title: 'ThreatNoir — Active Focus Items', href: '/api/focus/feed.xml' },
-	        { rel: 'alternate', type: 'application/rss+xml', title: 'ThreatNoir — Podcast', href: '/api/podcast/feed.xml' },
-	        { rel: 'alternate', type: 'application/rss+xml', title: 'ThreatNoir — Weekly Roundup', href: '/api/weekly/feed.xml' }
+	        }
       ]
     }
   },

@@ -20,7 +20,7 @@
         <div class="relative">
           <div class="text-center">
             <div class="font-headline text-2xl font-black tracking-tight text-tn-primary uppercase">
-              THREATNOIR
+	              {{ site.name }}
             </div>
             <div class="mt-1 font-label text-[10px] uppercase tracking-[0.25em] text-tn-on-surface-variant">
               Password recovery
@@ -86,19 +86,27 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+
+	const site = useSiteConfig()
+	const pageTitle = 'Reset Password'
+	const description = computed(
+	  () => `Request a password reset link for your ${site.name} account. We’ll email a secure link to set a new password and regain access.`
+	)
+	const pageUrl = computed(() => `${site.url}/auth/forgot-password`)
+
 useSeoMeta({
-  title: 'Reset Password | ThreatNoir',
-  description: 'Request a password reset link for your ThreatNoir account. We’ll email a secure link to set a new password and regain access.',
-  ogTitle: 'Reset Password | ThreatNoir',
-  ogDescription: 'Request a password reset link for your ThreatNoir account. We’ll email a secure link to set a new password and regain access.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/auth/forgot-password',
+	  title: pageTitle,
+	  description,
+	  ogTitle: `${pageTitle} | ${site.name}`,
+	  ogDescription: description,
+	  ogImage: site.ogImageUrl,
+	  ogUrl: pageUrl,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Reset Password | ThreatNoir',
-  twitterDescription: 'Request a password reset link for your ThreatNoir account. We’ll email a secure link to set a new password and regain access.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir',
+	  twitterTitle: `${pageTitle} | ${site.name}`,
+	  twitterDescription: description,
+	  twitterImage: site.ogImageUrl,
+	  author: site.name,
   robots: 'noindex'
 })
 

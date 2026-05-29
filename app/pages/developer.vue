@@ -18,10 +18,10 @@
 	            </span>
           </div>
           <h1 class="mt-4 text-balance font-headline text-3xl font-black uppercase tracking-tight text-tn-on-surface md:text-5xl">
-            Integrate ThreatNoir IOCs into your security workflow
+	            Integrate {{ site.name }} IOCs into your security workflow
           </h1>
           <p class="mt-3 max-w-2xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
-            Use the ThreatNoir MCP server for AI tools, or call the IOC REST API directly.
+	            Use the {{ site.name }} MCP server for AI tools, or call the IOC REST API directly.
           </p>
 
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -284,19 +284,22 @@
 
 definePageMeta({ layout: 'default' })
 
+	const site = useSiteConfig()
+	const apiBase = site.url
+
 useSeoMeta({
-  title: 'Developer API & MCP Server | ThreatNoir',
+	  title: 'Developer API & MCP Server',
   description: 'IOC search API, MCP server for Claude and Cursor, webhooks, and RSS feeds. Build security automation with a free API key.',
-  ogTitle: 'Developer API & MCP Server | ThreatNoir',
+	  ogTitle: `Developer API & MCP Server | ${site.name}`,
   ogDescription: 'IOC search API, MCP server for Claude and Cursor, webhooks, and RSS feeds. Build security automation with a free API key.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/developer',
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/developer`,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Developer API & MCP Server | ThreatNoir',
+	  twitterTitle: `Developer API & MCP Server | ${site.name}`,
   twitterDescription: 'IOC search API, MCP server for Claude and Cursor, webhooks, and RSS feeds. Build security automation with a free API key.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+	  twitterImage: site.ogImageUrl,
+	  author: site.name
 })
 
 const installSnippet = `# Using npx (recommended)
@@ -314,8 +317,8 @@ const mcpConfig = `{
   }
 }`
 
-const restExamples = `GET https://threatnoir.com/api/v1/iocs?type=cve&limit=10
-GET https://threatnoir.com/api/v1/iocs?q=192.168&type=ip
+	const restExamples = `GET ${apiBase}/api/v1/iocs?type=cve&limit=10
+	GET ${apiBase}/api/v1/iocs?q=192.168&type=ip
 
 Authorization: Bearer tn_live_your_key`
 
@@ -348,98 +351,98 @@ const codeExamples: Array<{
   {
     title: 'IOC Search (free tier, no auth)',
     snippets: {
-      Python: snip([
-        'import requests',
-        'r = requests.get("https://threatnoir.com/api/v1/iocs", params={"q": "log4j", "type": "cve"})',
+	      Python: snip([
+	        'import requests',
+	        `r = requests.get("${apiBase}/api/v1/iocs", params={"q": "log4j", "type": "cve"})`,
         'for ioc in r.json()["items"]:',
         '    print(f\'{ioc["type"]}: {ioc["value"]} — {ioc["article"]["title"]}\')'
       ]),
       JavaScript: snip([
-        'const res = await fetch("https://threatnoir.com/api/v1/iocs?q=log4j&type=cve")',
+	        `const res = await fetch("${apiBase}/api/v1/iocs?q=log4j&type=cve")`,
         'const { items } = await res.json()',
         'items.forEach(ioc => console.log(`${ioc.type}: ${ioc.value}`))'
       ]),
-      curl: 'curl -s "https://threatnoir.com/api/v1/iocs?q=log4j&type=cve" | jq \'.items[] | "\\(.type): \\(.value)"\''
+	      curl: `curl -s "${apiBase}/api/v1/iocs?q=log4j&type=cve" | jq '.items[] | "\\(.type): \\(.value)"'`
     }
   },
   {
     title: 'IOC Search (with API key, higher limits)',
     note: 'Add an Authorization header to use your API key.',
     snippets: {
-      Python: snip([
-        'headers = {"Authorization": "Bearer tn_live_your_key_here"}',
-        'r = requests.get("https://threatnoir.com/api/v1/iocs", params={"q": "192.168"}, headers=headers)'
+	      Python: snip([
+	        'headers = {"Authorization": "Bearer tn_live_your_key_here"}',
+	        `r = requests.get("${apiBase}/api/v1/iocs", params={"q": "192.168"}, headers=headers)`
       ]),
       JavaScript: snip([
-        'const res = await fetch("https://threatnoir.com/api/v1/iocs?q=192.168", {',
+	        `const res = await fetch("${apiBase}/api/v1/iocs?q=192.168", {`,
         '  headers: { Authorization: "Bearer tn_live_your_key_here" }',
         '})',
         'const data = await res.json()',
         'console.log(data)'
       ]),
-      curl: 'curl -s -H "Authorization: Bearer tn_live_..." "https://threatnoir.com/api/v1/iocs?q=192.168" | jq'
+	      curl: `curl -s -H "Authorization: Bearer tn_live_..." "${apiBase}/api/v1/iocs?q=192.168" | jq`
     }
   },
-  {
-    title: 'Articles',
-    snippets: {
-      Python: 'r = requests.get("https://threatnoir.com/api/v1/articles", params={"q": "ransomware", "limit": 5})',
-      JavaScript: snip([
-        'const res = await fetch("https://threatnoir.com/api/v1/articles?q=ransomware&limit=5")',
-        'const data = await res.json()',
-        'console.log(data)'
-      ]),
-      curl: 'curl -s "https://threatnoir.com/api/v1/articles?q=ransomware&limit=5" | jq'
-    }
-  },
-  {
-    title: 'Weekly Roundups',
-    snippets: {
-      Python: 'r = requests.get("https://threatnoir.com/api/v1/weekly", params={"limit": 3})',
-      JavaScript: snip([
-        'const res = await fetch("https://threatnoir.com/api/v1/weekly?limit=3")',
-        'const data = await res.json()',
-        'console.log(data)'
-      ]),
-      curl: 'curl -s "https://threatnoir.com/api/v1/weekly?limit=3" | jq'
-    }
-  },
-  {
-    title: 'Focus Items',
-    snippets: {
-      Python: 'r = requests.get("https://threatnoir.com/api/v1/focus", params={"severity": "critical"})',
-      JavaScript: snip([
-        'const res = await fetch("https://threatnoir.com/api/v1/focus?severity=critical")',
-        'const data = await res.json()',
-        'console.log(data)'
-      ]),
-      curl: 'curl -s "https://threatnoir.com/api/v1/focus?severity=critical" | jq'
-    }
-  },
-  {
-    title: 'Awareness Lessons',
-    snippets: {
-      Python: 'r = requests.get("https://threatnoir.com/api/v1/awareness", params={"q": "phishing"})',
-      JavaScript: snip([
-        'const res = await fetch("https://threatnoir.com/api/v1/awareness?q=phishing")',
-        'const data = await res.json()',
-        'console.log(data)'
-      ]),
-      curl: 'curl -s "https://threatnoir.com/api/v1/awareness?q=phishing" | jq'
-    }
-  },
+	  {
+	    title: 'Articles',
+	    snippets: {
+	      Python: `r = requests.get("${apiBase}/api/v1/articles", params={"q": "ransomware", "limit": 5})`,
+	      JavaScript: snip([
+	        `const res = await fetch("${apiBase}/api/v1/articles?q=ransomware&limit=5")`,
+	        'const data = await res.json()',
+	        'console.log(data)'
+	      ]),
+	      curl: `curl -s "${apiBase}/api/v1/articles?q=ransomware&limit=5" | jq`
+	    }
+	  },
+	  {
+	    title: 'Weekly Roundups',
+	    snippets: {
+	      Python: `r = requests.get("${apiBase}/api/v1/weekly", params={"limit": 3})`,
+	      JavaScript: snip([
+	        `const res = await fetch("${apiBase}/api/v1/weekly?limit=3")`,
+	        'const data = await res.json()',
+	        'console.log(data)'
+	      ]),
+	      curl: `curl -s "${apiBase}/api/v1/weekly?limit=3" | jq`
+	    }
+	  },
+	  {
+	    title: 'Focus Items',
+	    snippets: {
+	      Python: `r = requests.get("${apiBase}/api/v1/focus", params={"severity": "critical"})`,
+	      JavaScript: snip([
+	        `const res = await fetch("${apiBase}/api/v1/focus?severity=critical")`,
+	        'const data = await res.json()',
+	        'console.log(data)'
+	      ]),
+	      curl: `curl -s "${apiBase}/api/v1/focus?severity=critical" | jq`
+	    }
+	  },
+	  {
+	    title: 'Awareness Lessons',
+	    snippets: {
+	      Python: `r = requests.get("${apiBase}/api/v1/awareness", params={"q": "phishing"})`,
+	      JavaScript: snip([
+	        `const res = await fetch("${apiBase}/api/v1/awareness?q=phishing")`,
+	        'const data = await res.json()',
+	        'console.log(data)'
+	      ]),
+	      curl: `curl -s "${apiBase}/api/v1/awareness?q=phishing" | jq`
+	    }
+	  },
   {
     title: 'Submit Article (auth required)',
     note: 'Requires a valid API key in the Authorization header.',
     snippets: {
-      Python: snip([
-        'headers = {"Authorization": "Bearer tn_live_your_key_here"}',
-        'r = requests.post("https://threatnoir.com/api/v1/submit",',
+	      Python: snip([
+	        'headers = {"Authorization": "Bearer tn_live_your_key_here"}',
+	        `r = requests.post("${apiBase}/api/v1/submit",`,
         '    headers=headers,',
         '    json={"url": "https://example.com/security-article", "source_name": "My Feed"})'
       ]),
       JavaScript: snip([
-        'const res = await fetch("https://threatnoir.com/api/v1/submit", {',
+	        `const res = await fetch("${apiBase}/api/v1/submit", {`,
         '  method: "POST",',
         '  headers: {',
         '    Authorization: "Bearer tn_live_your_key_here",',
@@ -453,8 +456,8 @@ const codeExamples: Array<{
         'const data = await res.json()',
         'console.log(data)'
       ]),
-      curl: snip([
-        'curl -s -X POST "https://threatnoir.com/api/v1/submit" \\',
+	      curl: snip([
+	        `curl -s -X POST "${apiBase}/api/v1/submit" \\`,
         '  -H "Authorization: Bearer tn_live_..." \\',
         '  -H "Content-Type: application/json" \\',
         '  -d \'{"url":"https://example.com/security-article","source_name":"My Feed"}\' | jq'

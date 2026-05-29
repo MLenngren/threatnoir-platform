@@ -4,8 +4,8 @@
       <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p class="font-label text-[10px] font-bold uppercase tracking-widest text-tn-primary">Today at a glance</p>
-          <h2 class="mt-2 text-balance font-headline text-2xl font-black tracking-tight text-tn-on-surface md:text-3xl">
-            The latest across ThreatNoir
+	      <h2 class="mt-2 text-balance font-headline text-2xl font-black tracking-tight text-tn-on-surface md:text-3xl">
+	        The latest across {{ site.name }}
           </h2>
         </div>
       </div>
@@ -101,6 +101,7 @@
 </template>
 
 <script setup lang="ts">
+	const site = useSiteConfig()
 type PublicPodcastEpisode = {
   id: string
   date: string

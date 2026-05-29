@@ -4,6 +4,7 @@ import { createError, defineEventHandler, getHeader, getQuery, type H3Event } fr
 import { safeCompare } from '../../utils/safeCompare'
 import { sendWelcomeEmail } from '../../utils/resend'
 import { renderWeeklyDigest } from '../../utils/email/weeklyDigest'
+import { getSiteConfig } from '../../utils/siteConfig'
 import { renderWeeklyDigestPlaintextFallback } from '../../utils/email/weeklyDigestPlaintextFallback'
 import { pingOps } from '../../utils/discordOps'
 import { isoWeekLabel } from '../../utils/isoWeek'
@@ -81,8 +82,7 @@ export default defineEventHandler(async (event) => {
 
     const supabase = serverSupabaseServiceRole(event)
 
-    const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-    const base = siteUrl.replace(/\/$/, '')
+	    const base = getSiteConfig().url
 
     const todayIso = toIsoDate(now)
     const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))

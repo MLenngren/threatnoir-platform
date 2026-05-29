@@ -1,3 +1,5 @@
+import { DEFAULT_SITE_URL } from '../../shared/siteDefaults'
+
 const MAX_STATUS_LEN = 500
 
 const MASTODON_INSTANCE = (process.env.MASTODON_INSTANCE_URL || 'https://infosec.exchange').replace(/\/$/, '')
@@ -54,7 +56,7 @@ export function formatWeeklyPost(data: {
   tldr: string
   siteUrl: string
 }): string {
-  const base = (data.siteUrl || 'https://threatnoir.com').replace(/\/$/, '')
+	  const base = (data.siteUrl || DEFAULT_SITE_URL).replace(/\/$/, '')
   const url = `${base}/weekly/${data.slug}`
   const tldr = truncateStatus(data.tldr || '', 300)
 
@@ -69,7 +71,7 @@ export function formatFocusPost(data: {
   summary: string
   siteUrl: string
 }): string {
-  const base = (data.siteUrl || 'https://threatnoir.com').replace(/\/$/, '')
+	  const base = (data.siteUrl || DEFAULT_SITE_URL).replace(/\/$/, '')
   const severity = (data.severity || '').toUpperCase()
   const summary = truncateStatus(data.summary || '', 300)
 

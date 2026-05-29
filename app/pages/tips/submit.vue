@@ -190,10 +190,11 @@ type TipCategory = {
 type CategoriesResponse = { items: TipCategory[] }
 
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 
 useSeoMeta({
-	  title: 'Suggest a Tip — ThreatNoir',
-  description: 'Suggest a new security tip for the ThreatNoir Tips & Tricks library.'
+		  title: `Suggest a Tip — ${site.name}`,
+	  description: `Suggest a new security tip for the ${site.name} Tips & Tricks library.`
 })
 
 const { data: categoriesData } = await useFetch<CategoriesResponse>('/api/tips/categories')

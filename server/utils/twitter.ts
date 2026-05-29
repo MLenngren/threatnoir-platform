@@ -1,5 +1,7 @@
 import { createHmac, randomBytes } from 'node:crypto'
 
+import { DEFAULT_SITE_URL } from '../../shared/siteDefaults'
+
 const X_API_URL = 'https://api.x.com/2/tweets'
 const MAX_TWEET_LEN = 280
 const URL_CHAR_COUNT = 23 // t.co wrapping
@@ -129,7 +131,7 @@ export async function postTweet(text: string): Promise<{ id: string; text: strin
 }
 
 function cleanSiteUrl(siteUrl: string): string {
-  return (siteUrl || 'https://threatnoir.com').replace(/\/$/, '')
+	  return (siteUrl || DEFAULT_SITE_URL).replace(/\/$/, '')
 }
 
 export function formatWeeklyTweet(data: { weekLabel: string; slug: string; tldr: string; siteUrl: string }): string {

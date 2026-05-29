@@ -100,11 +100,12 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'Red vs Blue Show — ThreatNoir',
+	  title: `Red vs Blue Show — ${site.name}`,
   description: 'Red team attacks, blue team defends. Watch tactical security breakdowns of real vulnerabilities.',
-  ogTitle: 'Red vs Blue Show — ThreatNoir',
+	  ogTitle: `Red vs Blue Show — ${site.name}`,
   ogDescription: 'Red team attacks, blue team defends. Watch tactical security breakdowns.',
   ogType: 'website'
 })
@@ -114,7 +115,7 @@ useSeoMeta({
 	    {
 	      rel: 'alternate',
 	      type: 'application/rss+xml',
-	      title: 'ThreatNoir — Red vs Blue Show',
+		      title: `${site.name} — Red vs Blue Show`,
 	      href: '/api/show/feed.xml'
 	    }
 	  ]

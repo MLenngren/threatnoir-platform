@@ -7,6 +7,7 @@ import { sendWelcomeEmail } from '../../utils/resend'
 import { renderWeeklyDigestEmail } from '../../utils/weeklyDigestEmail'
 import { pingOps } from '../../utils/discordOps'
 import { renderWeeklyDigestPlaintextFallback } from '../../utils/email/weeklyDigestPlaintextFallback'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 const requireCronSecret = (event: H3Event) => {
   const expected = process.env.CRON_SECRET
@@ -74,8 +75,7 @@ export default defineEventHandler(async (event) => {
 
   const supabase = serverSupabaseServiceRole(event)
 
-  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  const base = siteUrl.replace(/\/$/, '')
+	  const base = getSiteConfig().url
 
   const todayIso = toIsoDate(now)
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))

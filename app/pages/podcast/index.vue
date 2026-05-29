@@ -334,7 +334,8 @@ type PodcastEpisodeRow = {
   created_at: string
 }
 
-const RSS_URL = 'https://threatnoir.com/api/podcast/feed.xml'
+	const site = useSiteConfig()
+	const RSS_URL = `${site.url}/api/podcast/feed.xml`
 
 	const structuredData = computed(() => usePodcastSeriesSchema())
 
@@ -357,9 +358,9 @@ if (weekQuery.value) {
 }
 
 useSeoMeta({
-  title: 'Podcast — ThreatNoir',
+	  title: `Podcast — ${site.name}`,
   description: 'A tactical daily security briefing with audio episodes and show notes.',
-  ogTitle: 'Podcast — ThreatNoir',
+	  ogTitle: `Podcast — ${site.name}`,
   ogDescription: 'A tactical daily security briefing with audio episodes and show notes.',
   ogType: 'website'
 })
@@ -369,7 +370,7 @@ useHead({
     {
       rel: 'alternate',
       type: 'application/rss+xml',
-      title: 'ThreatNoir Podcast',
+	      title: `${site.name} Podcast`,
       href: '/api/podcast/feed.xml'
     }
   ]

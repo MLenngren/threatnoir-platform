@@ -20,7 +20,7 @@
         <div class="relative">
           <div class="text-center">
             <div class="font-headline text-2xl font-black tracking-tight text-tn-primary uppercase">
-              THREATNOIR
+	              {{ site.name }}
             </div>
             <div class="mt-1 font-label text-[10px] uppercase tracking-[0.25em] text-tn-on-surface-variant">
               Secure access
@@ -133,19 +133,28 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+
+	const site = useSiteConfig()
+	const pageTitle = 'Log In'
+	const description = computed(
+	  () =>
+	    `Log in to your ${site.name} account to manage notifications, API keys, preferences, and delivery channels for email, Discord, Telegram, and webhooks.`
+	)
+	const pageUrl = computed(() => `${site.url}/auth/login`)
+
 useSeoMeta({
-  title: 'Log In | ThreatNoir',
-  description: 'Log in to your ThreatNoir account to manage notifications, API keys, preferences, and delivery channels for email, Discord, Telegram, and webhooks.',
-  ogTitle: 'Log In | ThreatNoir',
-  ogDescription: 'Log in to your ThreatNoir account to manage notifications, API keys, preferences, and delivery channels for email, Discord, Telegram, and webhooks.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/auth/login',
+	  title: pageTitle,
+	  description,
+	  ogTitle: `${pageTitle} | ${site.name}`,
+	  ogDescription: description,
+	  ogImage: site.ogImageUrl,
+	  ogUrl: pageUrl,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Log In | ThreatNoir',
-  twitterDescription: 'Log in to your ThreatNoir account to manage notifications, API keys, preferences, and delivery channels for email, Discord, Telegram, and webhooks.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir',
+	  twitterTitle: `${pageTitle} | ${site.name}`,
+	  twitterDescription: description,
+	  twitterImage: site.ogImageUrl,
+	  author: site.name,
   robots: 'noindex'
 })
 

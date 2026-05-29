@@ -7,6 +7,7 @@ import {
   renderWelcomeDay5,
   renderWelcomeDay10
 } from '../../utils/email/welcomeSequence'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 type PreviewQuery = {
   template?: string
@@ -27,8 +28,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Missing template' })
   }
 
-  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  const base = siteUrl.replace(/\/$/, '')
+	  const base = getSiteConfig().url
 
   const [podRes, weeklyRes, awarenessRes] = await Promise.all([
     supabase

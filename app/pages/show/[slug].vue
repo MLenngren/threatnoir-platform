@@ -149,10 +149,12 @@ const watchNext = computed(() => {
   return all.filter((e) => e.slug && e.slug !== cur).slice(0, 9)
 })
 
-const canonicalUrl = computed(() => {
-  const s = episode.value?.slug
-  return s ? `https://threatnoir.com/show/${s}` : 'https://threatnoir.com/show'
-})
+	const site = useSiteConfig()
+
+	const canonicalUrl = computed(() => {
+	  const s = episode.value?.slug
+	  return s ? `${site.url}/show/${s}` : `${site.url}/show`
+	})
 
 const seoDescription = computed(() => {
   const s = (episode.value?.summary || '').trim()
@@ -161,21 +163,21 @@ const seoDescription = computed(() => {
   return fallback || 'Red team attacks, blue team defends. Tactical security breakdowns.'
 })
 
-const ogImage = computed(() => {
-  const img = (episode.value?.thumbnail_url || '').trim()
-  return img || 'https://threatnoir.com/images/category-default.png'
-})
+	const ogImage = computed(() => {
+	  const img = (episode.value?.thumbnail_url || '').trim()
+	  return img || site.ogImageUrl
+	})
 
 useSeoMeta({
-  title: computed(() => (episode.value ? `${episode.value.title} | Red vs Blue Show — ThreatNoir` : 'Red vs Blue Show — ThreatNoir')),
+	  title: computed(() => (episode.value ? `${episode.value.title} | Red vs Blue Show — ${site.name}` : `Red vs Blue Show — ${site.name}`)),
   description: seoDescription,
-  ogTitle: computed(() => (episode.value ? `${episode.value.title} | Red vs Blue Show — ThreatNoir` : 'Red vs Blue Show — ThreatNoir')),
+	  ogTitle: computed(() => (episode.value ? `${episode.value.title} | Red vs Blue Show — ${site.name}` : `Red vs Blue Show — ${site.name}`)),
   ogDescription: seoDescription,
   ogImage,
   ogUrl: canonicalUrl,
   ogType: 'video.other',
   twitterCard: 'summary_large_image',
-  twitterTitle: computed(() => episode.value?.title || 'Red vs Blue Show — ThreatNoir'),
+	  twitterTitle: computed(() => episode.value?.title || `Red vs Blue Show — ${site.name}`),
   twitterDescription: seoDescription,
   twitterImage: ogImage
 })
@@ -183,7 +185,7 @@ useSeoMeta({
 useHead({
   link: [
     { rel: 'canonical', href: canonicalUrl },
-    { rel: 'alternate', type: 'application/rss+xml', title: 'ThreatNoir — Red vs Blue Show', href: '/api/show/feed.xml' }
+	    { rel: 'alternate', type: 'application/rss+xml', title: `${site.name} — Red vs Blue Show`, href: '/api/show/feed.xml' }
   ]
 })
 
@@ -192,7 +194,7 @@ const structuredData = computed(() => {
   const s = ep?.slug
   if (!ep || !s) return null
 
-  const url = `https://threatnoir.com/show/${s}`
+	  const url = `${site.url}/show/${s}`
   const durSeconds = typeof ep.duration_seconds === 'number' && ep.duration_seconds > 0 ? Math.floor(ep.duration_seconds) : null
   const isoDuration = durSeconds ? `PT${durSeconds}S` : undefined
   const uploadDate = ep.date ? `${ep.date}T12:00:00Z` : undefined
@@ -210,13 +212,13 @@ const structuredData = computed(() => {
       contentUrl: ep.video_url || undefined,
       publisher: {
         '@type': 'Organization',
-        name: 'ThreatNoir',
-        url: 'https://threatnoir.com'
+	        name: site.name,
+	        url: site.url
       }
     },
     useBreadcrumbSchema([
-      { name: 'Home', url: 'https://threatnoir.com' },
-      { name: 'Red vs Blue Show', url: 'https://threatnoir.com/show' },
+	      { name: 'Home', url: site.url },
+	      { name: 'Red vs Blue Show', url: `${site.url}/show` },
       { name: ep.title, url }
     ])
   ]

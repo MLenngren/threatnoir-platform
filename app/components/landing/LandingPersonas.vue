@@ -6,8 +6,8 @@
         <h2 class="mt-3 text-balance font-headline text-3xl font-black tracking-tight text-tn-on-surface md:text-4xl">
           Built for security practitioners who need signal, not noise
         </h2>
-        <p class="mx-auto mt-3 max-w-2xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
-          Pick your role to see what ThreatNoir gives you today.
+	      <p class="mx-auto mt-3 max-w-2xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
+	        Pick your role to see what {{ site.name }} gives you today.
         </p>
       </div>
 
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+	const site = useSiteConfig()
 const personas = [
   {
     key: 'soc',

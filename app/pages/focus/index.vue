@@ -239,8 +239,10 @@ type FocusItem = {
 
 type ArchiveResponse = { items: FocusItem[]; total: number }
 
-useHead({
-  title: 'Urgent Threats & Advisories | ThreatNoir',
+	const site = useSiteConfig()
+
+	useHead({
+	  title: `Urgent Threats & Advisories | ${site.name}`,
   meta: [{ name: 'description', content: 'Active and archived urgent security threats, CVEs, and advisories for SOC teams and threat hunters.' }]
 })
 

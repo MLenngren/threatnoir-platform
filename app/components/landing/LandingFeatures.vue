@@ -8,7 +8,7 @@
 	            Built for signal
 	          </h2>
 	          <p class="mt-3 max-w-2xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
-	            ThreatNoir is designed to compress the threat landscape into something you can act on—fast.
+		            {{ site.name }} is designed to compress the threat landscape into something you can act on—fast.
 	          </p>
         </div>
       </div>
@@ -137,6 +137,7 @@
 
 <script setup lang="ts">
 import { useScrollReveal } from '~/composables/useScrollReveal'
+	const site = useSiteConfig()
 
 const { el: root, revealed } = useScrollReveal({ rootMargin: '0px 0px -12% 0px' })
 

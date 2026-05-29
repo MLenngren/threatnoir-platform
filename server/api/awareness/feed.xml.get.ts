@@ -2,6 +2,8 @@ import { createError, defineEventHandler, setResponseHeader } from 'h3'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+import { getSiteConfig } from '../../utils/siteConfig'
+
 type AwarenessRow = {
   title: string | null
   slug: string | null
@@ -24,8 +26,7 @@ const wrapCdata = (s: string) => {
 }
 
 const normalizeSiteUrl = () => {
-  const raw = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  return raw.replace(/\/$/, '')
+	  return getSiteConfig().url
 }
 
 const firstChars = (s: string, maxLen: number) => {
@@ -36,6 +37,7 @@ const firstChars = (s: string, maxLen: number) => {
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
+	  const site = getSiteConfig()
   const siteUrl = normalizeSiteUrl()
 
   const { data, error } = await supabase
@@ -65,7 +67,7 @@ export default defineEventHandler(async (event) => {
       const description = firstChars(l.body || '', 500)
 
       return `    <item>
-      <title>${escXml((l.title || '').trim() || 'ThreatNoir Awareness Lesson')}</title>
+	      <title>${escXml((l.title || '').trim() || `${site.name} Awareness Lesson`)}</title>
       <link>${escXml(link)}</link>
       <guid isPermaLink="true">${escXml(link)}</guid>
       <pubDate>${pub.toUTCString()}</pubDate>
@@ -79,7 +81,7 @@ export default defineEventHandler(async (event) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>ThreatNoir — Awareness Lessons</title>
+	    <title>${site.name} — Awareness Lessons</title>
     <link>${escXml(siteUrl)}</link>
 	    <description>${wrapCdata('Curated cybersecurity news and analysis')}</description>
     <language>en</language>

@@ -33,8 +33,9 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 useSeoMeta({
-  title: "You're subscribed! — ThreatNoir",
+	  title: `You're subscribed! — ${site.name}`,
   description: 'Subscription confirmed.'
 })
 </script>

@@ -7,6 +7,7 @@ import { checkAiQuota, logAiCall } from '../../utils/aiUsage'
 import { safeCompare } from '../../utils/safeCompare'
 import { useSupabaseAdmin } from '../../utils/supabase'
 import { formatInsightTweet, postTweet } from '../../utils/twitter'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 const LINKEDIN_VOICE_PROMPT =
   "When drafting LinkedIn posts for the weekly ThreatNoir roundup, match Marcus's actual posting style:\n\n" +
@@ -68,6 +69,7 @@ export default defineEventHandler(async (event) => {
   if (!quota.allowed) return { skipped: true, reason: quota.reason || 'AI quota exceeded' }
 
   const supabase = useSupabaseAdmin()
+	const site = getSiteConfig()
   const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
 
   const { data: articles, error } = await supabase
@@ -103,7 +105,7 @@ export default defineEventHandler(async (event) => {
 Title: ${article.title}
 Summary: ${article.ai_summary || ''}
 
-End with the link standalone on its own line: https://threatnoir.com/article/${article.slug}
+End with the link standalone on its own line: ${site.url}/article/${article.slug}
 Add #cybersecurity and 1-2 relevant hashtags at the very end.
 
 Keep it 150-200 words. Conversational paragraphs, not lists.`
@@ -160,7 +162,7 @@ Keep it 150-200 words. Conversational paragraphs, not lists.`
 
   // Auto-post to X (fire and forget)
   try {
-    const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').replace(/\/$/, '')
+	  const siteUrl = site.url
     const tweet = formatInsightTweet({
       title: article.title || '',
       slug: article.slug || '',

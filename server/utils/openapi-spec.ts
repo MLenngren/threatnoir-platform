@@ -1,17 +1,21 @@
-// OpenAPI 3.1 spec for ThreatNoir public API.
+import { getSiteConfig } from './siteConfig'
+
+// OpenAPI 3.1 spec for the public API.
 // Kept as a TypeScript object (not raw JSON) so it can be type-checked and co-located with code.
+
+const site = getSiteConfig()
 
 export const openapiSpec = {
   openapi: '3.1.0',
   jsonSchemaDialect: 'https://json-schema.org/draft/2020-12/schema',
   info: {
-    title: 'ThreatNoir API',
+	  title: `${site.name} API`,
     description:
       'Curated cybersecurity threat intelligence — IOCs, articles, weekly roundups, focus items, and awareness lessons.',
     version: '1.0.0',
-    contact: { url: 'https://threatnoir.com/developer' }
+	  contact: { url: `${site.url}/developer` }
   },
-  servers: [{ url: 'https://threatnoir.com', description: 'Production' }],
+	servers: [{ url: site.url, description: 'Base URL' }],
   security: [],
   tags: [
     { name: 'Articles' },

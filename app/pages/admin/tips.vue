@@ -442,7 +442,7 @@
                       <input
                         v-model.trim="tipForm.author_name"
                         type="text"
-                        placeholder="ThreatNoir"
+					    :placeholder="site.name"
                         class="w-full bg-transparent px-1 py-2 text-sm text-gray-200 outline-none border-b-2 border-white/10 focus:border-cyan-400 placeholder:text-gray-600"
 	                      >
                     </div>
@@ -555,6 +555,7 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin' })
+	const site = useSiteConfig()
 
 	// --- Tips Manager (published/draft tips) ---
 	type TipCategory = {
@@ -622,7 +623,7 @@ definePageMeta({ layout: 'admin' })
 	    body: '',
 	    category_id: '',
 	    tagsText: '',
-	    author_name: 'ThreatNoir',
+	    author_name: site.name,
 	    status: 'draft',
 	    featured: false
 	  }
@@ -648,7 +649,7 @@ definePageMeta({ layout: 'admin' })
 	  tipForm.body = ''
 	  tipForm.category_id = ''
 	  tipForm.tagsText = ''
-	  tipForm.author_name = 'ThreatNoir'
+	  tipForm.author_name = site.name
 	  tipForm.status = 'draft'
 	  tipForm.featured = false
 	  tipFormError.value = null

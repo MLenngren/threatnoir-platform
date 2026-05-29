@@ -6,6 +6,7 @@ import { useSupabaseAdmin } from '../../utils/supabase'
 import { validateUrlSafe } from '../../utils/ssrf'
 import { sendNotificationEmail, sendWelcomeEmail, type ArticleData } from '../../utils/resend'
 import { formatWeeklyPost, postToMastodon } from '../../utils/mastodon'
+import { getSiteConfig } from '../../utils/siteConfig'
 import {
   renderWelcomeDay0,
   renderWelcomeDay2,
@@ -214,7 +215,7 @@ async function deliverDiscord(webhookUrl: string, article: ArticleData): Promise
             ...(article.jurisdiction ? [{ name: 'Jurisdiction', value: article.jurisdiction, inline: true }] : []),
             ...(article.fine_amount ? [{ name: 'Fine', value: article.fine_amount, inline: true }] : [])
           ],
-          footer: { text: 'ThreatNoir' },
+          footer: { text: getSiteConfig().name },
           timestamp: article.published_at || new Date().toISOString()
         }
       ]
@@ -496,8 +497,7 @@ export default defineEventHandler(async (event) => {
 
   const scheduled = (due ?? []) as unknown as ScheduledEmailRow[]
   if (scheduled.length > 0) {
-    const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-    const base = siteUrl.replace(/\/$/, '')
+	    const base = getSiteConfig().url
     const globals = await gatherWelcomeGlobals(supabase)
 
     const subscriberIds = Array.from(new Set(scheduled.map((r) => r.subscriber_id).filter(Boolean)))
@@ -626,8 +626,7 @@ export default defineEventHandler(async (event) => {
 		| undefined
 
   if (latest?.slug) {
-    const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-    const base = siteUrl.replace(/\/$/, '')
+	    const base = getSiteConfig().url
 
 		// Mastodon auto-post (best-effort, once per roundup)
 		if (!latest.mastodon_posted_at) {

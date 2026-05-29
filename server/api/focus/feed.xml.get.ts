@@ -2,6 +2,8 @@ import { createError, defineEventHandler, setResponseHeader } from 'h3'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+import { getSiteConfig } from '../../utils/siteConfig'
+
 type FocusRow = {
   id: string
   title: string | null
@@ -25,12 +27,12 @@ const wrapCdata = (s: string) => {
 }
 
 const normalizeSiteUrl = () => {
-  const raw = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  return raw.replace(/\/$/, '')
+	  return getSiteConfig().url
 }
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
+	  const site = getSiteConfig()
   const siteUrl = normalizeSiteUrl()
 
   const { data, error } = await supabase
@@ -53,7 +55,7 @@ export default defineEventHandler(async (event) => {
     .map((f) => {
       const link = `${siteUrl}/focus`
       const pub = new Date(f.created_at)
-      const title = (f.title || '').trim() || 'ThreatNoir Focus Item'
+	      const title = (f.title || '').trim() || `${site.name} Focus Item`
       const description = (f.summary || '').trim()
       const severity = (f.severity || '').trim().toLowerCase() || 'medium'
 
@@ -72,7 +74,7 @@ export default defineEventHandler(async (event) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>ThreatNoir — Active Focus Items</title>
+	    <title>${site.name} — Active Focus Items</title>
     <link>${escXml(siteUrl)}</link>
 	    <description>${wrapCdata('Curated cybersecurity news and analysis')}</description>
     <language>en</language>

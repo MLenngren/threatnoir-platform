@@ -2,6 +2,8 @@ import { createError, defineEventHandler, setResponseHeader } from 'h3'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
 
+import { getSiteConfig } from '../utils/siteConfig'
+
 type ArticleRow = {
   title: string | null
   slug: string | null
@@ -68,8 +70,7 @@ const wrapCdata = (s: string) => {
 }
 
 const normalizeSiteUrl = () => {
-  const raw = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  return raw.replace(/\/$/, '')
+	  return getSiteConfig().url
 }
 
 const stripToExcerpt = (input: string, maxLen: number) => {
@@ -94,6 +95,7 @@ function podcastPubDate(ep: PodcastRow) {
 
 export default defineEventHandler(async (event) => {
   const supabase = serverSupabaseServiceRole(event)
+	  const site = getSiteConfig()
   const siteUrl = normalizeSiteUrl()
 
   const [articlesRes, awarenessRes, focusRes, weeklyRes, podcastRes] = await Promise.all([
@@ -242,7 +244,7 @@ export default defineEventHandler(async (event) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>ThreatNoir — All Content</title>
+	    <title>${site.name} — All Content</title>
     <link>${escXml(siteUrl)}</link>
 	    <description>${wrapCdata('Curated cybersecurity news and analysis')}</description>
     <language>en</language>

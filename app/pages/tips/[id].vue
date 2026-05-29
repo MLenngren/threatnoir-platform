@@ -97,9 +97,10 @@ const id = computed(() => String(route.params.id || '').trim())
 const { data, pending, error } = await useFetch<{ tip: TipItem }>(`/api/tips/${encodeURIComponent(id.value)}`)
 
 const tip = computed(() => data.value?.tip ?? null)
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: computed(() => (tip.value?.title ? `${tip.value.title} — ThreatNoir` : 'Tip — ThreatNoir')),
+	  title: computed(() => (tip.value?.title ? `${tip.value.title} — ${site.name}` : `Tip — ${site.name}`)),
   description: computed(() => makeDescription(tip.value?.body || '')),
   ogType: 'article'
 })
@@ -132,7 +133,7 @@ async function copyBody() {
 async function share() {
   if (!import.meta.client) return
   const url = window.location.href
-  const title = (tip.value?.title || '').trim() || 'ThreatNoir tip'
+	  const title = (tip.value?.title || '').trim() || `${site.name} tip`
   try {
     if (navigator.share) {
       await navigator.share({ title, url })
@@ -188,7 +189,7 @@ function makeDescription(src: string) {
     .replace(/[#_*`>-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-  return raw.slice(0, 160) || 'Security tip from ThreatNoir.'
+	  return raw.slice(0, 160) || `Security tip from ${site.name}.`
 }
 </script>
 

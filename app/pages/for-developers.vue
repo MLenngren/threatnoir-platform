@@ -18,8 +18,8 @@
           <h1 class="mt-4 text-balance font-headline text-3xl font-black tracking-tight text-tn-on-surface md:text-5xl">
             APIs, MCP &amp; Threat Intel for <span class="text-tn-primary">Builders</span>
           </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-tn-on-surface-variant md:text-base">
-            Integrate IOCs and curated security signal into your tooling. Use the ThreatNoir MCP server for AI workflows, or the REST API for automation.
+	          <p class="mt-3 max-w-2xl text-sm leading-relaxed text-tn-on-surface-variant md:text-base">
+	            Integrate IOCs and curated security signal into your tooling. Use the {{ site.name }} MCP server for AI workflows, or the REST API for automation.
           </p>
 
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -99,14 +99,15 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'APIs, MCP & Threat Intel for Builders | ThreatNoir',
+	  title: `APIs, MCP & Threat Intel for Builders | ${site.name}`,
   description:
-    'ThreatNoir for developers and platform engineers: IOC search API, MCP server for Claude and Cursor, RSS feeds, and automation-ready threat intelligence.',
-  ogTitle: 'APIs, MCP & Threat Intel for Builders | ThreatNoir',
+	    `${site.name} for developers and platform engineers: IOC search API, MCP server for Claude and Cursor, RSS feeds, and automation-ready threat intelligence.`,
+	  ogTitle: `APIs, MCP & Threat Intel for Builders | ${site.name}`,
   ogDescription:
-    'ThreatNoir for developers and platform engineers: IOC search API, MCP server for Claude and Cursor, RSS feeds, and automation-ready threat intelligence.',
+	    `${site.name} for developers and platform engineers: IOC search API, MCP server for Claude and Cursor, RSS feeds, and automation-ready threat intelligence.`,
   ogType: 'website'
 })
 
@@ -154,7 +155,7 @@ const { data, pending } = await useFetch<ArticlesResponse>('/api/articles', {
 
 const featured = computed(() => (Array.isArray(data.value?.items) ? (data.value!.items[0] ?? null) : null))
 const featuredHref = computed(() => (featured.value?.slug ? `/article/${featured.value.slug}` : '/feed'))
-const featuredTitle = computed(() => (featured.value?.title || '').trim() || 'ThreatNoir article')
+	const featuredTitle = computed(() => (featured.value?.title || '').trim() || `${site.name} article`)
 const featuredExcerpt = computed(() => {
   const raw = (featured.value?.summary || featured.value?.ai_summary || '').trim()
   if (!raw) return ''

@@ -132,11 +132,13 @@ const description = computed(() => {
   return raw.slice(0, 160) || 'Podcast companion review article.'
 })
 
+	const site = useSiteConfig()
+
 useHead(() => ({
-  title: `${review.value.title} — ThreatNoir`,
+	  title: `${review.value.title} — ${site.name}`,
   meta: [
     { name: 'description', content: description.value },
-    { property: 'og:title', content: `${review.value.title} — ThreatNoir` },
+	    { property: 'og:title', content: `${review.value.title} — ${site.name}` },
     { property: 'og:description', content: description.value }
   ]
 }))

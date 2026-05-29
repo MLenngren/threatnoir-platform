@@ -3,6 +3,7 @@ import { createError, defineEventHandler } from 'h3'
 
 import { requireAdminUser } from '../../utils/requireAdmin'
 import { renderWeeklyDigest } from '../../utils/email/weeklyDigest'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 function getWeekLabel(date: Date): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -28,8 +29,7 @@ export default defineEventHandler(async (event) => {
   // Use service role for data access (same as cron)
   const supabase = serverSupabaseServiceRole(event)
 
-  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  const base = siteUrl.replace(/\/$/, '')
+	  const base = getSiteConfig().url
 
   const now = new Date()
   const todayIso = toIsoDate(now)

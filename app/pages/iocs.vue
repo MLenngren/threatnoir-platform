@@ -166,19 +166,21 @@ const types = [
   'malware'
 ]
 
+	const site = useSiteConfig()
+
 useSeoMeta({
-  title: 'IOC Search | ThreatNoir',
+	  title: `IOC Search | ${site.name}`,
   description: 'Search 10,000+ indicators of compromise by IP, domain, hash, CVE, or malware family. Free for SOC analysts and threat hunters. Updated daily.',
-  ogTitle: 'IOC Search | ThreatNoir',
+	  ogTitle: `IOC Search | ${site.name}`,
   ogDescription: 'Search 10,000+ indicators of compromise by IP, domain, hash, CVE, or malware family. Free for SOC analysts and threat hunters. Updated daily.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/iocs',
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/iocs`,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'IOC Search | ThreatNoir',
+	  twitterTitle: `IOC Search | ${site.name}`,
   twitterDescription: 'Search 10,000+ indicators of compromise by IP, domain, hash, CVE, or malware family. Free for SOC analysts and threat hunters. Updated daily.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir'
+	  twitterImage: site.ogImageUrl,
+	  author: site.name
 })
 
 const search = ref('')

@@ -1,5 +1,7 @@
 import { Resend } from 'resend'
 
+import { getSiteConfig } from './siteConfig'
+
 export type ArticleData = {
   id: string
   title: string
@@ -25,20 +27,22 @@ export async function sendVerificationEmail(email: string, token: string): Promi
   if (!to) throw new Error('Missing email')
   if (!verifyToken) throw new Error('Missing token')
 
-  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  const verifyUrl = `${siteUrl.replace(/\/$/, '')}/api/subscribe/verify?token=${encodeURIComponent(verifyToken)}`
+	const site = getSiteConfig()
+	const siteUrl = site.url
+	const siteHost = hostFromUrl(siteUrl)
+	const verifyUrl = `${siteUrl}/api/subscribe/verify?token=${encodeURIComponent(verifyToken)}`
 
   const html = `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#0b0f19;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:32px 24px;">
-    <div style="font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:900;color:#4cd7f6;">ThreatNoir</div>
+	    <div style="font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:900;color:#4cd7f6;">${escapeHtml(site.name)}</div>
 
     <div style="margin-top:20px;background:#161c28;border:1px solid #1e293b;border-radius:12px;padding:28px;">
       <h1 style="margin:0 0 12px 0;font-size:22px;line-height:28px;color:#ffffff;font-weight:800;">One more step</h1>
       <p style="margin:0 0 20px 0;font-size:14px;line-height:22px;color:#94a3b8;">
-        Click the button below to verify your email and activate your ThreatNoir subscription.
+	        Click the button below to verify your email and activate your ${escapeHtml(site.name)} subscription.
       </p>
 
       <div style="margin:24px 0;">
@@ -67,19 +71,19 @@ export async function sendVerificationEmail(email: string, token: string): Promi
 
     <div style="margin-top:20px;font-size:12px;line-height:18px;color:#64748b;text-align:center;">
       If you didn't request this, you can safely ignore this email.<br>
-      ThreatNoir · <a href="${siteUrl}" style="color:#64748b;">threatnoir.com</a>
+	      ${escapeHtml(site.name)} · <a href="${siteUrl}" style="color:#64748b;">${escapeHtml(siteHost)}</a>
     </div>
   </div>
 </body></html>
   `.trim()
 
-  const text = `Verify your ThreatNoir subscription\n\nClick this link to verify:\n${verifyUrl}\n\nOnce verified, you'll get daily briefings, weekly roundups, and focus items.\n\nIf you didn't request this, you can safely ignore this email.\n\nThreatNoir · threatnoir.com`
+	const text = `Verify your ${site.name} subscription\n\nClick this link to verify:\n${verifyUrl}\n\nOnce verified, you'll get daily briefings, weekly roundups, and focus items.\n\nIf you didn't request this, you can safely ignore this email.\n\n${site.name} · ${siteHost}`
 
   const resend = getResendClient()
   await resend.emails.send({
     from: 'ThreatNoir <noreply@threatnoir.com>',
     to,
-    subject: 'Verify your ThreatNoir subscription',
+	  subject: `Verify your ${site.name} subscription`,
     html,
     text
   })
@@ -129,9 +133,18 @@ function escapeHtml(input: string): string {
   })
 }
 
+function hostFromUrl(url: string): string {
+	try {
+		return new URL(url).host
+	} catch {
+		return (url || '').replace(/^https?:\/\//, '')
+	}
+}
+
 function buildNotificationHtml(article: ArticleData, unsubscribeUrl: string): string {
-  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  const tnUrl = siteUrl.replace(/\/$/, '')
+	const site = getSiteConfig()
+	const tnUrl = site.url
+	const siteName = escapeHtml(site.name)
 
   const titleRaw = (article?.title || '').trim()
   const briefRaw = (article?.brief || '').trim()
@@ -151,11 +164,11 @@ function buildNotificationHtml(article: ArticleData, unsubscribeUrl: string): st
 	  `<strong style="font-weight:600;color:#F9FAFB">${escapeHtml(label)}:</strong> ${escapeHtml(value)}` +
     `</span>`
 
-  return (
+	  return (
     `<div style="background:#0B0F19;padding:24px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">` +
     `<div style="max-width:640px;margin:0 auto;background:#0F172A;border:1px solid #1F2937;border-radius:16px;overflow:hidden;">` +
     `<div style="padding:22px 22px 18px 22px;">` +
-    `<div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#9CA3AF;">ThreatNoir</div>` +
+	    `<div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#9CA3AF;">${siteName}</div>` +
     `<h1 style="margin:10px 0 0 0;font-size:18px;line-height:26px;color:#F9FAFB;">` +
     `<a href="${escapeHtml(safeSourceUrl)}" style="color:#F9FAFB;text-decoration:none;">${brief || title || 'New article'}</a>` +
     `</h1>` +
@@ -173,12 +186,12 @@ function buildNotificationHtml(article: ArticleData, unsubscribeUrl: string): st
     `<div style="margin-top:16px;">` +
     `<a href="${escapeHtml(safeSourceUrl)}" style="display:inline-block;padding:10px 14px;border-radius:10px;background:#111827;color:#F9FAFB;text-decoration:none;font-weight:600;font-size:14px;border:1px solid #374151;">Open original</a>` +
     `<span style="display:inline-block;width:10px;"></span>` +
-    `<a href="${escapeHtml(tnUrl)}" style="display:inline-block;padding:10px 14px;border-radius:10px;background:#0B1220;color:#E5E7EB;text-decoration:none;font-weight:600;font-size:14px;border:1px solid #334155;">View on ThreatNoir</a>` +
+	    `<a href="${escapeHtml(tnUrl)}" style="display:inline-block;padding:10px 14px;border-radius:10px;background:#0B1220;color:#E5E7EB;text-decoration:none;font-weight:600;font-size:14px;border:1px solid #334155;">View on ${siteName}</a>` +
     `</div>` +
     `</div>` +
     `<div style="padding:16px 22px;border-top:1px solid #1F2937;background:#0B1220;">` +
     `<div style="font-size:12px;line-height:18px;color:#9CA3AF;">` +
-    `You’re receiving this because you subscribed to ThreatNoir notifications.` +
+	    `You’re receiving this because you subscribed to ${siteName} notifications.` +
     `</div>` +
     `<div style="margin-top:10px;font-size:12px;line-height:18px;color:#9CA3AF;">` +
     `<a href="${escapeHtml(safeUnsubUrl)}" style="color:#93C5FD;text-decoration:underline;">Unsubscribe</a>` +
@@ -202,15 +215,14 @@ export async function sendNotificationEmail(
   if (!subscriberId) throw new Error('Missing subscriberId')
   if (!token) throw new Error('Missing verifyToken')
 
-  const siteUrl = (process.env.NUXT_PUBLIC_SITE_URL || 'https://threatnoir.com').trim() || 'https://threatnoir.com'
-  const base = siteUrl.replace(/\/$/, '')
-  const unsubscribeUrl = `${base}/api/subscribe/${encodeURIComponent(subscriberId)}?token=${encodeURIComponent(token)}`
+	const site = getSiteConfig()
+	const unsubscribeUrl = `${site.url}/api/subscribe/${encodeURIComponent(subscriberId)}?token=${encodeURIComponent(token)}`
 
   const resend = getResendClient()
   await resend.emails.send({
     from: 'ThreatNoir <notifications@threatnoir.com>',
     to,
-    subject: `ThreatNoir: ${(article?.brief || article?.title || 'New article').trim()}`,
+	  subject: `${site.name}: ${(article?.brief || article?.title || 'New article').trim()}`,
     html: buildNotificationHtml(article, unsubscribeUrl)
   })
 }

@@ -1,5 +1,6 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
 import { checkRateLimit, getClientIP } from '../../utils/rateLimit'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 export default defineEventHandler(async (event) => {
   const ip = getClientIP(event)
@@ -54,21 +55,22 @@ export default defineEventHandler(async (event) => {
 
   // Send confirmation email only for NEW signups
   try {
+	  const site = getSiteConfig()
     const { Resend } = await import('resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
     await resend.emails.send({
       from: 'ThreatNoir <noreply@threatnoir.com>',
       to: email,
-      subject: "You're on the list — ThreatNoir Extended Podcast",
+	    subject: `You're on the list — ${site.name} Extended Podcast`,
       html: [
         '<div style="font-family:sans-serif;color:#e2e8f0;background:#030712;padding:32px;border-radius:12px;">',
         '<h1 style="color:#fff;font-size:24px;margin:0 0 16px;">You\'re on the list!</h1>',
-        '<p style="color:#94a3b8;line-height:1.6;">Thanks for signing up for the ThreatNoir Extended Podcast Edition.</p>',
+	      `<p style="color:#94a3b8;line-height:1.6;">Thanks for signing up for the ${site.name} Extended Podcast Edition.</p>`,
         '<p style="color:#94a3b8;line-height:1.6;">We\'ll notify you when the 20-minute deep-dive edition launches — covering more stories with detailed analysis, expert context, and actionable takeaways.</p>',
         '<p style="color:#94a3b8;line-height:1.6;">In the meantime, check out our daily briefings:</p>',
-        '<p><a href="https://threatnoir.com/podcast" style="color:#06b6d4;text-decoration:none;font-weight:600;">Listen to today\'s briefing →</a></p>',
+	      `<p><a href="${site.url}/podcast" style="color:#06b6d4;text-decoration:none;font-weight:600;">Listen to today's briefing →</a></p>`,
         '<hr style="border:none;border-top:1px solid #1e293b;margin:24px 0;">',
-        '<p style="color:#64748b;font-size:12px;">ThreatNoir — Security intelligence, curated for practitioners.</p>',
+	      `<p style="color:#64748b;font-size:12px;">${site.name} — Security intelligence, curated for practitioners.</p>`,
         '</div>'
       ].join('')
     })

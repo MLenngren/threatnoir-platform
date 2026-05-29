@@ -1,6 +1,6 @@
 <template>
 	<a
-		href="https://www.youtube.com/@ThreatNoir/shorts"
+			href="/show"
 		target="_blank"
 		rel="noopener noreferrer"
 		class="block"

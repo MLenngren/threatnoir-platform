@@ -1,4 +1,5 @@
 import { validateUrlSafe } from './ssrf'
+import { DEFAULT_SITE_URL } from '../../shared/siteDefaults'
 
 export type RedditPost = {
   id: string
@@ -22,7 +23,7 @@ type RedditListing = {
   }
 }
 
-const USER_AGENT = 'ThreatNoirBot/1.0 (+https://threatnoir.com)'
+const USER_AGENT = `ThreatIntelBot/1.0 (+${DEFAULT_SITE_URL})`
 
 function asString(v: unknown): string {
   return typeof v === 'string' ? v : ''

@@ -148,10 +148,11 @@ if (error.value) {
   })
 }
 
-const seoTitle = computed(() => (data.value ? `${data.value.tag.name} — Security Intel | ThreatNoir` : 'Tag | ThreatNoir'))
+	const site = useSiteConfig()
+	const seoTitle = computed(() => (data.value ? `${data.value.tag.name} — Security Intel | ${site.name}` : `Tag | ${site.name}`))
 const seoDescription = computed(() => {
-  if (!data.value) return 'Browse security content by tag on ThreatNoir.'
-  return `${data.value.total_count} items tagged ${data.value.tag.name} on ThreatNoir.`.slice(0, 160)
+	  if (!data.value) return `Browse security content by tag on ${site.name}.`
+	  return `${data.value.total_count} items tagged ${data.value.tag.name} on ${site.name}.`.slice(0, 160)
 })
 
 useSeoMeta({
@@ -159,11 +160,11 @@ useSeoMeta({
   description: seoDescription,
   ogTitle: seoTitle,
   ogDescription: seoDescription,
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: computed(() => `https://threatnoir.com/tag/${slug.value}`),
+	  ogImage: site.ogImageUrl,
+	  ogUrl: computed(() => `${site.url}/tag/${slug.value}`),
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  author: 'ThreatNoir'
+	  author: site.name
 })
 
 function articleHref(a: TagResponse['articles'][number]) {

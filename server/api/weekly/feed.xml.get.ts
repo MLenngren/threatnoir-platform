@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, setResponseHeader } from 'h3'
 
 import { serverSupabaseServiceRole } from '#supabase/server'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 type RoundupRow = {
   week_label: string
@@ -36,6 +37,7 @@ const stripMarkdownToExcerpt = (input: string, maxLen = 280) => {
 }
 
 export default defineEventHandler(async (event) => {
+	const site = getSiteConfig()
   const supabase = serverSupabaseServiceRole(event)
 
   const { data, error } = await supabase
@@ -52,7 +54,7 @@ export default defineEventHandler(async (event) => {
 
   const items = ((data ?? []) as RoundupRow[])
     .map((r) => {
-      const link = `https://threatnoir.com/weekly/${encodeURIComponent(r.slug)}`
+	    const link = `${site.url}/weekly/${encodeURIComponent(r.slug)}`
       const pub = new Date(r.published_at || r.created_at)
       const title = `Weekly Threat Roundup ${r.week_label} (${r.date_from} to ${r.date_to})`
       const description = stripMarkdownToExcerpt(r.tldr || r.full_brief || '', 300)
@@ -71,12 +73,12 @@ export default defineEventHandler(async (event) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>ThreatNoir — Weekly Threat Roundup</title>
-    <link>https://threatnoir.com/weekly</link>
-    <description>Weekly threat intelligence roundup curated for practitioners. Drafted by AI, reviewed by ThreatNoir.</description>
+	    <title>${site.name} — Weekly Threat Roundup</title>
+	    <link>${site.url}/weekly</link>
+	    <description>Weekly threat intelligence roundup curated for practitioners. Drafted by AI, reviewed by ${site.name}.</description>
     <language>en</language>
     <copyright>ThreatNoir ${year}</copyright>
-    <atom:link href="https://threatnoir.com/api/weekly/feed.xml" rel="self" type="application/rss+xml"/>
+	    <atom:link href="${site.url}/api/weekly/feed.xml" rel="self" type="application/rss+xml"/>
 ${items}
   </channel>
 </rss>`

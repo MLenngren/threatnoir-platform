@@ -1,5 +1,6 @@
 import { marked } from 'marked'
 import type { RendererThis, Tokens } from 'marked'
+import { DEFAULT_SITE_URL } from '../../../shared/siteDefaults'
 
 const BASE_STYLES = `
 <style>
@@ -43,7 +44,7 @@ function escapeHtml(input: string): string {
 }
 
 function normalizeSiteUrl(raw?: string | null): string {
-  const v = (raw || '').trim() || 'https://threatnoir.com'
+	const v = (raw || '').trim() || DEFAULT_SITE_URL
   return v.replace(/\/$/, '')
 }
 

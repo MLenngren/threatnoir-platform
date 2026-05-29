@@ -88,11 +88,12 @@
 
 <script setup lang="ts">
 import { safeHref } from '~/composables/useSafeHref'
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'Security Briefs — ThreatNoir',
+	  title: `Security Briefs — ${site.name}`,
   description: 'Top security stories as punchy one-liners.',
-  ogTitle: 'Security Briefs — ThreatNoir',
+	  ogTitle: `Security Briefs — ${site.name}`,
   ogDescription: 'Top security stories as punchy one-liners.',
   ogType: 'website'
 })

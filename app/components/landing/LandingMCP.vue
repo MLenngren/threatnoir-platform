@@ -7,8 +7,8 @@
             <img src="/mcp-icon.svg" alt="" class="h-8 w-8" loading="lazy">
             <p class="font-label text-[10px] font-bold uppercase tracking-widest text-tn-primary">Integrate IOCs into your AI workflow</p>
           </div>
-          <h2 class="mt-4 text-balance font-headline text-3xl font-black tracking-tight text-tn-on-surface md:text-4xl">
-            MCP Server for ThreatNoir
+	          <h2 class="mt-4 text-balance font-headline text-3xl font-black tracking-tight text-tn-on-surface md:text-4xl">
+	            MCP Server for {{ site.name }}
           </h2>
           <p class="mt-3 max-w-xl text-sm leading-6 text-tn-on-surface-variant md:text-base">
             Search and query threat indicators directly from Claude Code, VS Code, or any MCP-compatible client.
@@ -87,6 +87,7 @@
 <script setup lang="ts">
 import { useScrollReveal } from '~/composables/useScrollReveal'
 	import { useToast } from '~/composables/useToast'
+	const site = useSiteConfig()
 
 const { el: root, revealed } = useScrollReveal({ rootMargin: '0px 0px -12% 0px' })
 	const toast = useToast()

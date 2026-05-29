@@ -37,7 +37,7 @@
           If you need tailored feeds for your security team, custom integrations, company-specific monitoring, or bulk subscriptions, get in touch.
         </p>
         <a
-	      href="mailto:contact@threatnoir.com?subject=Custom%20subscription%20inquiry"
+		      :href="`mailto:${runtimeConfig.public.contactEmail || 'contact@example.com'}?subject=Custom%20subscription%20inquiry`"
 	        class="mt-5 inline-flex items-center gap-2 rounded-xl bg-tn-surface-lowest/60 px-4 py-3 font-label text-[11px] font-bold uppercase tracking-[0.2em] text-tn-on-surface ring-1 ring-white/10 hover:bg-tn-surface-lowest"
         >
 	        <UIcon name="i-heroicons-envelope" class="h-4 w-4 text-tn-primary" />
@@ -442,7 +442,7 @@
                 placeholder="123456789"
 	                class="w-full rounded-xl bg-black/20 px-3 py-2 text-sm text-tn-on-surface placeholder:text-white/30 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-tn-primary/25"
               >
-	              <p class="text-xs text-tn-on-surface-variant">Message @ThreatNoirBot on Telegram to get your chat ID</p>
+	              <p class="text-xs text-tn-on-surface-variant">Message the Telegram bot to get your chat ID</p>
             </div>
 
             <div v-else-if="channel === 'webhook'" class="space-y-2">
@@ -451,7 +451,7 @@
                 id="generic-webhook"
                 v-model.trim="webhookEndpointUrl"
                 type="url"
-                placeholder="https://example.com/threatnoir"
+					placeholder="https://example.com/webhook"
 	                class="w-full rounded-xl bg-black/20 px-3 py-2 text-sm text-tn-on-surface placeholder:text-white/30 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-tn-primary/25"
               >
 	              <p class="text-xs text-tn-on-surface-variant">We’ll POST JSON to this URL for each matching article</p>
@@ -543,9 +543,11 @@ type Category = {
 type Channel = 'email' | 'discord' | 'telegram' | 'webhook' | 'api' | 'x'
 
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
+		const runtimeConfig = useRuntimeConfig()
 useSeoMeta({
-  title: 'Subscribe — ThreatNoir',
-  description: 'Subscribe to ThreatNoir notifications and tailor what you care about.'
+	  title: `Subscribe — ${site.name}`,
+	  description: `Subscribe to ${site.name} notifications and tailor what you care about.`
 })
 
 const { authenticated } = useAuthGate()

@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { logAiCall } from './aiUsage'
 import { sendWelcomeEmail } from './resend'
+import { getSiteConfig } from './siteConfig'
 
 const LINKEDIN_VOICE_PROMPT =
   "When drafting LinkedIn posts for the weekly ThreatNoir roundup, match Marcus's actual posting style:\n\n" +
@@ -75,7 +76,7 @@ export async function generateAndEmailFocusDraft(
       `Affected: ${(focusItem.affected_products && focusItem.affected_products.length) ? focusItem.affected_products.join(', ') : '(unknown)'}. ` +
       `Action: ${(focusItem.action_required || '').trim() || '(none provided)'}. ` +
       `Keep it under 150 words. Direct, first-person, practitioner sharing an alert. ` +
-      `End with link to https://threatnoir.com/focus. No emoji, no bold, no lists.`
+	      `End with link to ${getSiteConfig().url}/focus. No emoji, no bold, no lists.`
 
     const client = new Anthropic({ apiKey })
 	    const model = 'claude-haiku-4-5-20251001'

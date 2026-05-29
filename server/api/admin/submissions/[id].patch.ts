@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import { requireAdminUser } from '../../../utils/requireAdmin'
 import { generateArticleSlug } from '../../../utils/slugify'
+import { getSiteConfig } from '../../../utils/siteConfig'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 type Body = {
@@ -19,7 +20,7 @@ async function getOrCreateCommunitySource(supabase: SupabaseClient) {
 
   const { data: created, error } = await supabase
     .from('sources')
-    .insert({ name: 'Community', url: 'https://threatnoir.com/community', type: 'community', is_active: true })
+	  .insert({ name: 'Community', url: `${getSiteConfig().url}/community`, type: 'community', is_active: true })
     .select('id,name,url,type')
     .single()
 	if (error) {

@@ -219,6 +219,7 @@
 <script setup lang="ts">
 import { marked } from 'marked'
 import { useToast } from '~/composables/useToast'
+	const site = useSiteConfig()
 
 type TipCategory = {
   id: string
@@ -364,7 +365,7 @@ async function shareTip() {
   if (!import.meta.client) return
 
   const url = `${window.location.origin}/tips/${encodeURIComponent(props.tip.id)}`
-  const title = (props.tip.title || '').trim() || 'ThreatNoir tip'
+	  const title = (props.tip.title || '').trim() || `${site.name} tip`
 
   try {
     if (navigator.share) {

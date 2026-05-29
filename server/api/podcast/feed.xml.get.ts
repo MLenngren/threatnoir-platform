@@ -1,5 +1,6 @@
 import { defineEventHandler, setResponseHeader } from 'h3'
 import { serverSupabaseServiceRole } from '#supabase/server'
+import { getSiteConfig } from '../../utils/siteConfig'
 
 type EpisodeRow = {
   date: string
@@ -58,6 +59,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const eps = (episodes ?? []) as EpisodeRow[]
+	const site = getSiteConfig()
 
   const items = eps
     .map((ep, idx) => {
@@ -77,8 +79,8 @@ export default defineEventHandler(async (event) => {
 
       const durationFormatted = formatItunesDuration(ep.duration_seconds || 0)
 
-      return `    <item>
-      <title>${escXml(ep.title || `ThreatNoir ${edition === 'afternoon' ? 'Afternoon' : 'Morning'} Brief`)}</title>
+	    return `    <item>
+	      <title>${escXml(ep.title || `${site.name} ${edition === 'afternoon' ? 'Afternoon' : 'Morning'} Brief`)}</title>
       <enclosure url="${escXml(ep.audio_url || '')}" type="audio/mpeg"/>
       <guid isPermaLink="false">${escXml(guid)}</guid>
       <pubDate>${date.toUTCString()}</pubDate>
@@ -97,19 +99,19 @@ export default defineEventHandler(async (event) => {
   xmlns:content="http://purl.org/rss/1.0/modules/content/"
   xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>ThreatNoir — Security Intelligence Briefing</title>
-    <link>https://threatnoir.com/podcast</link>
+	    <title>${site.name} — Security Intelligence Briefing</title>
+	    <link>${site.url}/podcast</link>
     <description>Daily security intelligence briefings curated for practitioners. Morning and afternoon editions covering vulnerabilities, breaches, ransomware, regulations, and threat intelligence. AI-curated from 1000+ sources, delivered as a conversational podcast under 5 minutes.</description>
     <language>en</language>
-    <copyright>ThreatNoir ${year}</copyright>
-    <atom:link href="https://threatnoir.com/api/podcast/feed.xml" rel="self" type="application/rss+xml"/>
-    <itunes:author>ThreatNoir</itunes:author>
+	    <copyright>${site.name} ${year}</copyright>
+	    <atom:link href="${site.url}/api/podcast/feed.xml" rel="self" type="application/rss+xml"/>
+	    <itunes:author>${site.name}</itunes:author>
     <itunes:summary>Daily security intelligence briefings. AI-curated from 1000+ sources, delivered as a conversational podcast. Morning and afternoon editions, under 5 minutes each. Covering vulnerabilities, breaches, ransomware, regulatory enforcement, and threat intelligence.</itunes:summary>
     <itunes:owner>
-      <itunes:name>ThreatNoir</itunes:name>
+	      <itunes:name>${site.name}</itunes:name>
       <itunes:email>${process.env.ADMIN_EMAIL || 'admin@example.com'}</itunes:email>
     </itunes:owner>
-    <itunes:image href="https://threatnoir.com/podcast-artwork.jpg"/>
+	    <itunes:image href="${site.podcastArtworkUrl}"/>
     <itunes:category text="Technology"/>
     <itunes:category text="News">
       <itunes:category text="Tech News"/>

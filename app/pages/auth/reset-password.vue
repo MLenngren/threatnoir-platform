@@ -98,19 +98,20 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 useSeoMeta({
-  title: 'Set New Password | ThreatNoir',
-  description: 'Set a new password for your ThreatNoir account. If you requested a reset link, you can securely update your credentials here.',
-  ogTitle: 'Set New Password | ThreatNoir',
-  ogDescription: 'Set a new password for your ThreatNoir account. If you requested a reset link, you can securely update your credentials here.',
-  ogImage: 'https://threatnoir.com/images/category-default.png',
-  ogUrl: 'https://threatnoir.com/auth/reset-password',
+	  title: `Set New Password | ${site.name}`,
+	  description: `Set a new password for your ${site.name} account. If you requested a reset link, you can securely update your credentials here.`,
+	  ogTitle: `Set New Password | ${site.name}`,
+	  ogDescription: `Set a new password for your ${site.name} account. If you requested a reset link, you can securely update your credentials here.`,
+	  ogImage: site.ogImageUrl,
+	  ogUrl: `${site.url}/auth/reset-password`,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Set New Password | ThreatNoir',
-  twitterDescription: 'Set a new password for your ThreatNoir account. If you requested a reset link, you can securely update your credentials here.',
-  twitterImage: 'https://threatnoir.com/images/category-default.png',
-  author: 'ThreatNoir',
+	  twitterTitle: `Set New Password | ${site.name}`,
+	  twitterDescription: `Set a new password for your ${site.name} account. If you requested a reset link, you can securely update your credentials here.`,
+	  twitterImage: site.ogImageUrl,
+	  author: site.name,
   robots: 'noindex'
 })
 

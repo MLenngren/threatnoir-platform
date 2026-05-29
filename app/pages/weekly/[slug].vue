@@ -315,6 +315,8 @@ import { marked } from 'marked'
 
 import { safeHref } from '~/composables/useSafeHref'
 
+const site = useSiteConfig()
+
 type AwarenessLink = { slug: string; title: string }
 type TopIoc = { type: string; value: string; context?: string }
 
@@ -357,30 +359,32 @@ const cardImage = computed(() => {
 	const cover = (roundup.value?.cover_image_url || '').trim()
 	if (cover) return cover
   const s = roundup.value?.slug
-  if (!s) return 'https://threatnoir.com/images/category-default.png'
-  return `https://threatnoir.com/images/weekly/${s}-card.png`
+	  if (!s) return site.ogImageUrl
+	  return `${site.url}/images/weekly/${s}-card.png`
 })
 
 useSeoMeta({
-  title: computed(() => (roundup.value ? `Weekly Roundup ${roundup.value.week_label} | ThreatNoir` : 'Weekly Threat Roundup | ThreatNoir')),
+	  title: computed(() => (roundup.value ? `Weekly Roundup ${roundup.value.week_label}` : 'Weekly Threat Roundup')),
   description: seoDescription,
-  ogTitle: computed(() => (roundup.value ? `Weekly Roundup ${roundup.value.week_label} | ThreatNoir` : 'Weekly Threat Roundup | ThreatNoir')),
+	  ogTitle: computed(() =>
+	    roundup.value ? `Weekly Roundup ${roundup.value.week_label} | ${site.name}` : `Weekly Threat Roundup | ${site.name}`
+	  ),
   ogDescription: seoDescription,
   ogImage: cardImage,
-  ogUrl: computed(() => (roundup.value?.slug ? `https://threatnoir.com/weekly/${roundup.value.slug}` : 'https://threatnoir.com/weekly')),
+	  ogUrl: computed(() => (roundup.value?.slug ? `${site.url}/weekly/${roundup.value.slug}` : `${site.url}/weekly`)),
   ogType: 'article',
-  articleAuthor: 'ThreatNoir',
+	  articleAuthor: site.name,
   articlePublishedTime: computed(() => roundup.value?.date_from ? `${roundup.value.date_to}T00:00:00Z` : undefined),
   twitterCard: 'summary_large_image',
-  author: 'ThreatNoir'
+	  author: site.name
 })
 
-const shareUrl = computed(() => (roundup.value?.slug ? `https://threatnoir.com/weekly/${roundup.value.slug}` : ''))
+	const shareUrl = computed(() => (roundup.value?.slug ? `${site.url}/weekly/${roundup.value.slug}` : ''))
 
 const structuredData = computed(() => {
   if (!roundup.value?.slug) return null
 
-  const url = `https://threatnoir.com/weekly/${roundup.value.slug}`
+	  const url = `${site.url}/weekly/${roundup.value.slug}`
 
   return [
     useNewsArticleSchema({
@@ -391,8 +395,8 @@ const structuredData = computed(() => {
       image_url: cardImage.value
     }),
     useBreadcrumbSchema([
-      { name: 'Home', url: 'https://threatnoir.com' },
-      { name: 'Weekly', url: 'https://threatnoir.com/weekly' },
+	      { name: 'Home', url: site.url },
+	      { name: 'Weekly', url: `${site.url}/weekly` },
       { name: roundup.value.week_label, url }
     ])
   ]

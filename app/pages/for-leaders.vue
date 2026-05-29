@@ -99,12 +99,13 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+	const site = useSiteConfig()
 
 useSeoMeta({
-  title: 'Security Briefings for CISOs & Leaders | ThreatNoir',
+	  title: `Security Briefings for CISOs & Leaders | ${site.name}`,
   description:
     'Weekly security briefings for CISOs and security leaders. Curated intelligence, executive context, and decision-ready signal across breaches, vulnerabilities, and regulations.',
-  ogTitle: 'Security Briefings for CISOs & Leaders | ThreatNoir',
+	  ogTitle: `Security Briefings for CISOs & Leaders | ${site.name}`,
   ogDescription:
     'Weekly security briefings for CISOs and security leaders. Curated intelligence, executive context, and decision-ready signal across breaches, vulnerabilities, and regulations.',
   ogType: 'website'
