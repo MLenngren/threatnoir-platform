@@ -41,7 +41,7 @@ AI provider switch:
 Ollama provider (Phase 4a/b):
 
 - `OLLAMA_BASE_URL` (default `http://host.docker.internal:11434` in compose)
-- `OLLAMA_MODEL` (default `llama3.1:8b`)
+- `OLLAMA_MODEL` (default `qwen2.5-coder:7b`)
 
 OpenRouter provider (Phase 4c):
 
@@ -104,6 +104,17 @@ ThreatNoir's compose stack runs `ai-gateway` inside Docker. That means:
 - Ollama can run on your **host** (recommended) or in its own **separate Docker container** (Linux + NVIDIA only).
 - `OLLAMA_BASE_URL` must be reachable **from inside the `ai-gateway` container** (so `http://localhost:11434` will *not* work in compose).
 
+#### Local model shootout (2026-05-30)
+
+| Model | Wall | Processed | IoCs | Verdict |
+| --- | --- | --- | --- | --- |
+| **qwen2.5-coder:7b** | 46s | 3/3 | 2 (CVE + MITRE T1047) | 🥇 Factual, code-tuned JSON adherence, no hallucinations |
+| qwen2.5:7b | 45s | 3/3 | 1 (hallucinated URL) | Fast, summaries solid, IoC weak |
+| llama3.1:8b | 56s | 3/3 | 2 (CVE + plausible URL) | 25% slower, comparable quality, occasional URL hallucination |
+| gemma2:9b | 192s | 1/3 | 0 | ❌ Broken at this prompt complexity on 8GB VRAM — 5x slower, silently drops 2/3 articles |
+
+*Methodology: 3 fixed test articles (CVE+vendor, supply-chain campaign, credential theft), single `curl POST /api/cron/summarize` run per model, RTX 5060 8GB VRAM, `AI_PROVIDER=ollama`. Wall time includes all calls (article_summarize + awareness_lesson + auto_focus + linkedin_focus_draft pipelines).*
+
 #### Option A (recommended): run Ollama on the host (macOS / Windows / Linux)
 
 1. Install Ollama from https://ollama.com
@@ -114,13 +125,13 @@ ThreatNoir's compose stack runs `ai-gateway` inside Docker. That means:
 
 3. Pull a small model (example):
 
-   - `ollama pull qwen2.5:7b`
+   - `ollama pull qwen2.5-coder:7b`
 
 4. Point ThreatNoir at Ollama:
 
    - Edit `deploy/.env`:
      - `AI_PROVIDER=ollama`
-     - `OLLAMA_MODEL=qwen2.5:7b`
+     - `OLLAMA_MODEL=qwen2.5-coder:7b`
      - `OLLAMA_BASE_URL=http://host.docker.internal:11434`
 
    Notes for Linux operators:
@@ -150,7 +161,7 @@ Important caveat:
 
 3. Pull a model inside the container:
 
-   - `docker exec -it ollama ollama pull qwen2.5:7b`
+   - `docker exec -it ollama ollama pull qwen2.5-coder:7b`
 
 4. Set ThreatNoir env and restart `ai-gateway` (same as Option A).
 
@@ -227,8 +238,9 @@ This option is for operators who want a self-contained gateway image without hos
 
 | Goal | Model | Notes |
 | --- | --- | --- |
-| Quick local smoke test | `qwen2.5:7b` | Strong for its size; generally decent at JSON-ish outputs. |
-| Default / balanced | `llama3.1:8b` | Default in `.env.example`; works, but structured output is less reliable. |
+| Recommended default (8GB+ VRAM) | `qwen2.5-coder:7b` | Best balance in our shootout for cyber-intel structured JSON: strong schema adherence + better IoC/framework extraction. |
+| Quick local smoke test | `qwen2.5:7b` | Fast and generally solid summaries, but weaker IoC extraction at this prompt complexity. |
+| Baseline alternative | `llama3.1:8b` | Comparable summaries but slower (~25%) and more prone to occasional URL hallucinations vs `qwen2.5-coder:7b`. |
 | Better quality (more VRAM) | `qwen2.5:14b` | Higher quality than 7B; needs more GPU/CPU RAM. |
 | "Try to match Claude" (very expensive) | `llama3.1:70b` | Requires serious hardware; still may not match Claude on strict schema compliance. |
 
@@ -242,7 +254,7 @@ Ollama mode is a great way to develop locally or run a privacy-first deployment,
 
 - Expect slower responses and occasional malformed JSON.
 - Classification accuracy and security-domain nuance is noticeably worse.
-- As a rule of thumb: **Llama 3.1 8B is ~50% of Claude Haiku for structured output reliability**.
+- As a rule of thumb: **qwen2.5-coder:7b reaches roughly ~75% of Claude Haiku quality on structured cyber-intel JSON output (in our 3-article shootout)** — meaningfully better than `llama3.1:8b` for IoC extraction and framework references. Quality scales with VRAM and model choice — the recommendation assumes 8GB+ VRAM with the listed quantizations.
 
 If you care about consistent automation (auto-approve thresholds, stable categorization, low operator intervention), keep `AI_PROVIDER=claude`.
 
