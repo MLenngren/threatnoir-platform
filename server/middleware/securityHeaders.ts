@@ -21,9 +21,9 @@ export default defineEventHandler((event) => {
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
-    "font-src 'self' data:",
+    "font-src 'self' data: https://fonts.gstatic.com",
     // Supabase client-side calls (REST/Auth) + Realtime (websocket).
     // Resolves to the configured Supabase origin, falling back to hosted Supabase.
     `connect-src 'self' ${supabaseConnectSources()}`,
