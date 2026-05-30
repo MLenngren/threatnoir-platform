@@ -13,7 +13,7 @@ export function mountTagResource(app: Hono) {
     if (!mediaType) return c.json({ error: 'invalid_request', message: 'mediaType is required' }, 400)
     if (!base64) return c.json({ error: 'invalid_request', message: 'base64 is required' }, 400)
 
-    const result = await getProvider().tagResource({ mediaType, base64 })
+    const result = await getProvider('resource_tagger').tagResource({ mediaType, base64 })
     return c.json(result)
   })
 }

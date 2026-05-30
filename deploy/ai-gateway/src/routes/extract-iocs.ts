@@ -14,7 +14,7 @@ export function mountExtractIocs(app: Hono) {
 
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
 
-    const result = await getProvider().extractIocs(title, summary, fullText)
+    const result = await getProvider('iocs_extract').extractIocs(title, summary, fullText)
     return c.json(result)
   })
 }

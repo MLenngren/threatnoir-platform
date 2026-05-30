@@ -5,15 +5,29 @@ import { cliProvider } from './cli.js'
 import { ollamaProvider } from './ollama.js'
 import { openrouterProvider } from './openrouter.js'
 
-let cachedProvider: Provider | null = null
-let cachedKey: string | null = null
+const providerCache = new Map<string, Provider>()
+const resolvedKeyCache = new Map<string, string>()
 
-export function getProvider(): Provider {
-  const key = (process.env.AI_PROVIDER || 'claude').trim().toLowerCase()
-  if (cachedProvider && cachedKey === key) return cachedProvider
+export function getProvider(pipeline?: string): Provider {
+  const pipelineName = typeof pipeline === 'string' ? pipeline.trim() : ''
+  const cacheKey = pipelineName || '_default'
+
+  const overrideEnvKey = pipelineName ? `AI_PROVIDER_${pipelineName.toUpperCase()}` : ''
+  const overrideRaw = overrideEnvKey ? process.env[overrideEnvKey] : undefined
+  const overrideKey = typeof overrideRaw === 'string' ? overrideRaw.trim().toLowerCase() : ''
+
+  const globalRaw = process.env.AI_PROVIDER
+  const globalKey = typeof globalRaw === 'string' && globalRaw.trim() ? globalRaw.trim().toLowerCase() : 'claude'
+
+  const resolvedKey = overrideKey || globalKey
+  const sourceEnv = overrideKey ? overrideEnvKey : 'AI_PROVIDER'
+
+  const cachedProvider = providerCache.get(cacheKey)
+  const cachedKey = resolvedKeyCache.get(cacheKey)
+  if (cachedProvider && cachedKey === resolvedKey) return cachedProvider
 
   let provider: Provider
-  switch (key) {
+  switch (resolvedKey) {
     case 'claude':
       provider = claudeProvider
       break
@@ -27,14 +41,21 @@ export function getProvider(): Provider {
       provider = openrouterProvider
       break
     default:
-      throw new Error(`[providers] unknown AI_PROVIDER=${key} (expected 'claude' | 'cli' | 'ollama' | 'openrouter')`)
+      throw new Error(
+        `[providers] unknown ${sourceEnv}=${resolvedKey} (expected 'claude' | 'cli' | 'ollama' | 'openrouter')`
+      )
   }
 
-  cachedProvider = provider
-  cachedKey = key
+  providerCache.set(cacheKey, provider)
+  resolvedKeyCache.set(cacheKey, resolvedKey)
 
   // Keep logs grep-friendly for verification.
-  console.log(`[providers] using AI_PROVIDER=${key}`)
+  if (pipelineName) {
+    console.log(`[providers] pipeline=${pipelineName} → ${sourceEnv}=${resolvedKey}`)
+  } else {
+    // Backward-compat: preserve legacy log line when no pipeline is provided.
+    console.log(`[providers] using AI_PROVIDER=${resolvedKey}`)
+  }
 
   return provider
 }

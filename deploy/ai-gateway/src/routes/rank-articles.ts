@@ -11,7 +11,7 @@ export function mountRankArticles(app: Hono) {
     const text = typeof body?.text === 'string' ? body.text : ''
     if (!text.trim()) return c.json({ error: 'invalid_request', message: 'text is required' }, 400)
 
-    const relevant = await getProvider().relevanceCheck(text)
+    const relevant = await getProvider('relevance_check').relevanceCheck(text)
     return c.json({ relevant })
   })
 }

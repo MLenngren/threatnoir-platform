@@ -49,7 +49,7 @@ const AI_CLI_TIMEOUT_MS = (() => {
 // Security: validate binary name to prevent injection and unexpected shell metacharacters.
 // Note: we never invoke a shell (spawn with args array), but this prevents operators
 // from accidentally setting something like "foo; rm -rf /".
-if (!/^[a-zA-Z0-9._\/-]+$/.test(AI_CLI_BIN)) {
+if (!/^[a-zA-Z0-9._/-]+$/.test(AI_CLI_BIN)) {
   throw new Error(`AI_CLI_BIN contains invalid characters: ${AI_CLI_BIN}`)
 }
 

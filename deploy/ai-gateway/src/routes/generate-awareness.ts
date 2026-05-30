@@ -13,7 +13,7 @@ export function mountGenerateAwareness(app: Hono) {
 
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
 
-    const result = await getProvider().generateAwareness(title, summary)
+    const result = await getProvider('awareness_lesson').generateAwareness(title, summary)
     return c.json(result)
   })
 }

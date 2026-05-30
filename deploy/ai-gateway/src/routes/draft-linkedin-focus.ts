@@ -16,7 +16,7 @@ export function mountDraftLinkedinFocus(app: Hono) {
     if (!siteUrl) return c.json({ error: 'invalid_request', message: 'siteUrl is required' }, 400)
     if (!focus) return c.json({ error: 'invalid_request', message: 'focus is required' }, 400)
 
-    const result = await getProvider().draftLinkedinFocus({ siteName, siteUrl, focus })
+    const result = await getProvider('linkedin_focus_draft').draftLinkedinFocus({ siteName, siteUrl, focus })
     return c.json(result)
   })
 }

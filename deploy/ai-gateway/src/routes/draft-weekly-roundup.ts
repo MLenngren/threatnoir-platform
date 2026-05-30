@@ -16,7 +16,7 @@ export function mountDraftWeeklyRoundup(app: Hono) {
     if (!siteUrl) return c.json({ error: 'invalid_request', message: 'siteUrl is required' }, 400)
     if (!promptPayload) return c.json({ error: 'invalid_request', message: 'promptPayload is required' }, 400)
 
-    const result = await getProvider().draftWeeklyRoundup({ siteName, siteUrl, promptPayload })
+    const result = await getProvider('weekly_roundup').draftWeeklyRoundup({ siteName, siteUrl, promptPayload })
     return c.json(result)
   })
 }

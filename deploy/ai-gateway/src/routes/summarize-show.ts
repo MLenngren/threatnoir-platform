@@ -13,7 +13,7 @@ export function mountSummarizeShow(app: Hono) {
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
     if (!script) return c.json({ error: 'invalid_request', message: 'script is required' }, 400)
 
-    const result = await getProvider().summarizeShow({ title, script })
+    const result = await getProvider('video_briefing').summarizeShow({ title, script })
     return c.json(result)
   })
 }

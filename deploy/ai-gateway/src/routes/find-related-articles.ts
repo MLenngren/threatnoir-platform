@@ -15,7 +15,7 @@ export function mountFindRelatedArticles(app: Hono) {
     if (!parentTitle) return c.json({ error: 'invalid_request', message: 'parentTitle is required' }, 400)
     if (!childTitle) return c.json({ error: 'invalid_request', message: 'childTitle is required' }, 400)
 
-    const result = await getProvider().findRelatedArticles({ parentTitle, parentSummary, childTitle, childSummary })
+    const result = await getProvider('related_articles').findRelatedArticles({ parentTitle, parentSummary, childTitle, childSummary })
     return c.json(result)
   })
 }
