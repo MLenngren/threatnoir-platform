@@ -19,6 +19,9 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-anthropic/claude-3.5-haiku}
+      AI_CLI_BIN: ${AI_CLI_BIN:-claude}
+      AI_CLI_ARGS: ${AI_CLI_ARGS:---print}
+      AI_CLI_TIMEOUT_MS: ${AI_CLI_TIMEOUT_MS:-60000}
       # Used for OpenRouter attribution headers (http-referer).
       NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://localhost:${APP_PORT:-7000}}
       SUPABASE_URL: http://supabase-kong:8000

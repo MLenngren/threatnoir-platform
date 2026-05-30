@@ -48,13 +48,19 @@ OpenRouter provider (Phase 4c):
 - `OPENROUTER_API_KEY` (required when `AI_PROVIDER=openrouter`)
 - `OPENROUTER_MODEL` (example: `anthropic/claude-3.5-haiku`)
 
+CLI provider (Phase 4d):
+
+- `AI_CLI_BIN` (default `claude`)
+- `AI_CLI_ARGS` (default `--print`)
+- `AI_CLI_TIMEOUT_MS` (default `60000`)
+
 Notes:
 
 - Ollama requires the operator to run Ollama separately and pull a model themselves.
 - The gateway calls Ollama's Generate API: `POST <OLLAMA_BASE_URL>/api/generate`.
 - Open-weight models are noticeably worse than Claude at reliably emitting structured JSON and doing security-domain classification.
 - OpenRouter provides multi-model access + unified billing while keeping the same prompts/parsers.
-- Upcoming: Phase 4d local CLI provider.
+- Phase 4d local CLI provider is supported (spawn a local agent binary).
 
 Anthropic provider:
 
@@ -166,6 +172,49 @@ The win is multi-model access + unified billing behind a single API.
    - `cd deploy && docker compose up -d --force-recreate ai-gateway`
    - `docker compose logs ai-gateway --tail=20`
    - Expected: `[providers] using AI_PROVIDER=openrouter`
+
+---
+
+### Switching to CLI provider (Phase 4d)
+
+The CLI provider lets you run AI through a **local CLI agent** (for example `claude` / `claude-code`) instead of an HTTP API.
+
+This is useful when operators already have a paid desktop/CLI subscription and want to avoid managing separate API keys.
+
+Important caveats:
+
+- CLI agents are typically **slower** than API calls.
+- Structured output quality depends entirely on the CLI output mode. Prefer JSON output flags when available.
+- The gateway sends prompts via **stdin** (never argv) to avoid shell injection and handle large prompts.
+
+#### Configure env
+
+Edit `deploy/.env`:
+
+- `AI_PROVIDER=cli`
+- `AI_CLI_BIN=claude` (or another installed CLI)
+- `AI_CLI_ARGS=--print` (consider adding a JSON output flag if your CLI supports it)
+- `AI_CLI_TIMEOUT_MS=60000`
+
+#### Make the CLI available inside the container
+
+Because `ai-gateway` runs inside Docker, the binary must exist **inside the container**.
+
+Option A (fastest): bind-mount the host binary (read-only)
+
+- Add something like this to your compose override:
+  - `volumes: ['/usr/local/bin/claude:/usr/local/bin/claude:ro']`
+
+Option B (more portable): rebuild the image with the CLI installed
+
+- Example (Dockerfile change in your fork):
+  - `RUN npm install -g @anthropic-ai/claude-code`
+
+#### Restart and verify dispatch
+
+- `cd deploy && docker compose up -d --force-recreate ai-gateway`
+- `docker compose logs ai-gateway --tail=20`
+- Expected: `[providers] using AI_PROVIDER=cli`
 
 ---
 
