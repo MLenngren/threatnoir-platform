@@ -247,7 +247,9 @@ Edit the `categories` table directly or via `/admin/categories`. The 30+ default
 
 ## Roadmap
 
-- Phase 4: pluggable AI providers (Ollama, OpenRouter, local CLI)
+- Phase 4 (DONE): pluggable AI providers — **Ollama** local model support
+- Phase 4c (upcoming): OpenRouter provider
+- Phase 4d (upcoming): local CLI provider
 - Phase 5: compose profiles, healthchecks, polished operator UX
 
 ---
