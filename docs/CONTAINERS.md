@@ -10,6 +10,18 @@ This repo includes a Docker Compose stack under `deploy/` intended for operators
 
 If you are doing day-to-day UI development (hot reload, etc.), you may prefer the Supabase CLI flow in [`docs/local-dev.md`](local-dev.md).
 
+### Table of contents
+
+- [Prerequisites](#prerequisites)
+- [Quick start (fresh operator)](#quick-start-fresh-operator)
+- [Services + ports (defaults)](#services--ports-defaults)
+- [Common operator commands](#common-operator-commands)
+- [First-run bootstrap container](#first-run-bootstrap-container)
+- [Email: Inbucket vs Resend](#email-inbucket-vs-resend)
+- [AI in compose (ai-gateway)](#ai-in-compose-ai-gateway)
+- [Compose profiles](#compose-profiles)
+- [Stopping / wiping](#stopping--wiping)
+
 ### Prerequisites
 
 - Docker + Docker Compose v2
@@ -112,16 +124,27 @@ Controls:
 
 See [`docs/AI-GATEWAY.md`](AI-GATEWAY.md) for the endpoint list and `pipeline` labels.
 
-### Dev profile: expose Postgres on localhost
+### Compose profiles
 
-By default, Postgres is not exposed on a host port. For DB tools on your host machine:
+This stack uses Docker Compose **profiles** to gate dev-only host port exposures.
+
+- **Default** (`docker compose up -d`): only the app + Supabase endpoints are exposed on your host.
+- **Dev** (`docker compose --profile dev up -d`): also exposes Postgres and the ai-gateway for direct debugging.
 
 ```bash
 cd deploy
+
+# Default: only the app + Supabase endpoints are exposed on the host
+docker compose up -d
+
+# Dev: also expose Postgres + ai-gateway for direct access
 docker compose --profile dev up -d
 ```
 
-Then connect to `localhost:${SUPABASE_DB_PORT:-7110}`.
+Dev profile ports:
+
+- Postgres: `localhost:${SUPABASE_DB_PORT:-7110}`
+- ai-gateway: `http://localhost:${AI_GATEWAY_PORT:-7180}`
 
 ### Stopping / wiping
 

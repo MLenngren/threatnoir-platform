@@ -2,6 +2,10 @@
 
 **Curated cybersecurity news. AI-enriched. Self-hostable.**
 
+**Project status:** Production-deployable OSS. Full Docker Compose deployment (app + self-hosted Supabase + internal ai-gateway + one-shot bootstrap), plus a Vercel + hosted Supabase option. AI providers: Claude, OpenRouter, Ollama, or a local CLI runner.
+
+**Why this exists:** Security practitioners want AI-curated news they can self-host and customize — without SaaS lock-in, unpredictable costs, or a black-box pipeline they can’t adapt to their org.
+
 ThreatNoir ingests RSS feeds from major security publications, uses Claude to summarize, classify, score relevance, and extract IOCs (CVEs, domains, hashes, etc.), then publishes the result through a fast public site, a JSON API, a weekly email digest, daily podcast audio, and auto-generated awareness lessons. The reference deployment runs at [threatnoir.com](https://threatnoir.com).
 
 This is the open-source release under Apache 2.0. Deploy your own instance and customize it — or contribute back.
@@ -247,10 +251,12 @@ Edit the `categories` table directly or via `/admin/categories`. The 30+ default
 
 ## Roadmap
 
-- Phase 4 (DONE): pluggable AI providers — **Ollama** local model support
-- Phase 4c (upcoming): OpenRouter provider
-- Phase 4d (upcoming): local CLI provider
-- Phase 5: compose profiles, healthchecks, polished operator UX
+- Phase 1 (DONE): open-source release + core pipeline
+- Phase 2 (DONE): admin + distribution fundamentals
+- Phase 3 (DONE): Docker Compose operator stack + docs
+- Phase 4 (DONE): pluggable AI providers (Claude / Ollama / OpenRouter / CLI)
+- Phase 5 (IN PROGRESS): compose profiles, healthchecks, polished operator UX (LEN-1891)
+- Future: LEN-1888 — hybrid models research
 
 ---
 

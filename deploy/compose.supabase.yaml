@@ -38,6 +38,12 @@ services:
       sh -c "apk add --no-cache socat >/dev/null && exec socat TCP-LISTEN:5432,fork,reuseaddr TCP-CONNECT:supabase-db:5432"
     ports:
       - "${SUPABASE_DB_PORT:-7110}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "ps | grep -q '[s]ocat'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   # One-shot job to set Supabase service role passwords.
   # We do this outside the supabase/postgres init scripts so we don't need to
@@ -85,6 +91,13 @@ services:
     restart: unless-stopped
     ports:
       - "${INBUCKET_PORT:-7111}:9000"
+    healthcheck:
+      # Avoid IPv6 ::1 resolution issues in minimal images
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:9000/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   supabase-auth:
     image: supabase/gotrue:v2.186.0
@@ -146,6 +159,15 @@ services:
         condition: service_healthy
       db-roles-init:
         condition: service_completed_successfully
+    healthcheck:
+      # postgrest/postgrest is intentionally minimal (no shell/curl/wget). This
+      # check is a cheap "binary is runnable" probe so `docker compose ps` can
+      # report (healthy) for long-running services.
+      test: ["CMD", "postgrest", "--help"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
       PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:-public,storage,graphql_public}
@@ -203,6 +225,12 @@ services:
     depends_on:
       supabase-db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: db
@@ -221,6 +249,12 @@ services:
     depends_on:
       supabase-meta:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     environment:
       HOSTNAME: 0.0.0.0
       STUDIO_PG_META_URL: http://meta:8080
