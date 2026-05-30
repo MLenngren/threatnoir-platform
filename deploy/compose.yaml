@@ -43,6 +43,25 @@ services:
       timeout: 5s
       retries: 10
 
+  # Optional: expose ai-gateway to the host ONLY when --profile dev.
+  # Default flow keeps ai-gateway internal-only.
+  ai-gateway-dev:
+    profiles: ["dev"]
+    image: alpine:3.21
+    restart: unless-stopped
+    depends_on:
+      ai-gateway:
+        condition: service_healthy
+    command: >-
+      sh -c "apk add --no-cache socat >/dev/null && exec socat TCP-LISTEN:8080,fork,reuseaddr TCP-CONNECT:ai-gateway:8080"
+    ports:
+      - "${AI_GATEWAY_PORT:-7180}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "ps | grep -q '[s]ocat'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
     build:
       context: ..
@@ -62,6 +81,12 @@ services:
         condition: service_completed_successfully
     ports:
       - "${APP_PORT:-7000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     environment:
       # App-required env vars (see repo root .env.example)
       SUPABASE_URL: http://supabase-kong:8000
@@ -120,6 +145,12 @@ services:
     depends_on:
       app:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -q '[s]upercronic'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     environment:
       CRON_SECRET: ${CRON_SECRET}
 
