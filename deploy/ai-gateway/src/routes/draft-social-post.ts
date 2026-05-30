@@ -23,7 +23,7 @@ export function mountDraftSocialPost(app: Hono) {
     if (hooks.length < 1) return c.json({ error: 'invalid_request', message: 'hooks is required' }, 400)
     if (articles.length < 3) return c.json({ error: 'invalid_request', message: 'articles must include at least 3 items' }, 400)
 
-    const result = await getProvider().draftSocialPost({ hookText, recentHooks, hooks, siteName, siteHost, articles })
+    const result = await getProvider('social_draft').draftSocialPost({ hookText, recentHooks, hooks, siteName, siteHost, articles })
     return c.json(result)
   })
 }

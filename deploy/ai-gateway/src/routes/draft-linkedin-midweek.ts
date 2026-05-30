@@ -15,7 +15,7 @@ export function mountDraftLinkedinMidweek(app: Hono) {
     if (!siteUrl) return c.json({ error: 'invalid_request', message: 'siteUrl is required' }, 400)
     if (!article) return c.json({ error: 'invalid_request', message: 'article is required' }, 400)
 
-    const result = await getProvider().draftLinkedinMidweek({ siteName, siteUrl, article })
+    const result = await getProvider('linkedin_midweek').draftLinkedinMidweek({ siteName, siteUrl, article })
     return c.json(result)
   })
 }

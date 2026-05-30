@@ -14,7 +14,7 @@ export function mountSummarizeArticle(app: Hono) {
 
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
 
-    const result = await getProvider().classifyAndSummarize(title, summary, fullText)
+    const result = await getProvider('article_summarize').classifyAndSummarize(title, summary, fullText)
     return c.json(result)
   })
 }

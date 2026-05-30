@@ -37,6 +37,7 @@ Common:
 AI provider switch:
 
 - `AI_PROVIDER` (default `claude`)
+- For hybrid setups + cost-saving guidance, see `docs/COST-OPTIMIZATION.md`.
 
 Ollama provider (Phase 4a/b):
 
