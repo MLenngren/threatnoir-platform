@@ -1,6 +1,7 @@
 import type { Provider } from './types.js'
 
 import { claudeProvider } from './claude.js'
+import { cliProvider } from './cli.js'
 import { ollamaProvider } from './ollama.js'
 import { openrouterProvider } from './openrouter.js'
 
@@ -16,6 +17,9 @@ export function getProvider(): Provider {
     case 'claude':
       provider = claudeProvider
       break
+    case 'cli':
+      provider = cliProvider
+      break
     case 'ollama':
       provider = ollamaProvider
       break
@@ -23,7 +27,7 @@ export function getProvider(): Provider {
       provider = openrouterProvider
       break
     default:
-      throw new Error(`[providers] unknown AI_PROVIDER=${key} (expected 'claude' | 'ollama' | 'openrouter')`)
+      throw new Error(`[providers] unknown AI_PROVIDER=${key} (expected 'claude' | 'cli' | 'ollama' | 'openrouter')`)
   }
 
   cachedProvider = provider
