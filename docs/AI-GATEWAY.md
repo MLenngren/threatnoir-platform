@@ -202,6 +202,14 @@ Important caveats:
     # Expect: "[entrypoint] linked claude → /opt/claude/versions/X.Y.Z"
     #         "[providers] using AI_PROVIDER=cli"
 
+##### How authentication works
+
+The compose override bind-mounts your host's `~/.claude.json` (containing your Claude Code session token) into the gateway container read-only. There is **no separate auth step inside the container** — the containerized `claude` binary reads the same auth file your host CLI uses.
+
+- **First-time setup:** the host login (Claude Pro/Max account or API key) must already exist. If you've never run `claude` interactively on this machine, the bind-mount will fail because `~/.claude.json` doesn't exist yet. Fix: run `claude` once on the host to sign in, then bring up the stack.
+- **Token refresh:** if your Claude Code session expires while the stack is running, gateway calls start failing. Run `claude` once on the host to refresh — the read-only bind-mount reflects the new token live, no container restart needed.
+- **Account attribution:** all AI calls bill your **personal** Claude Code account (the one in `~/.claude.json`), not the Anthropic API workspace owning `ANTHROPIC_API_KEY` in `.env`. Heavy ThreatNoir use will consume your personal Claude Code quota. If you want both providers to attribute to the same workspace, use `AI_PROVIDER=claude` with an API key from the same org instead.
+
 #### Option B — Build a custom gateway image with claude-code installed
 
 This option is for operators who want a self-contained gateway image without host bind-mounts.
