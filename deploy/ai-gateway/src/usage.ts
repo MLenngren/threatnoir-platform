@@ -137,6 +137,9 @@ export async function logAiCall(params: {
   durationMs?: number | null
   status?: LogAiCallStatus
   metadata?: Record<string, unknown>
+  // Optional override for providers that return direct billing (e.g. OpenRouter).
+  // Unit: $1e-6 ("micro-cents" in legacy naming).
+  costMicroCentsOverride?: number
 }): Promise<void> {
   const supabase = useSupabaseAdmin()
 
@@ -148,7 +151,9 @@ export async function logAiCall(params: {
     cache_creation_input_tokens: Math.max(0, Math.round(usageRaw?.cache_creation_input_tokens ?? 0))
   }
 
-  const costMicroCents = computeCostMicroCents(params.model, usage)
+  const costMicroCents = Number.isFinite(params.costMicroCentsOverride)
+    ? Math.max(0, Math.round(params.costMicroCentsOverride as number))
+    : computeCostMicroCents(params.model, usage)
 
   // 1) Insert per-call log (best-effort; never break pipeline execution)
   try {

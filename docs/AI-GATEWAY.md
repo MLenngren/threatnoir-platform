@@ -43,12 +43,18 @@ Ollama provider (Phase 4a/b):
 - `OLLAMA_BASE_URL` (default `http://host.docker.internal:11434` in compose)
 - `OLLAMA_MODEL` (default `llama3.1:8b`)
 
+OpenRouter provider (Phase 4c):
+
+- `OPENROUTER_API_KEY` (required when `AI_PROVIDER=openrouter`)
+- `OPENROUTER_MODEL` (example: `anthropic/claude-3.5-haiku`)
+
 Notes:
 
 - Ollama requires the operator to run Ollama separately and pull a model themselves.
 - The gateway calls Ollama's Generate API: `POST <OLLAMA_BASE_URL>/api/generate`.
 - Open-weight models are noticeably worse than Claude at reliably emitting structured JSON and doing security-domain classification.
-- Upcoming: Phase 4c OpenRouter provider + Phase 4d local CLI provider.
+- OpenRouter provides multi-model access + unified billing while keeping the same prompts/parsers.
+- Upcoming: Phase 4d local CLI provider.
 
 Anthropic provider:
 
@@ -141,6 +147,25 @@ Important caveat:
    - `docker exec -it ollama ollama pull qwen2.5:7b`
 
 4. Set ThreatNoir env and restart `ai-gateway` (same as Option A).
+
+---
+
+### Switching to OpenRouter
+
+OpenRouter is a hosted router that exposes an OpenAI-compatible Chat Completions API (`/v1/chat/completions`).
+
+In practice, if you set `OPENROUTER_MODEL=anthropic/claude-3.5-haiku`, quality is **effectively identical** to calling Claude directly.
+The win is multi-model access + unified billing behind a single API.
+
+1. Create an API key at https://openrouter.ai
+2. Edit `deploy/.env`:
+   - `AI_PROVIDER=openrouter`
+   - `OPENROUTER_API_KEY=...`
+   - `OPENROUTER_MODEL=anthropic/claude-3.5-haiku`
+3. Restart just the gateway:
+   - `cd deploy && docker compose up -d --force-recreate ai-gateway`
+   - `docker compose logs ai-gateway --tail=20`
+   - Expected: `[providers] using AI_PROVIDER=openrouter`
 
 ---
 
