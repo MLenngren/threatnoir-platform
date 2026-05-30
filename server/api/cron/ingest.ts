@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getHeader } from 'h3'
+import { createError, defineEventHandler, getHeader, readBody } from 'h3'
 import type { H3Event } from 'h3'
 
 import { parseRssFeed } from '../../utils/rss'
@@ -7,7 +7,7 @@ import { ingestRedditSources, type RedditSource } from '../../utils/redditIngest
 import { generateArticleSlug } from '../../utils/slugify'
 import { useSupabaseAdmin } from '../../utils/supabase'
 
-const MAX_ARTICLE_AGE_HOURS = Number(process.env.MAX_ARTICLE_AGE_HOURS) || 48
+const DEFAULT_MAX_ARTICLE_AGE_HOURS = Number(process.env.MAX_ARTICLE_AGE_HOURS) || 48
 
 const requireCronSecret = (event: H3Event) => {
   const expected = process.env.CRON_SECRET
@@ -30,6 +30,12 @@ const requireCronSecret = (event: H3Event) => {
 
 export default defineEventHandler(async (event) => {
   requireCronSecret(event)
+
+  const rawBody = (await readBody(event).catch(() => ({}))) as { backfillHours?: unknown }
+  const backfillHoursRaw = typeof rawBody.backfillHours === 'number' ? rawBody.backfillHours : Number(rawBody.backfillHours)
+  const maxArticleAgeHours = Number.isFinite(backfillHoursRaw) && backfillHoursRaw > 0
+    ? backfillHoursRaw
+    : DEFAULT_MAX_ARTICLE_AGE_HOURS
 
   const supabase = useSupabaseAdmin()
 
@@ -60,7 +66,7 @@ export default defineEventHandler(async (event) => {
       const uniqueItems = [...byUrl.values()]
 
       // Filter out stale articles — RSS feeds can resurface old content
-      const cutoff = new Date(Date.now() - MAX_ARTICLE_AGE_HOURS * 60 * 60 * 1000)
+      const cutoff = new Date(Date.now() - maxArticleAgeHours * 60 * 60 * 1000)
       const freshItems = uniqueItems.filter((i) => {
         if (!i.publishedAt) return true // no date = let it through
         return new Date(i.publishedAt) >= cutoff
@@ -143,7 +149,7 @@ export default defineEventHandler(async (event) => {
 		const redditRes = await ingestRedditSources({
 			supabase,
 			sources: (redditSources ?? []) as unknown as RedditSource[],
-			maxArticleAgeHours: MAX_ARTICLE_AGE_HOURS,
+				maxArticleAgeHours,
 			limitPerSubreddit: 25
 		})
 

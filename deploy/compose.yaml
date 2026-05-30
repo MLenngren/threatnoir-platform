@@ -111,3 +111,36 @@ services:
       # Provided for parity with app container (future cron direct gateway calls)
       AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://ai-gateway:8080}
       AI_GATEWAY_INTERNAL_TOKEN: ${AI_GATEWAY_INTERNAL_TOKEN}
+
+  bootstrap:
+    build:
+      context: ./bootstrap
+    image: threatnoir-platform-bootstrap
+    restart: "no"
+    depends_on:
+      app:
+        condition: service_started
+      supabase-kong:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: supabase-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: supabase_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      APP_URL: ${APP_URL:-http://app:3000}
+      KONG_URL: ${KONG_URL:-http://supabase-kong:8000}
+
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      CRON_SECRET: ${CRON_SECRET}
+
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      BACKFILL_HOURS: ${BACKFILL_HOURS:-8}
+      BOOTSTRAP_INGEST: ${BOOTSTRAP_INGEST:-true}
+      BOOTSTRAP_RUN_AI: ${BOOTSTRAP_RUN_AI:-false}
+
+      # Used only to determine whether AI can run without failing.
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-http://ai-gateway:8080}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
