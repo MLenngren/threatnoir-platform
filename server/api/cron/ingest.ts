@@ -31,7 +31,7 @@ const requireCronSecret = (event: H3Event) => {
 export default defineEventHandler(async (event) => {
   requireCronSecret(event)
 
-  const rawBody = (await readBody(event).catch(() => ({}))) as { backfillHours?: unknown }
+  const rawBody = ((await readBody(event).catch(() => ({}))) ?? {}) as { backfillHours?: unknown }
   const backfillHoursRaw = typeof rawBody.backfillHours === 'number' ? rawBody.backfillHours : Number(rawBody.backfillHours)
   const maxArticleAgeHours = Number.isFinite(backfillHoursRaw) && backfillHoursRaw > 0
     ? backfillHoursRaw
