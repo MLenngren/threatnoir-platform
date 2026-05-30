@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { DraftWeeklyRoundupRequest } from '../types.js'
-import { draftWeeklyRoundupClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountDraftWeeklyRoundup(app: Hono) {
   app.post('/draft-weekly-roundup', requireGatewayToken(), async (c) => {
@@ -16,7 +16,7 @@ export function mountDraftWeeklyRoundup(app: Hono) {
     if (!siteUrl) return c.json({ error: 'invalid_request', message: 'siteUrl is required' }, 400)
     if (!promptPayload) return c.json({ error: 'invalid_request', message: 'promptPayload is required' }, 400)
 
-    const result = await draftWeeklyRoundupClaude({ siteName, siteUrl, promptPayload })
+    const result = await getProvider().draftWeeklyRoundup({ siteName, siteUrl, promptPayload })
     return c.json(result)
   })
 }

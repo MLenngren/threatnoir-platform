@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { FindRelatedArticlesRequest } from '../types.js'
-import { findRelatedArticlesClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountFindRelatedArticles(app: Hono) {
   app.post('/find-related-articles', requireGatewayToken(), async (c) => {
@@ -15,7 +15,7 @@ export function mountFindRelatedArticles(app: Hono) {
     if (!parentTitle) return c.json({ error: 'invalid_request', message: 'parentTitle is required' }, 400)
     if (!childTitle) return c.json({ error: 'invalid_request', message: 'childTitle is required' }, 400)
 
-    const result = await findRelatedArticlesClaude({ parentTitle, parentSummary, childTitle, childSummary })
+    const result = await getProvider().findRelatedArticles({ parentTitle, parentSummary, childTitle, childSummary })
     return c.json(result)
   })
 }

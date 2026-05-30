@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { TagResourceRequest } from '../types.js'
-import { tagResourceClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountTagResource(app: Hono) {
   app.post('/tag-resource', requireGatewayToken(), async (c) => {
@@ -13,7 +13,7 @@ export function mountTagResource(app: Hono) {
     if (!mediaType) return c.json({ error: 'invalid_request', message: 'mediaType is required' }, 400)
     if (!base64) return c.json({ error: 'invalid_request', message: 'base64 is required' }, 400)
 
-    const result = await tagResourceClaude({ mediaType, base64 })
+    const result = await getProvider().tagResource({ mediaType, base64 })
     return c.json(result)
   })
 }

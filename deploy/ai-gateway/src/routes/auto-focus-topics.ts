@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { AutoFocusTopicsRequest } from '../types.js'
-import { autoFocusTopicsClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountAutoFocusTopics(app: Hono) {
   app.post('/auto-focus-topics', requireGatewayToken(), async (c) => {
@@ -18,7 +18,7 @@ export function mountAutoFocusTopics(app: Hono) {
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
     if (!summary) return c.json({ error: 'invalid_request', message: 'summary is required' }, 400)
 
-    const result = await autoFocusTopicsClaude({ title, summary, relevance_score, cves })
+    const result = await getProvider().autoFocusTopics({ title, summary, relevance_score, cves })
     return c.json(result)
   })
 }

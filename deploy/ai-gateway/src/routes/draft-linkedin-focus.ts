@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { DraftLinkedinFocusRequest } from '../types.js'
-import { draftLinkedinFocusClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountDraftLinkedinFocus(app: Hono) {
   app.post('/draft-linkedin-focus', requireGatewayToken(), async (c) => {
@@ -16,7 +16,7 @@ export function mountDraftLinkedinFocus(app: Hono) {
     if (!siteUrl) return c.json({ error: 'invalid_request', message: 'siteUrl is required' }, 400)
     if (!focus) return c.json({ error: 'invalid_request', message: 'focus is required' }, 400)
 
-    const result = await draftLinkedinFocusClaude({ siteName, siteUrl, focus })
+    const result = await getProvider().draftLinkedinFocus({ siteName, siteUrl, focus })
     return c.json(result)
   })
 }

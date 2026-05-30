@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { GenerateAwarenessRequest } from '../types.js'
-import { generateAwarenessClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountGenerateAwareness(app: Hono) {
   app.post('/generate-awareness', requireGatewayToken(), async (c) => {
@@ -13,7 +13,7 @@ export function mountGenerateAwareness(app: Hono) {
 
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
 
-    const result = await generateAwarenessClaude(title, summary)
+    const result = await getProvider().generateAwareness(title, summary)
     return c.json(result)
   })
 }

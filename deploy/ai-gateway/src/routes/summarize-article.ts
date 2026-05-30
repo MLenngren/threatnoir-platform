@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { SummarizeArticleRequest } from '../types.js'
-import { classifyAndSummarizeClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountSummarizeArticle(app: Hono) {
   app.post('/summarize-article', requireGatewayToken(), async (c) => {
@@ -14,7 +14,7 @@ export function mountSummarizeArticle(app: Hono) {
 
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
 
-    const result = await classifyAndSummarizeClaude(title, summary, fullText)
+    const result = await getProvider().classifyAndSummarize(title, summary, fullText)
     return c.json(result)
   })
 }

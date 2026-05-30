@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { RankArticlesRequest } from '../types.js'
-import { relevanceCheckClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountRankArticles(app: Hono) {
   app.post('/rank-articles', requireGatewayToken(), async (c) => {
@@ -11,7 +11,7 @@ export function mountRankArticles(app: Hono) {
     const text = typeof body?.text === 'string' ? body.text : ''
     if (!text.trim()) return c.json({ error: 'invalid_request', message: 'text is required' }, 400)
 
-    const relevant = await relevanceCheckClaude(text)
+    const relevant = await getProvider().relevanceCheck(text)
     return c.json({ relevant })
   })
 }

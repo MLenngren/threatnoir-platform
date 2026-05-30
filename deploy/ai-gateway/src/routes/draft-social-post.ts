@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { DraftSocialPostRequest } from '../types.js'
-import { draftSocialPostClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountDraftSocialPost(app: Hono) {
   app.post('/draft-social-post', requireGatewayToken(), async (c) => {
@@ -23,7 +23,7 @@ export function mountDraftSocialPost(app: Hono) {
     if (hooks.length < 1) return c.json({ error: 'invalid_request', message: 'hooks is required' }, 400)
     if (articles.length < 3) return c.json({ error: 'invalid_request', message: 'articles must include at least 3 items' }, 400)
 
-    const result = await draftSocialPostClaude({ hookText, recentHooks, hooks, siteName, siteHost, articles })
+    const result = await getProvider().draftSocialPost({ hookText, recentHooks, hooks, siteName, siteHost, articles })
     return c.json(result)
   })
 }

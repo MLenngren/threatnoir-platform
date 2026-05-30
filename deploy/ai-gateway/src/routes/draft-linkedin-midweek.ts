@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { DraftLinkedinMidweekRequest } from '../types.js'
-import { draftLinkedinMidweekClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountDraftLinkedinMidweek(app: Hono) {
   app.post('/draft-linkedin-midweek', requireGatewayToken(), async (c) => {
@@ -15,7 +15,7 @@ export function mountDraftLinkedinMidweek(app: Hono) {
     if (!siteUrl) return c.json({ error: 'invalid_request', message: 'siteUrl is required' }, 400)
     if (!article) return c.json({ error: 'invalid_request', message: 'article is required' }, 400)
 
-    const result = await draftLinkedinMidweekClaude({ siteName, siteUrl, article })
+    const result = await getProvider().draftLinkedinMidweek({ siteName, siteUrl, article })
     return c.json(result)
   })
 }
