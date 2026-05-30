@@ -47,56 +47,112 @@ This is the open-source release under Apache 2.0. Deploy your own instance and c
 **Operational**
 - Per-call AI cost tracking (`ai_call_log` table) — never get surprised by a bill
 - Configurable daily call cap and monthly budget cap
+- Optional internal **AI gateway** (Docker Compose) so the app can run AI calls without embedding provider keys in the app container
+- One-shot **bootstrap container** (Docker Compose) that seeds an admin user + backfills recent articles on first run
 - Auto-publish to YouTube (optional, for video briefings)
 - Discord ops alerts (optional)
 
 ---
 
+## Quick start (Docker, ~10 minutes)
+
+Run the full platform locally via Docker Compose: app (Nuxt SSR + API), self-hosted Supabase (Postgres + Auth + Storage), an internal AI gateway, local email (Inbucket), and a one-shot bootstrap container that seeds an admin user + backfills recent articles.
+
+### Prerequisites
+
+- Docker + Docker Compose v2
+- (Optional) `openssl` to generate secrets
+
+### Steps
+
+1. Clone the repo:
+
+   ```bash
+   git clone https://github.com/MLenngren/threatnoir-platform
+   cd threatnoir-platform
+   ```
+
+2. Copy the compose env file:
+
+   ```bash
+   cd deploy
+   cp .env.example .env
+   ```
+
+3. Edit `deploy/.env` and set the bare minimum:
+
+   - `AI_GATEWAY_INTERNAL_TOKEN` (required; the gateway refuses to start if blank)
+     - generate: `openssl rand -hex 32`
+   - `ADMIN_EMAIL` + `ADMIN_PASSWORD` (required; used by the bootstrap container to seed your first admin)
+   - Optional (enables AI during first bootstrap run; costs money):
+     - `ANTHROPIC_API_KEY`
+     - `BOOTSTRAP_RUN_AI=true`
+
+4. Start the stack:
+
+   ```bash
+   docker compose up -d
+   ```
+
+5. Watch the one-shot bootstrap container until it prints `[bootstrap] Done`:
+
+   ```bash
+   docker compose logs -f bootstrap
+   ```
+
+6. Open:
+
+   - App: http://localhost:7000
+   - Supabase Studio: http://localhost:7101
+   - Inbucket (magic-link emails): http://localhost:7111
+
+7. Log in to admin:
+
+   - Go to http://localhost:7000/admin/login
+   - Request a magic link to `ADMIN_EMAIL`
+   - Open Inbucket → click the magic link → you should land in `/admin`
+
+### What runs (URL map)
+
+- `http://localhost:7000` → ThreatNoir app (Nuxt SSR + API)
+- `http://localhost:7100` → Supabase API gateway (Kong)
+- `http://localhost:7101` → Supabase Studio
+- `http://localhost:7111` → Inbucket (local email inbox)
+- `ai-gateway` runs **internal-only** (no host port)
+
+### Next steps
+
+- Deep dive on the compose stack: [`docs/CONTAINERS.md`](docs/CONTAINERS.md)
+- Operator branding env vars: [`docs/OPERATOR-BRANDING.md`](docs/OPERATOR-BRANDING.md)
+- AI gateway endpoints + pipeline labels: [`docs/AI-GATEWAY.md`](docs/AI-GATEWAY.md)
+- Non-container local dev (Supabase CLI + `npm run dev`): [`docs/local-dev.md`](docs/local-dev.md)
+
+---
+
 ## Architecture
 
-- **Frontend + API:** [Nuxt 4](https://nuxt.com) (Vue 3, SSR) — deployed to Vercel
-- **Database + auth:** [Supabase](https://supabase.com) (Postgres + Row-Level Security + magic-link auth)
-- **AI:** [Anthropic Claude](https://anthropic.com) (Haiku for high-volume, Sonnet for weekly roundups)
-- **Email:** [Resend](https://resend.com)
-- **Media storage:** Cloudflare R2 (or any S3-compatible bucket) — optional, for podcast audio and video covers
-- **Crons:** Vercel cron + a chain pattern (one cron triggers downstream pipelines via shared utils)
+ThreatNoir supports two common deployment modes:
 
-Cost: at small scale (a few hundred subscribers, default sources), expect **~$50–150/month total** for Vercel Hobby + Supabase Free + Anthropic API + Resend Free tier.
+- **Docker Compose (self-hosted):** app + self-hosted Supabase + internal `ai-gateway` + Inbucket + one-shot `bootstrap`
+- **Vercel + Supabase (hosted):** app deployed to Vercel, backed by a hosted Supabase project
 
----
+Core components:
 
-## Quick start (local, ~15 minutes)
+- **Frontend + API:** [Nuxt 4](https://nuxt.com) (Vue 3, SSR)
+- **Database + auth:** [Supabase](https://supabase.com) (Postgres + Row-Level Security)
+- **AI:** [Anthropic Claude](https://anthropic.com)
+- **Email:** [Resend](https://resend.com) (production) / Inbucket (local compose)
 
-**Prerequisites:** Node.js 20+, npm, Docker (for local Supabase)
+Docker Compose adds two operator-focused containers:
 
-```bash
-# Clone
-git clone https://github.com/MLenngren/threatnoir-platform
-cd threatnoir-platform
-npm install
-
-# Start local Supabase (creates Postgres + auth + storage in Docker)
-npx supabase start
-
-# Apply migrations + seed data
-npx supabase db reset
-
-# Copy local env (uses Supabase's local demo keys)
-cp .env.local.example .env.local
-
-# Start dev server
-npm run dev
-```
-
-Open http://localhost:3000.
-
-To log in to admin, use the email shown by `npx supabase status` for the local instance. See [`docs/local-dev.md`](docs/local-dev.md) for more.
-
-Prefer an all-in-one Docker Compose stack (app + self-hosted Supabase + local email)? See [`docs/CONTAINERS.md`](docs/CONTAINERS.md).
+- **`ai-gateway`**: internal service that wraps AI calls and logs each call to `ai_call_log` with a `pipeline` label
+- **`bootstrap`**: one-shot init that (optionally) seeds an admin user and backfills recent articles on first run
 
 ---
 
-## Production deployment (~2 hours)
+## Deploy to Vercel
+
+The Docker Compose AI gateway is optional in production. If you are deploying the app to Vercel, leave `AI_GATEWAY_URL` empty/unset and the server will call Anthropic directly.
 
 ### 1. Supabase project
 
@@ -163,7 +219,11 @@ The weekly roundup and weekly digest email cron at `/api/cron/generate-weekly-ro
 
 ---
 
-## Customizing
+## Configuration
+
+- Operator branding (site name, logo, social links): [`docs/OPERATOR-BRANDING.md`](docs/OPERATOR-BRANDING.md)
+- AI gateway deep dive (endpoints, pipeline labels, cost logs): [`docs/AI-GATEWAY.md`](docs/AI-GATEWAY.md)
+- Docker Compose deep dive (ports, bootstrap, Inbucket vs Resend): [`docs/CONTAINERS.md`](docs/CONTAINERS.md)
 
 ### Hardcoded URLs
 
@@ -183,6 +243,13 @@ Edit the `categories` table directly or via `/admin/categories`. The 30+ default
 
 ---
 
+## Roadmap
+
+- Phase 4: pluggable AI providers (Ollama, OpenRouter, local CLI)
+- Phase 5: compose profiles, healthchecks, polished operator UX
+
+---
+
 ## Backups
 
 We removed the operator-specific backup scripts before open-sourcing. Recommended approach for production:
@@ -196,6 +263,9 @@ We removed the operator-specific backup scripts before open-sourcing. Recommende
 ## Documentation
 
 - `docs/local-dev.md` — local development setup
+- `docs/CONTAINERS.md` — Docker Compose quick start + deep dive
+- `docs/OPERATOR-BRANDING.md` — operator branding env vars
+- `docs/AI-GATEWAY.md` — AI gateway endpoints + pipeline labels
 - `.env.example` — every environment variable with purpose
 - `CONTRIBUTING.md` — how to contribute
 - `SECURITY.md` — vulnerability disclosure
