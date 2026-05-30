@@ -1,0 +1,26 @@
+# Use the host's Claude Code CLI as the AI provider.
+# Prerequisites:
+#   - claude CLI installed on host (https://docs.claude.com/en/docs/claude-code/setup)
+#   - Logged in once interactively so ~/.claude.json exists
+#
+# Usage:
+#   docker compose -f compose.yaml -f compose.cli.yaml up -d --build ai-gateway
+#
+# Override install paths in .env if your claude lives elsewhere:
+#   HOST_CLAUDE_INSTALL_DIR=/custom/path/.local/share/claude
+#   HOST_CLAUDE_AUTH_FILE=/custom/path/.claude.json
+
+services:
+  ai-gateway:
+    environment:
+      AI_PROVIDER: cli
+      AI_CLI_BIN: claude
+      # CRITICAL cost control: --model haiku is REQUIRED.
+      # Claude Code auto-loads ~/.claude.json project context (CLAUDE.md, agent rules,
+      # MEMORY.md) on EVERY call. Default model is Opus → $0.20+ per summarize.
+      # Forcing haiku keeps cost in the ~$0.001-0.01 range.
+      AI_CLI_ARGS: "--print --model haiku"
+      AI_CLI_TIMEOUT_MS: "120000"
+    volumes:
+      - ${HOST_CLAUDE_INSTALL_DIR:-${HOME}/.local/share/claude}:/opt/claude:ro
+      - ${HOST_CLAUDE_AUTH_FILE:-${HOME}/.claude.json}:/root/.claude.json:ro
