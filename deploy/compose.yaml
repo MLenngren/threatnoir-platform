@@ -1,4 +1,4 @@
-name: oss-platform
+name: threatnoir-platform
 
 include:
   - compose.supabase.yaml
@@ -7,7 +7,7 @@ services:
   ai-gateway:
     build:
       context: ./ai-gateway
-    image: oss-platform-ai-gateway
+    image: threatnoir-platform-ai-gateway
     restart: unless-stopped
     depends_on:
       supabase-kong:
@@ -38,7 +38,7 @@ services:
         SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
         # For Phase 1 we map secret key to the service role JWT.
         SUPABASE_SECRET_KEY: ${SUPABASE_SERVICE_KEY}
-    image: oss-platform-app
+    image: threatnoir-platform-app
     restart: unless-stopped
     depends_on:
       supabase-kong:
@@ -100,7 +100,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/cron/Dockerfile
-    image: oss-platform-cron
+    image: threatnoir-platform-cron
     restart: unless-stopped
     depends_on:
       app:
