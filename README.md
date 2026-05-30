@@ -104,13 +104,15 @@ Run the full platform locally via Docker Compose: app (Nuxt SSR + API), self-hos
 
    - App: http://localhost:7000
    - Supabase Studio: http://localhost:7101
-   - Inbucket (magic-link emails): http://localhost:7111
+   - Inbucket (catches password-reset / magic-link emails): http://localhost:7111
 
 7. Log in to admin:
 
-   - Go to http://localhost:7000/admin/login
-   - Request a magic link to `ADMIN_EMAIL`
-   - Open Inbucket → click the magic link → you should land in `/admin`
+   - Go to http://localhost:7000/auth/login
+   - Enter `ADMIN_EMAIL` + `ADMIN_PASSWORD` (the bootstrap container auto-confirmed
+     the email, so no inbox click is needed)
+   - You should land in `/admin`. If you forget the password, use `/auth/forgot-password`
+     and the reset link will arrive in Inbucket at http://localhost:7111.
 
 ### What runs (URL map)
 
