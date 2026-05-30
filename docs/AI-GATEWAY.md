@@ -28,6 +28,21 @@ Common:
 - `AI_DAILY_LIMIT`
 - `AI_MONTHLY_BUDGET_CENTS`
 
+AI provider switch:
+
+- `AI_PROVIDER` (default `claude`)
+
+Ollama provider (Phase 4a/b):
+
+- `OLLAMA_BASE_URL` (default `http://host.docker.internal:11434` in compose)
+- `OLLAMA_MODEL` (default `llama3.1:8b`)
+
+Notes:
+
+- Ollama requires the operator to run Ollama on the host machine and pull a model themselves.
+- Open-weight models are noticeably worse than Claude at reliably emitting structured JSON and doing security-domain classification.
+- Phase 4c/4d placeholders: OpenRouter provider + local CLI provider.
+
 Anthropic provider:
 
 - `ANTHROPIC_API_KEY` (required for AI endpoints that call Claude)

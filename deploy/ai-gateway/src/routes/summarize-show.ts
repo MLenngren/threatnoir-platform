@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { SummarizeShowRequest } from '../types.js'
-import { summarizeShowClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountSummarizeShow(app: Hono) {
   app.post('/summarize-show', requireGatewayToken(), async (c) => {
@@ -13,7 +13,7 @@ export function mountSummarizeShow(app: Hono) {
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
     if (!script) return c.json({ error: 'invalid_request', message: 'script is required' }, 400)
 
-    const result = await summarizeShowClaude({ title, script })
+    const result = await getProvider().summarizeShow({ title, script })
     return c.json(result)
   })
 }

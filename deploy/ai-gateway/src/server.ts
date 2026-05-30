@@ -16,6 +16,8 @@ import { mountExtractCves } from './routes/extract-cves.js'
 import { mountDraftLinkedinMidweek } from './routes/draft-linkedin-midweek.js'
 import { mountTagResource } from './routes/tag-resource.js'
 
+import { getProvider } from './providers/index.js'
+
 function requireNonEmpty(name: string): string {
   const v = process.env[name]
   if (!v || !v.trim()) throw new Error(`${name} is required`)
@@ -24,6 +26,9 @@ function requireNonEmpty(name: string): string {
 
 // Refuse to start with a blank token.
 requireNonEmpty('AI_GATEWAY_INTERNAL_TOKEN')
+
+// Log provider selection on startup for operator visibility.
+getProvider()
 
 const app = new Hono()
 

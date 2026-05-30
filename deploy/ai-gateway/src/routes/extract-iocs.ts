@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 
 import { requireGatewayToken } from '../auth.js'
 import type { ExtractIocsRequest } from '../types.js'
-import { extractIocsClaude } from '../providers/claude.js'
+import { getProvider } from '../providers/index.js'
 
 export function mountExtractIocs(app: Hono) {
   app.post('/extract-iocs', requireGatewayToken(), async (c) => {
@@ -14,7 +14,7 @@ export function mountExtractIocs(app: Hono) {
 
     if (!title) return c.json({ error: 'invalid_request', message: 'title is required' }, 400)
 
-    const result = await extractIocsClaude(title, summary, fullText)
+    const result = await getProvider().extractIocs(title, summary, fullText)
     return c.json(result)
   })
 }
