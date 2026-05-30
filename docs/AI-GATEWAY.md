@@ -187,34 +187,39 @@ Important caveats:
 - Structured output quality depends entirely on the CLI output mode. Prefer JSON output flags when available.
 - The gateway sends prompts via **stdin** (never argv) to avoid shell injection and handle large prompts.
 
-#### Configure env
+#### Option A — Bind-mount host claude (recommended)
 
-Edit `deploy/.env`:
+    # Prerequisites:
+    #   - claude CLI installed (https://docs.claude.com/en/docs/claude-code/setup)
+    #   - Logged in once so ~/.claude.json exists
 
-- `AI_PROVIDER=cli`
-- `AI_CLI_BIN=claude` (or another installed CLI)
-- `AI_CLI_ARGS=--print` (consider adding a JSON output flag if your CLI supports it)
-- `AI_CLI_TIMEOUT_MS=60000`
+    cd deploy
+    docker compose -f compose.yaml -f compose.cli.yaml up -d --build ai-gateway
 
-#### Make the CLI available inside the container
+    # Verify
+    docker compose -f compose.yaml -f compose.cli.yaml exec ai-gateway claude --version
+    docker compose -f compose.yaml -f compose.cli.yaml logs ai-gateway --tail=10
+    # Expect: "[entrypoint] linked claude → /opt/claude/versions/X.Y.Z"
+    #         "[providers] using AI_PROVIDER=cli"
 
-Because `ai-gateway` runs inside Docker, the binary must exist **inside the container**.
+##### How authentication works
 
-Option A (fastest): bind-mount the host binary (read-only)
+The compose override bind-mounts your host's `~/.claude.json` (containing your Claude Code session token) into the gateway container read-only. There is **no separate auth step inside the container** — the containerized `claude` binary reads the same auth file your host CLI uses.
 
-- Add something like this to your compose override:
-  - `volumes: ['/usr/local/bin/claude:/usr/local/bin/claude:ro']`
+- **First-time setup:** the host login (Claude Pro/Max account or API key) must already exist. If you've never run `claude` interactively on this machine, the bind-mount will fail because `~/.claude.json` doesn't exist yet. Fix: run `claude` once on the host to sign in, then bring up the stack.
+- **Token refresh:** if your Claude Code session expires while the stack is running, gateway calls start failing. Run `claude` once on the host to refresh — the read-only bind-mount reflects the new token live, no container restart needed.
+- **Account attribution:** all AI calls bill your **personal** Claude Code account (the one in `~/.claude.json`), not the Anthropic API workspace owning `ANTHROPIC_API_KEY` in `.env`. Heavy ThreatNoir use will consume your personal Claude Code quota. If you want both providers to attribute to the same workspace, use `AI_PROVIDER=claude` with an API key from the same org instead.
 
-Option B (more portable): rebuild the image with the CLI installed
+#### Option B — Build a custom gateway image with claude-code installed
+
+This option is for operators who want a self-contained gateway image without host bind-mounts.
 
 - Example (Dockerfile change in your fork):
   - `RUN npm install -g @anthropic-ai/claude-code`
 
-#### Restart and verify dispatch
+> ⚠️ **Cost trap:** Claude Code auto-loads your `~/.claude.json` project context (CLAUDE.md files, agent rules, prior session context) on EVERY call. Without `--model haiku` forced via `AI_CLI_ARGS`, a single article summarize call can cost **$0.20+** because Claude Code defaults to Opus + 30K cache tokens. The `compose.cli.yaml` override forces `--model haiku` — keep it that way unless you understand the cost trade-off. For comparison, direct API + Haiku is ~$0.001/call.
 
-- `cd deploy && docker compose up -d --force-recreate ai-gateway`
-- `docker compose logs ai-gateway --tail=20`
-- Expected: `[providers] using AI_PROVIDER=cli`
+> ⚠️ ~15-20s per summarize call vs ~2s for direct API. Acceptable for cron-driven pipelines, not interactive use.
 
 ---
 
