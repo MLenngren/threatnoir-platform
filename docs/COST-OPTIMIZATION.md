@@ -84,7 +84,25 @@ On gateway startup (or first call per pipeline), the gateway logs provider resol
 
 ### Production benchmark — cloud-cheap summarize (2026-05-31)
 
-- Defaulting OpenRouter to `google/gemini-2.0-flash-001` provides a cheap, reliable path for bulk pipelines (`article_summarize` / `iocs_extract`).
-- Observed behavior in production: Gemini 2.0 Flash in JSON mode returned consistently valid JSON for these pipelines.
-- `maxTokens: 1000` truncates the long summarize JSON for a meaningful minority of articles (~20%); increasing to `maxTokens: 2500` eliminates the truncation without impacting the shorter prompts/pipelines.
-- Cost note: Gemini 2.0 Flash is ~16× cheaper than Claude Haiku for these bulk workloads.
+ThreatNoir's own production instance benchmarked Claude Haiku 4.5 vs **Google Gemini 2.0 Flash** (via OpenRouter) on the `article_summarize` pipeline, using identical prompts on real articles.
+
+| Metric | Claude Haiku 4.5 | Gemini 2.0 Flash |
+|---|---|---|
+| Valid JSON | 80% | 100% |
+| Avg latency | ~7.3s | ~2.7s |
+| Cost / call | ~$0.0063 | ~$0.0004 (~16x cheaper) |
+| Monthly (~26k calls) | ~$256 | ~$15 |
+
+Findings:
+
+- **Gemini 2.0 Flash is the cost-optimal cloud model for the bulk pipelines** (`article_summarize`, `iocs_extract`). It is ~16x cheaper than Haiku, faster, and its JSON mode (`response_format: json_object`) returns 100% valid JSON.
+- For the cheapest reliable cloud setup: `AI_PROVIDER=openrouter` with `OPENROUTER_MODEL=google/gemini-2.0-flash-001` (now the default), and keep low-volume / high-visibility pipelines (`weekly_roundup`, `social_draft`, LinkedIn drafts) on `claude`.
+- Local Ollama (`qwen2.5-coder:7b`) is the $0 alternative for the bulk pipelines but depends on your own always-on GPU host. Cloud Gemini Flash trades ~$15/mo for not running hardware.
+
+#### max_tokens and the summarize JSON
+
+The `article_summarize` response is a single JSON object containing the summary, brief, IOCs, entities, relevance score, **and a multi-line podcast dialogue**. That last field makes the output long. With `max_tokens: 1000` the JSON truncates mid-array on ~20% of articles (invalid JSON → no summary). Gemini is more verbose than Haiku and needed more headroom: at 1500 it still truncated ~12%, at **2500 it dropped to 0%**.
+
+The gateway uses `max_tokens: 2500` for `classifyAndSummarize` / `extractIocs` across all providers. A higher ceiling only bills for tokens actually emitted, so it is pure upside for reducing truncation.
+
+> Tip: if you route summarize to a provider/model and see intermittent "no summary" or JSON parse errors, raise the summarize `max_tokens` first — truncation is the most common cause.
