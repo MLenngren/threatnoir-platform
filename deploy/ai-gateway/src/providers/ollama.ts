@@ -203,7 +203,7 @@ export const ollamaProvider: Provider = {
       pipeline: 'article_summarize',
       systemText: ARTICLE_SYSTEM,
       userText,
-      maxTokens: 1000,
+      maxTokens: 2500,
       metadata: {
         title: title.slice(0, 200),
         hasSummary: Boolean(summary),
@@ -220,7 +220,7 @@ export const ollamaProvider: Provider = {
       pipeline: 'iocs_extract',
       systemText: ARTICLE_SYSTEM,
       userText,
-      maxTokens: 1000,
+      maxTokens: 2500,
       metadata: {
         title: title.slice(0, 200),
         hasSummary: Boolean(summary),

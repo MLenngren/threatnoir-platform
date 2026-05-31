@@ -203,7 +203,7 @@ async function classifyAndSummarizeInternal(
   const response = await callClaude({
     pipeline,
     model,
-    maxTokens: 1000,
+    maxTokens: 2500,
     systemText: STABLE_INSTRUCTIONS,
     userText:
       `Article title: ${title}\n` +

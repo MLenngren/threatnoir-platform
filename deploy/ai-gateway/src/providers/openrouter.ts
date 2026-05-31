@@ -66,7 +66,9 @@ function getOpenRouterApiKey(): string {
 }
 
 function getOpenRouterModel(): string {
-  return (process.env.OPENROUTER_MODEL || 'anthropic/claude-3.5-haiku').trim() || 'anthropic/claude-3.5-haiku'
+  return (
+    process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001'
+  ).trim() || 'google/gemini-2.0-flash-001'
 }
 
 function getOpenRouterHeaders(): Record<string, string> {
@@ -240,7 +242,7 @@ export const openrouterProvider: Provider = {
       pipeline: 'article_summarize',
       systemText: ARTICLE_SYSTEM,
       userText: buildSummarizeArticleUserText(title, summary, fullText),
-      maxTokens: 1000,
+      maxTokens: 2500,
       responseFormatJson: true,
       metadata: {
         title: title.slice(0, 200),
@@ -257,7 +259,7 @@ export const openrouterProvider: Provider = {
       pipeline: 'iocs_extract',
       systemText: ARTICLE_SYSTEM,
       userText: buildSummarizeArticleUserText(title, summary, fullText),
-      maxTokens: 1000,
+      maxTokens: 2500,
       responseFormatJson: true,
       metadata: {
         title: title.slice(0, 200),
