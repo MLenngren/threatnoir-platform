@@ -23,6 +23,13 @@ In `deploy/.env`:
 - `AI_PROVIDER=ollama`
 - `AI_PROVIDER_WEEKLY_ROUNDUP=claude`
 
+Cloud-only cheap option (no local Ollama; keep quality on public-facing output, save money on bulk enrichment):
+
+- `AI_PROVIDER=claude`
+- `AI_PROVIDER_ARTICLE_SUMMARIZE=openrouter`
+- `AI_PROVIDER_IOCS_EXTRACT=openrouter`
+- `OPENROUTER_MODEL=google/gemini-2.0-flash-001`
+
 This is the simplest **hybrid** configuration: it preserves quality on long-form, public-facing output while moving most background enrichment workloads off paid APIs.
 
 ### Canonical pipeline names
@@ -74,3 +81,10 @@ On gateway startup (or first call per pipeline), the gateway logs provider resol
 
 - `[providers] pipeline=<name> → AI_PROVIDER=<provider>`
 - `[providers] pipeline=<name> → AI_PROVIDER_<PIPELINE>=<provider>`
+
+### Production benchmark — cloud-cheap summarize (2026-05-31)
+
+- Defaulting OpenRouter to `google/gemini-2.0-flash-001` provides a cheap, reliable path for bulk pipelines (`article_summarize` / `iocs_extract`).
+- Observed behavior in production: Gemini 2.0 Flash in JSON mode returned consistently valid JSON for these pipelines.
+- `maxTokens: 1000` truncates the long summarize JSON for a meaningful minority of articles (~20%); increasing to `maxTokens: 2500` eliminates the truncation without impacting the shorter prompts/pipelines.
+- Cost note: Gemini 2.0 Flash is ~16× cheaper than Claude Haiku for these bulk workloads.
