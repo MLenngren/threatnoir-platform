@@ -28,7 +28,7 @@ Cloud-only cheap option (no local Ollama; keep quality on public-facing output, 
 - `AI_PROVIDER=claude`
 - `AI_PROVIDER_ARTICLE_SUMMARIZE=openrouter`
 - `AI_PROVIDER_IOCS_EXTRACT=openrouter`
-- `OPENROUTER_MODEL=google/gemini-2.0-flash-001`
+- `OPENROUTER_MODEL=google/gemini-2.5-flash-lite`
 
 This is the simplest **hybrid** configuration: it preserves quality on long-form, public-facing output while moving most background enrichment workloads off paid APIs.
 
@@ -96,8 +96,10 @@ ThreatNoir's own production instance benchmarked Claude Haiku 4.5 vs **Google Ge
 Findings:
 
 - **Gemini 2.0 Flash is the cost-optimal cloud model for the bulk pipelines** (`article_summarize`, `iocs_extract`). It is ~16x cheaper than Haiku, faster, and its JSON mode (`response_format: json_object`) returns 100% valid JSON.
-- For the cheapest reliable cloud setup: `AI_PROVIDER=openrouter` with `OPENROUTER_MODEL=google/gemini-2.0-flash-001` (now the default), and keep low-volume / high-visibility pipelines (`weekly_roundup`, `social_draft`, LinkedIn drafts) on `claude`.
+- For the cheapest reliable cloud setup: `AI_PROVIDER=openrouter` with `OPENROUTER_MODEL=google/gemini-2.5-flash-lite` (now the default), and keep low-volume / high-visibility pipelines (`weekly_roundup`, `social_draft`, LinkedIn drafts) on `claude`.
 - Local Ollama (`qwen2.5-coder:7b`) is the $0 alternative for the bulk pipelines but depends on your own always-on GPU host. Cloud Gemini Flash trades ~$15/mo for not running hardware.
+
+> **Model-slug note (2026-06-06):** the benchmark above was run on `google/gemini-2.0-flash-001`, which OpenRouter has since removed. The current same-price ($0.10/$0.40) successor is `google/gemini-2.5-flash-lite` — the default this repo now ships. Avoid `google/gemini-flash-latest`: it maps to premium flash ($1.50/$9.00), pricier than Haiku. Always confirm your `OPENROUTER_MODEL` slug exists in OpenRouter's live model list — a removed slug 404s on every call and silently falls back.
 
 #### max_tokens and the summarize JSON
 

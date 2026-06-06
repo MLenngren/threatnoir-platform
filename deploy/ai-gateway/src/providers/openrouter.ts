@@ -66,9 +66,12 @@ function getOpenRouterApiKey(): string {
 }
 
 function getOpenRouterModel(): string {
+  // gemini-2.0-flash-001 was removed from OpenRouter (~2026-06-01); 2.5-flash-lite
+  // is the same-price ($0.10/$0.40) successor. Avoid 'gemini-flash-latest' — it
+  // maps to premium flash ($1.50/$9.00), pricier than Haiku.
   return (
-    process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001'
-  ).trim() || 'google/gemini-2.0-flash-001'
+    process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite'
+  ).trim() || 'google/gemini-2.5-flash-lite'
 }
 
 function getOpenRouterHeaders(): Record<string, string> {
